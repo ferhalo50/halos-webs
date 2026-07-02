@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HalosWebs crea páginas web modernas, profesionales y adaptadas a cada negocio." />
+  <meta name="theme-color" content="#0a0d14" />
+  <title>HalosWebs | Páginas web profesionales</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- ICONO DE PESTAÑA Y EMBLEMA DEL MENÚ: agrega una imagen cuadrada PNG en img/favicon.png (ideal: 512 x 512 px). -->
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="shortcut icon" href="img/favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="img/favicon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="site-grain" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a class="brand brand--header" href="#inicio" aria-label="HalosWebs - Inicio">
+        <!--
+          ICONO DE MARCA:
+          Guarda tu emblema cuadrado (la H con el aro orbital) como: img/favicon.png
+          Este mismo archivo se usa como icono de pestaña y como emblema del encabezado.
+        -->
+        <span class="brand-icon" aria-hidden="true">
+          <img class="brand-icon__image" src="img/favicon.png" alt="" width="48" height="48" decoding="async" />
+          <span class="brand-icon__fallback">H</span>
+        </span>
+        <span class="brand-name" aria-hidden="true">
+          <span class="brand-name__halos">Halos</span>
+          <span class="brand-name__webs">Webs</span>
+        </span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Navegación principal">
+        <a href="#inicio" class="nav-link active" data-i18n="navHome">Inicio</a>
+        <a href="#servicios" class="nav-link" data-i18n="navServices">Servicios</a>
+        <a href="#planes" class="nav-link" data-i18n="navPlans">Planes</a>
+        <a href="#portafolio" class="nav-link" data-i18n="navPortfolio">Portafolio</a>
+        <a href="#conoceme" class="nav-link" data-i18n="navAbout">Conóceme</a>
+        <a href="#proceso" class="nav-link" data-i18n="navProcess">Proceso</a>
+        <a href="#contacto" class="nav-link" data-i18n="navContact">Contacto</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="language-toggle" type="button" aria-label="Cambiar idioma" title="Cambiar idioma">
+          <span class="language-toggle__current">ES</span>
+          <span class="language-toggle__divider">/</span>
+          <span class="language-toggle__other">EN</span>
+        </button>
+        <a class="header-cta" href="#contacto" data-i18n="navCta">Cotizar proyecto</a>
+        <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+      <nav aria-label="Navegación móvil">
+        <a href="#inicio" data-i18n="navHome">Inicio</a>
+        <a href="#servicios" data-i18n="navServices">Servicios</a>
+        <a href="#planes" data-i18n="navPlans">Planes</a>
+        <a href="#portafolio" data-i18n="navPortfolio">Portafolio</a>
+        <a href="#conoceme" data-i18n="navAbout">Conóceme</a>
+        <a href="#proceso" data-i18n="navProcess">Proceso</a>
+        <a href="#contacto" data-i18n="navContact">Contacto</a>
+      </nav>
+      <a class="button button--primary mobile-menu__cta" href="#contacto" data-i18n="navCta">Cotizar proyecto</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section" id="inicio">
+      <div class="container hero__grid">
+        <div class="hero__content reveal">
+          <p class="eyebrow"><span></span><span data-i18n="heroEyebrow">DISEÑO WEB PARA NEGOCIOS QUE QUIEREN CRECER</span></p>
+          <h1 data-i18n-html="heroTitle">Dale a tu negocio una <em>presencia digital</em> que se vea profesional.</h1>
+          <p class="hero__lead" data-i18n="heroLead">Creamos páginas web modernas, rápidas y personalizadas para que tus clientes te encuentren, confíen en tu negocio y se pongan en contacto contigo.</p>
+          <div class="hero__actions">
+            <a class="button button--primary" href="#planes"><span data-i18n="heroPrimary">Ver niveles de página</span><span class="button-arrow">↗</span></a>
+            <a class="button button--ghost" href="#portafolio" data-i18n="heroSecondary">Ver mi trabajo</a>
+          </div>
+          <ul class="hero__pills" aria-label="Beneficios principales">
+            <li data-i18n="pillOne">Diseño a tu medida</li>
+            <li data-i18n="pillTwo">Adaptado a celular</li>
+            <li data-i18n="pillThree">Atención directa</li>
+            <li data-i18n="pillFour">Opción bilingüe ES / EN</li>
+          </ul>
+        </div>
+
+        <div class="hero__visual reveal reveal--delay">
+          <div class="orb orb--one"></div>
+          <div class="orb orb--two"></div>
+          <div class="browser-window">
+            <div class="browser-window__top">
+              <span></span><span></span><span></span>
+              <div class="browser-window__url">haloswebs.com</div>
+            </div>
+            <div class="browser-window__body">
+              <div class="fake-nav"><span class="fake-logo">H</span><span></span><span></span><span></span></div>
+              <div class="fake-hero">
+                <div class="fake-copy"><i></i><strong></strong><strong></strong><b></b></div>
+                <div class="fake-art"><div></div><span></span><small></small></div>
+              </div>
+              <div class="fake-cards"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="floating-card floating-card--one"><span class="floating-card__icon">↗</span><div><strong data-i18n="floatOneTitle">Más visibilidad</strong><small data-i18n="floatOneText">para tu negocio</small></div></div>
+          <div class="floating-card floating-card--two"><span class="floating-card__check">✓</span><div><strong data-i18n="floatTwoTitle">Diseño profesional</strong><small data-i18n="floatTwoText">hecho para ti</small></div></div>
+        </div>
+      </div>
+      <div class="container trust-bar reveal">
+        <p data-i18n="trustText">Ideal para negocios locales, emprendedores, profesionistas y empresas.</p>
+        <div class="trust-bar__items" aria-hidden="true"><span>WEB</span><i></i><span>DESIGN</span><i></i><span>GROW</span><i></i><span>DIGITAL</span></div>
+      </div>
+    </section>
+
+    <section class="intro-strip" aria-label="Introducción">
+      <div class="container intro-strip__content reveal">
+        <p class="eyebrow"><span></span><span data-i18n="introEyebrow">NO SOLO UNA PÁGINA BONITA</span></p>
+        <p data-i18n-html="introText">Tu sitio debe explicar lo que haces, mostrar por qué elegirte y convertir visitas en <strong>clientes potenciales.</strong></p>
+      </div>
+    </section>
+
+
+    <section class="section about-section" id="conoceme">
+      <div class="container about-layout">
+        <div class="about-photo reveal">
+          <div class="about-photo__frame">
+            <!-- FOTO PERSONAL: coloca tu foto dentro de la carpeta /img. Ejemplo: img/fernando.jpg.
+                 Si usas otro nombre de archivo, cambia solamente el valor de src en la etiqueta img siguiente. -->
+            <span class="about-photo__fallback" aria-hidden="true">F</span>
+            <img class="about-photo__image" src="img/fernando.jpg" alt="Fernando, creador de HalosWebs" loading="lazy" onerror="this.style.display='none'" />
+            <div class="about-photo__caption">
+              <strong>Ing. Fernando</strong>
+              <span data-i18n="aboutRole">Soluciones digitales y soporte técnico</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-content reveal reveal--delay-sm">
+          <p class="eyebrow"><span></span><span data-i18n="aboutEyebrow">CONÓCEME</span></p>
+          <h2 data-i18n-html="aboutTitle">Tecnología y soluciones <em>hechas con propósito.</em></h2>
+          <p class="about-content__lead" data-i18n="aboutLead">Hola, soy Fernando. Soy Ingeniero en Sistemas Computacionales y Técnico en Programación. Diseño y desarrollo páginas web y sistemas, administro servidores con usuarios y bases de datos MySQL, y doy mantenimiento a equipos tanto en hardware como software.</p>
+
+          <ul class="about-expertise" aria-label="Servicios y experiencia">
+            <li><span>01</span><strong data-i18n="aboutFocusOne">Páginas web y sistemas</strong></li>
+            <li><span>02</span><strong data-i18n="aboutFocusTwo">Servidores, usuarios y MySQL</strong></li>
+            <li><span>03</span><strong data-i18n="aboutFocusThree">Mantenimiento de hardware y software</strong></li>
+          </ul>
+
+          <p class="about-content__availability" data-i18n="aboutAvailability">¿Tienes una idea o necesitas apoyo técnico? Cuéntame en qué puedo ayudarte.</p>
+          <div class="about-actions">
+            <a class="button button--primary js-services-whatsapp-link" href="#" target="_blank" rel="noopener"><span data-i18n="aboutCtaWhatsapp">Contactarme por WhatsApp</span><span class="button-arrow">↗</span></a>
+            <a class="button button--ghost js-services-email-link" href="#"><span data-i18n="aboutCtaEmail">Escribirme por correo</span><span class="button-arrow">↗</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--dark" id="servicios">
+      <div class="container">
+        <div class="section-heading reveal">
+          <div>
+            <p class="eyebrow"><span></span><span data-i18n="servicesEyebrow">LO QUE RECIBE TU NEGOCIO</span></p>
+            <h2 data-i18n-html="servicesTitle">Una página pensada para <em>trabajar por ti.</em></h2>
+          </div>
+          <p data-i18n="servicesLead">Cada proyecto se adapta a lo que necesita tu negocio, sin plantillas genéricas ni procesos confusos.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-card__number">01</span>
+            <div class="feature-card__icon">✦</div>
+            <h3 data-i18n="featureOneTitle">Diseño con identidad</h3>
+            <p data-i18n="featureOneText">Colores, estilo, secciones y contenido alineados a la imagen de tu marca.</p>
+          </article>
+          <article class="feature-card reveal reveal--delay-sm">
+            <span class="feature-card__number">02</span>
+            <div class="feature-card__icon">⌁</div>
+            <h3 data-i18n="featureTwoTitle">Perfecta en celular</h3>
+            <p data-i18n="featureTwoText">Tu página se adapta de forma limpia a teléfonos, tablets y computadoras.</p>
+          </article>
+          <article class="feature-card reveal reveal--delay-md">
+            <span class="feature-card__number">03</span>
+            <div class="feature-card__icon">◌</div>
+            <h3 data-i18n="featureThreeTitle">Contacto fácil</h3>
+            <p data-i18n="featureThreeText">Botones de WhatsApp, correo, mapas, redes sociales y llamados claros a la acción.</p>
+          </article>
+          <article class="feature-card reveal reveal--delay-lg">
+            <span class="feature-card__number">04</span>
+            <div class="feature-card__icon">↗</div>
+            <h3 data-i18n="featureFourTitle">Listo para crecer</h3>
+            <p data-i18n="featureFourText">Tu sitio puede evolucionar con nuevas secciones, galerías, productos o funciones.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="planes">
+      <div class="container">
+        <div class="section-heading section-heading--center reveal">
+          <p class="eyebrow"><span></span><span data-i18n="plansEyebrow">ELIGE EL NIVEL IDEAL</span></p>
+          <h2 data-i18n-html="plansTitle">Tu página, al nivel que <em>tu negocio necesita.</em></h2>
+          <p data-i18n="plansLead">El costo de creación se cotiza según el contenido y funciones. Elige una base y la adaptamos a tu proyecto.</p>
+        </div>
+
+        <div class="plans-grid">
+          <article class="plan-card reveal">
+            <div class="plan-card__top">
+              <span class="plan-card__level">01</span>
+              <span class="plan-card__tag" data-i18n="planOneTag">Esencial</span>
+            </div>
+            <h3 data-i18n="planOneTitle">Presencia inicial</h3>
+            <p class="plan-card__summary" data-i18n="planOneSummary">Para presentar tu negocio de forma clara, limpia y profesional.</p>
+            <div class="plan-card__price" aria-label="Precio desde">
+              <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
+              <strong data-i18n="planOnePrice">$5,500 MXN</strong>
+              <small data-i18n="planPriceNote">Pago único por desarrollo</small>
+            </div>
+            <ul class="plan-card__list">
+              <li data-i18n="planOneItem1">Información general del negocio</li>
+              <li data-i18n="planOneItem2">Servicios, horarios y ubicación</li>
+              <li data-i18n="planOneItem3">Botones de WhatsApp y contacto</li>
+              <li data-i18n="planOneItem4">Diseño sencillo y responsivo</li>
+              <li data-i18n="planOneItem5">Enlaces a redes sociales</li>
+            </ul>
+            <a class="text-link" href="#contacto"><span data-i18n="planCta">Solicitar cotización</span><b>→</b></a>
+          </article>
+
+          <article class="plan-card plan-card--featured reveal reveal--delay-sm">
+            <span class="plan-card__ribbon" data-i18n="recommended">RECOMENDADO</span>
+            <div class="plan-card__top">
+              <span class="plan-card__level">02</span>
+              <span class="plan-card__tag" data-i18n="planTwoTag">Profesional</span>
+            </div>
+            <h3 data-i18n="planTwoTitle">Página personalizada</h3>
+            <p class="plan-card__summary" data-i18n="planTwoSummary">Para marcas que quieren destacar con una experiencia visual más completa.</p>
+            <div class="plan-card__price" aria-label="Precio desde">
+              <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
+              <strong data-i18n="planTwoPrice">$10,500 MXN</strong>
+              <small data-i18n="planPriceNote">Pago único por desarrollo</small>
+            </div>
+            <ul class="plan-card__list">
+              <li data-i18n="planTwoItem1">Todo lo incluido en el Nivel 1</li>
+              <li data-i18n="planTwoItem2">Diseño visual personalizado</li>
+              <li data-i18n="planTwoItem3">Galerías, animaciones y secciones extra</li>
+              <li data-i18n="planTwoItem4">Página bilingüe si la necesitas</li>
+              <li data-i18n="planTwoItem5">Portafolio, reseñas o preguntas frecuentes</li>
+            </ul>
+            <a class="text-link" href="#contacto"><span data-i18n="planCta">Solicitar cotización</span><b>→</b></a>
+          </article>
+
+          <article class="plan-card reveal reveal--delay-md">
+            <div class="plan-card__top">
+              <span class="plan-card__level">03</span>
+              <span class="plan-card__tag" data-i18n="planThreeTag">Ventas</span>
+            </div>
+            <h3 data-i18n="planThreeTitle">Tienda o sistema de ventas</h3>
+            <p class="plan-card__summary" data-i18n="planThreeSummary">Para vender productos o recibir pedidos desde tu propia página.</p>
+            <div class="plan-card__price" aria-label="Precio desde">
+              <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
+              <strong data-i18n="planThreePrice">$18,000 MXN</strong>
+              <small data-i18n="planPriceNote">Pago único por desarrollo</small>
+            </div>
+            <ul class="plan-card__list">
+              <li data-i18n="planThreeItem1">Todo lo incluido en el Nivel 2</li>
+              <li data-i18n="planThreeItem2">Catálogo o tienda en línea</li>
+              <li data-i18n="planThreeItem3">Carrito, pedidos o flujo de compra</li>
+              <li data-i18n="planThreeItem4">Opciones de pago según el proyecto</li>
+              <li data-i18n="planThreeItem5">Panel y funciones cotizadas a medida</li>
+            </ul>
+            <a class="text-link" href="#contacto"><span data-i18n="planCta">Solicitar cotización</span><b>→</b></a>
+          </article>
+        </div>
+
+        <div class="service-notes reveal">
+          <article class="service-note">
+            <div class="service-note__icon">⌁</div>
+            <div>
+              <h3 data-i18n="hostingTitle">Hosting y publicación</h3>
+              <p data-i18n-html="hostingText">Los planes Essential y Professional se publican en <strong>Cloudflare Pages</strong> con HTTPS y conexión desde GitHub. Para páginas informativas estándar, no hay una mensualidad adicional de hosting.</p>
+            </div>
+          </article>
+          <article class="service-note">
+            <div class="service-note__icon">⌘</div>
+            <div>
+              <h3 data-i18n="domainTitle">Dominio y configuración anual</h3>
+              <p data-i18n-html="domainText">El nombre de tu página, por ejemplo <strong>tunegocio.com</strong>, se registra a tu nombre. Incluye conexión, DNS y HTTPS. Suele costar entre <strong>$510 y $850 MXN al año</strong>, según extensión y disponibilidad.</p>
+            </div>
+          </article>
+          <article class="service-note">
+            <div class="service-note__icon">▣</div>
+            <div>
+              <h3 data-i18n="salesPlatformTitle">Plataforma para ventas</h3>
+              <p data-i18n-html="salesPlatformText">El plan Sales se implementa en una plataforma de comercio como <strong>Tiendanube</strong>, desde <strong>$149 MXN al mes</strong>. La suscripción, comisiones de pago y envíos se contratan por separado.</p>
+            </div>
+          </article>
+          <article class="service-note">
+            <div class="service-note__icon">∞</div>
+            <div>
+              <h3 data-i18n="maintenanceTitle">Mantenimiento opcional</h3>
+              <p data-i18n-html="maintenanceText">Por <strong>$340 MXN al mes</strong>, puedo ayudarte con cambios razonables de contenido, correcciones, actualizaciones y revisión general de la página.</p>
+            </div>
+          </article>
+        </div>
+        <p class="plans-footnote" data-i18n="plansFootnote">Precios base en MXN. El alcance final se confirma antes de iniciar el proyecto.</p>
+      </div>
+    </section>
+
+    <section class="section portfolio-section" id="portafolio">
+      <div class="container">
+        <div class="section-heading reveal">
+          <div>
+            <p class="eyebrow"><span></span><span data-i18n="portfolioEyebrow">PROYECTOS REALES</span></p>
+            <h2 data-i18n-html="portfolioTitle">Mira ejemplos y conoce <em>mi trabajo.</em></h2>
+          </div>
+          <p data-i18n="portfolioLead">Cada página tiene una personalidad distinta, creada alrededor del negocio, su público y sus objetivos.</p>
+        </div>
+
+        <div class="portfolio-grid" id="portfolio-grid">
+          <!-- Las tarjetas se crean desde app.js para que puedas editar los enlaces e imágenes en un solo lugar. -->
+        </div>
+
+        <div class="portfolio-note reveal">
+          <span>✦</span><p data-i18n="portfolioNote">¿Te gustó algún estilo? Podemos tomarlo como referencia y crear uno que sea único para tu marca.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section process-section" id="proceso">
+      <div class="container process-layout">
+        <div class="process-layout__intro reveal">
+          <p class="eyebrow"><span></span><span data-i18n="processEyebrow">UN PROCESO CLARO</span></p>
+          <h2 data-i18n-html="processTitle">De la idea a una página <em>lista para compartir.</em></h2>
+          <p data-i18n="processLead">Nos enfocamos en hacer el proceso directo: tú conoces tu negocio y yo convierto esa información en una presencia digital profesional.</p>
+          <a class="button button--ghost" href="#contacto" data-i18n="processCta">Hablemos de tu proyecto</a>
+        </div>
+        <ol class="process-steps">
+          <li class="reveal"><span>01</span><div><h3 data-i18n="stepOneTitle">Platicamos</h3><p data-i18n="stepOneText">Me cuentas qué hace tu negocio, qué necesitas y qué estilo te gustaría transmitir.</p></div></li>
+          <li class="reveal reveal--delay-sm"><span>02</span><div><h3 data-i18n="stepTwoTitle">Planeamos</h3><p data-i18n="stepTwoText">Definimos secciones, contenido, funciones y el nivel de página que mejor te conviene.</p></div></li>
+          <li class="reveal reveal--delay-md"><span>03</span><div><h3 data-i18n="stepThreeTitle">Diseñamos</h3><p data-i18n="stepThreeText">Construyo tu sitio con una propuesta visual clara, adaptable a celular y enfocada en tus clientes.</p></div></li>
+          <li class="reveal reveal--delay-lg"><span>04</span><div><h3 data-i18n="stepFourTitle">Publicamos</h3><p data-i18n="stepFourText">Revisamos los detalles, conectamos el dominio si aplica y tu página queda lista para compartirse.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section faq-section">
+      <div class="container faq-layout">
+        <div class="reveal">
+          <p class="eyebrow"><span></span><span data-i18n="faqEyebrow">PREGUNTAS COMUNES</span></p>
+          <h2 data-i18n-html="faqTitle">Todo claro, desde el <em>inicio.</em></h2>
+          <p data-i18n="faqLead">Estas son algunas dudas frecuentes antes de crear una página web.</p>
+        </div>
+        <div class="faq-list reveal">
+          <details>
+            <summary><span data-i18n="faqOneQuestion">¿El dominio está incluido?</span><b>+</b></summary>
+            <p data-i18n="faqOneAnswer">El dominio se cobra por separado porque queda registrado a tu nombre. Su precio anual normalmente está entre US$30 y US$50, según el nombre y la disponibilidad.</p>
+          </details>
+          <details>
+            <summary><span data-i18n="faqTwoQuestion">¿Puedo pedir cambios después?</span><b>+</b></summary>
+            <p data-i18n="faqTwoAnswer">Sí. Puedes solicitar cambios por proyecto o elegir el mantenimiento mensual de US$20 para ajustes razonables, correcciones y revisión general.</p>
+          </details>
+          <details>
+            <summary><span data-i18n="faqThreeQuestion">¿La página se verá bien en celular?</span><b>+</b></summary>
+            <p data-i18n="faqThreeAnswer">Sí. Todas las páginas se desarrollan con diseño responsivo para que se adapten correctamente a teléfonos, tablets y computadoras.</p>
+          </details>
+          <details>
+            <summary><span data-i18n="faqFourQuestion">¿Qué necesito para empezar?</span><b>+</b></summary>
+            <p data-i18n="faqFourAnswer">Lo principal es información de tu negocio: servicios, fotos, logo si ya tienes uno, medios de contacto y una idea general de lo que quieres lograr.</p>
+          </details>
+          <details>
+            <summary><span data-i18n="faqFiveQuestion">¿El hosting está incluido?</span><b>+</b></summary>
+            <p data-i18n="faqFiveAnswer">Para Essential y Professional, el hosting estático estándar con Cloudflare Pages y HTTPS se entrega sin una mensualidad adicional. Las tiendas usan una plataforma como Tiendanube, cuya suscripción se paga por separado.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact-section" id="contacto">
+      <div class="container contact-card reveal">
+        <div class="contact-card__glow"></div>
+        <div class="contact-card__content">
+          <p class="eyebrow"><span></span><span data-i18n="contactEyebrow">HAGAMOS QUE TU NEGOCIO SE VEA EN LÍNEA</span></p>
+          <h2 data-i18n-html="contactTitle">Tu próxima página puede empezar <em>hoy.</em></h2>
+          <p data-i18n="contactLead">Cuéntame qué necesitas y te responderé con una propuesta clara para tu negocio.</p>
+          <div class="contact-card__buttons">
+            <a class="button button--primary js-whatsapp-link" href="#" target="_blank" rel="noopener"><span data-i18n="contactWhatsapp">Escribirme por WhatsApp</span><span class="button-arrow">↗</span></a>
+            <a class="contact-email js-email-link" href="#" title="Abrir correo con solicitud de cotización preparada"><span class="contact-email__label" data-i18n="contactEmailLabel">O por correo</span><strong class="js-email-text">ferhalo50@hotmail.com</strong></a>
+          </div>
+        </div>
+        <form class="contact-form" id="contact-form">
+          <label>
+            <span data-i18n="formName">Tu nombre</span>
+            <input id="contact-name" type="text" name="name" autocomplete="name" required data-i18n-placeholder="formNamePlaceholder" placeholder="¿Cómo te llamas?" />
+          </label>
+          <label>
+            <span data-i18n="formBusiness">Negocio o empresa</span>
+            <input id="contact-business" type="text" name="business" data-i18n-placeholder="formBusinessPlaceholder" placeholder="Nombre de tu negocio" />
+          </label>
+          <label>
+            <span data-i18n="formNeed">¿Qué necesitas?</span>
+            <select id="contact-plan" name="plan">
+              <option value="Essential" data-i18n="formOptionOne">Essential — Presencia inicial</option>
+              <option value="Professional" data-i18n="formOptionTwo">Professional — Página personalizada</option>
+              <option value="Sales" data-i18n="formOptionThree">Sales — Tienda / sistema de ventas</option>
+              <option value="Otro" data-i18n="formOptionOther">No estoy seguro todavía</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="formMessage">Cuéntame un poco más</span>
+            <textarea id="contact-message" name="message" rows="4" data-i18n-placeholder="formMessagePlaceholder" placeholder="Ej. Quiero mostrar mis servicios y recibir mensajes por WhatsApp."></textarea>
+          </label>
+          <button class="button button--light" type="submit"><span data-i18n="formSubmit">Preparar mensaje</span><span class="button-arrow">↗</span></button>
+          <p class="form-note" data-i18n="formNote">Al enviarlo se abrirá WhatsApp con tu mensaje listo para mandar.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__top">
+      <a class="brand brand--footer" href="#inicio" aria-label="HalosWebs - Inicio">
+        <!-- Se reutiliza el emblema cuadrado: img/favicon.png -->
+        <span class="brand-icon" aria-hidden="true">
+          <img class="brand-icon__image" src="img/favicon.png" alt="" width="48" height="48" loading="lazy" decoding="async" />
+          <span class="brand-icon__fallback">H</span>
+        </span>
+        <span class="brand-name" aria-hidden="true">
+          <span class="brand-name__halos">Halos</span>
+          <span class="brand-name__webs">Webs</span>
+        </span>
+      </a>
+      <p data-i18n="footerText">Diseño web moderno para negocios que quieren crecer.</p>
+      <div class="footer-links">
+        <a class="js-whatsapp-link" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="js-email-link" href="#">Email</a>
+        <a href="#top" data-i18n="backToTop">Volver arriba ↑</a>
+      </div>
+    </div>
+    <div class="container site-footer__bottom">
+      <small>© <span id="year"></span> HalosWebs. <span data-i18n="footerRights">Todos los derechos reservados.</span></small>
+      <small data-i18n="footerBuilt">Diseñado y desarrollado con atención al detalle.</small>
+    </div>
+  </footer>
+
+  <a class="whatsapp-float js-whatsapp-link" href="#" target="_blank" rel="noopener" aria-label="Escríbeme por WhatsApp">
+    <span class="whatsapp-float__pulse"></span>
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27.1 4.8A15.4 15.4 0 0 0 16.2.3C7.7.3.8 7.2.8 15.7c0 2.7.7 5.3 2 7.6L.6 31.7l8.6-2.2a15.3 15.3 0 0 0 7 1.7h.1c8.5 0 15.4-6.9 15.4-15.4 0-4.1-1.6-8-4.6-11Zm-10.9 23.8h-.1c-2.3 0-4.6-.6-6.6-1.8l-.5-.3-5.1 1.3 1.4-5-.3-.5a12.7 12.7 0 0 1-2-6.6c0-7.1 5.8-12.8 12.9-12.8 3.4 0 6.7 1.3 9.1 3.8a12.8 12.8 0 0 1 3.8 9.1c0 7.1-5.7 12.8-12.7 12.8Zm7-9.6c-.4-.2-2.1-1-2.4-1.1-.3-.1-.6-.2-.8.2-.2.4-.9 1.1-1.1 1.4-.2.2-.4.3-.8.1-2.3-1.1-3.8-2-5.3-4.5-.4-.7.4-.6 1.1-2 .1-.3.1-.5 0-.7-.1-.2-.8-1.9-1.1-2.6-.3-.7-.6-.6-.8-.6h-.7c-.3 0-.7.1-1.1.5-.4.4-1.4 1.4-1.4 3.4s1.5 4 1.7 4.3c.2.3 3 4.6 7.2 6.4 1 .4 1.8.7 2.4.9 1 .3 1.9.2 2.6.1.8-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.7-.5Z" fill="currentColor"/></svg>
+    <span class="whatsapp-float__label" data-i18n="floatWhatsapp">¿Hablamos?</span>
+  </a>
+
+  <script src="app.js"></script>
+</body>
+</html>
