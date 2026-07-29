@@ -23,7 +23,7 @@ const siteConfig = {
       title: "Casa Lobos",
       typeEs: "Página para propiedad / renta",
       typeEn: "Property / rental website",
-      url: "https://ferhalo50.github.io/TerrenoCasaLobos/",
+      url: "https://ferhalo50.github.io/terrenocasalobos/",
       image: "img/casa-lobos.jpg" // Añade, por ejemplo: "img/casa-lobos.jpg"
     },
     {
