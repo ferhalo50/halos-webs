@@ -45,6 +45,23 @@ const siteConfig = {
 
 const translations = {
   es: {
+    profileName: "Ing. Fernando", footerEmail: "Correo", trustDesign: "DISEÑO", trustGrow: "CRECE",
+    preview: "Vista previa de",
+    homeLabel: "HalosWebs - Inicio",
+    mainNav: "Navegación principal",
+    mobileNav: "Navegación móvil",
+    benefitsLabel: "Beneficios principales",
+    introLabel: "Introducción",
+    photoAlt: "Fernando, creador de HalosWebs",
+    expertiseLabel: "Servicios y experiencia",
+    priceLabel: "Precio desde",
+    emailTitle: "Abrir correo con solicitud de cotización preparada",
+    languageTitle: "Cambiar a inglés",
+    openMenu: "Abrir menú",
+    closeMenu: "Cerrar menú",
+    metaDescription: "HalosWebs crea páginas web modernas, profesionales y adaptadas a cada negocio.",
+    socialDescription: "Creamos páginas web modernas, profesionales y adaptadas a cada negocio.",
+    socialImageAlt: "HalosWebs — Tu negocio merece una presencia digital profesional.",
     navHome: "Inicio", navServices: "Servicios", navPlans: "Planes", navPortfolio: "Portafolio", navAbout: "Conóceme", navProcess: "Proceso", navContact: "Contacto", navCta: "Cotizar proyecto",
     heroEyebrow: "DISEÑO WEB PARA NEGOCIOS QUE QUIEREN CRECER",
     heroTitle: "Dale a tu negocio una <em>presencia digital</em> que se vea profesional.",
@@ -77,6 +94,23 @@ const translations = {
     footerText: "Diseño web moderno para negocios que quieren crecer.", backToTop: "Volver arriba ↑", footerRights: "Todos los derechos reservados.", footerBuilt: "Diseñado y desarrollado con atención al detalle.", floatWhatsapp: "¿Hablamos?"
   },
   en: {
+    profileName: "Fernando · Engineer", footerEmail: "Email", trustDesign: "DESIGN", trustGrow: "GROW",
+    preview: "Preview of",
+    homeLabel: "HalosWebs - Home",
+    mainNav: "Main navigation",
+    mobileNav: "Mobile navigation",
+    benefitsLabel: "Key benefits",
+    introLabel: "Introduction",
+    photoAlt: "Fernando, creator of HalosWebs",
+    expertiseLabel: "Services and experience",
+    priceLabel: "Starting price",
+    emailTitle: "Open email with a prepared quote request",
+    languageTitle: "Switch to Spanish",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    metaDescription: "HalosWebs creates modern, professional websites tailored to each business.",
+    socialDescription: "We create modern, professional websites tailored to each business.",
+    socialImageAlt: "HalosWebs — Your business deserves a professional digital presence.",
     navHome: "Home", navServices: "Services", navPlans: "Plans", navPortfolio: "Portfolio", navAbout: "About me", navProcess: "Process", navContact: "Contact", navCta: "Get a quote",
     heroEyebrow: "WEB DESIGN FOR BUSINESSES READY TO GROW",
     heroTitle: "Give your business a <em>digital presence</em> that looks professional.",
@@ -110,9 +144,14 @@ const translations = {
   }
 };
 
-let currentLanguage = localStorage.getItem("haloswebsLanguage") || "es";
+// Language switching must work even when storage is unavailable or invalid.
+let currentLanguage = "es";
+try {
+  const savedLanguage = localStorage.getItem("haloswebsLanguage");
+  if (savedLanguage === "es" || savedLanguage === "en") currentLanguage = savedLanguage;
+} catch { /* Keep the default for this visit. */ }
 
-const getWhatsappUrl = (message = siteConfig.defaultWhatsappMessage) =>
+const getWhatsappUrl = (message = currentLanguage === "es" ? siteConfig.defaultWhatsappMessage : "Hi, I saw your HalosWebs website and would like a quote for a website for my business.") =>
   `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`;
 
 function getGeneralWhatsappUrl() {
@@ -191,7 +230,7 @@ function renderPortfolio() {
     return `
       <a class="project-card reveal is-visible" href="${safeUrl}" target="${safeUrl !== "#" ? "_blank" : "_self"}" rel="noopener" aria-label="${translations[currentLanguage].projectVisit}: ${project.title}">
         <span class="project-card__fallback" aria-hidden="true"></span>
-        ${project.image ? `<img class="project-card__image" src="${project.image}" alt="Vista previa de ${project.title}" loading="lazy" onerror="this.style.display='none'">` : ""}
+        ${project.image ? `<img class="project-card__image" src="${project.image}" alt="${translations[currentLanguage].preview} ${project.title}" loading="lazy" onerror="this.style.display='none'">` : ""}
         <span class="project-card__content">
           <span>
             <small class="project-card__type">${type}</small>
@@ -204,6 +243,7 @@ function renderPortfolio() {
 }
 
 function applyLanguage(language) {
+  language = language === "en" ? "en" : "es";
   currentLanguage = language;
   const dictionary = translations[language];
   document.documentElement.lang = language;
@@ -230,10 +270,21 @@ function applyLanguage(language) {
   document.querySelector(".menu-toggle")?.setAttribute("aria-label", language === "es" ? "Abrir menú" : "Open menu");
   document.querySelector(".whatsapp-float")?.setAttribute("aria-label", language === "es" ? "Escríbeme por WhatsApp" : "Message me on WhatsApp");
 
+  ["aria-label", "title", "alt", "content"].forEach((attribute) => {
+    document.querySelectorAll(`[data-i18n-${attribute}]`).forEach((element) => {
+      const key = element.getAttribute(`data-i18n-${attribute}`);
+      if (dictionary[key]) element.setAttribute(attribute, dictionary[key]);
+    });
+  });
+  document.querySelectorAll('meta[property="og:title"], meta[name="twitter:title"]').forEach(el => el.content = document.title);
+  document.querySelector('meta[property="og:locale"]')?.setAttribute("content", language === "es" ? "es_MX" : "en_US");
+  document.querySelector('meta[property="og:locale:alternate"]')?.setAttribute("content", language === "es" ? "en_US" : "es_MX");
+  updateMenuLabel();
+
   // Actualiza también el asunto y el mensaje predeterminado del correo al cambiar de idioma.
   setContactLinks();
   renderPortfolio();
-  localStorage.setItem("haloswebsLanguage", language);
+  try { localStorage.setItem("haloswebsLanguage", language); } catch { /* Switching still works for this visit. */ }
 }
 
 function setContactLinks() {
@@ -275,6 +326,11 @@ function setupBrandIcons() {
   });
 }
 
+function updateMenuLabel() {
+  const toggle = document.querySelector(".menu-toggle");
+  if (toggle) toggle.setAttribute("aria-label", translations[currentLanguage][toggle.getAttribute("aria-expanded") === "true" ? "closeMenu" : "openMenu"]);
+}
+
 function setupMobileMenu() {
   const menuToggle = document.querySelector(".menu-toggle");
   const mobileMenu = document.querySelector(".mobile-menu");
@@ -286,6 +342,7 @@ function setupMobileMenu() {
     mobileMenu.classList.remove("is-open");
     mobileMenu.setAttribute("aria-hidden", "true");
     document.body.classList.remove("menu-open");
+    updateMenuLabel();
   };
 
   menuToggle.addEventListener("click", () => {
@@ -294,6 +351,7 @@ function setupMobileMenu() {
     menuToggle.setAttribute("aria-expanded", String(isOpen));
     mobileMenu.setAttribute("aria-hidden", String(!isOpen));
     document.body.classList.toggle("menu-open", isOpen);
+    updateMenuLabel();
   });
 
   mobileMenu.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
@@ -336,7 +394,7 @@ function setupContactForm() {
     event.preventDefault();
     const name = document.getElementById("contact-name").value.trim();
     const business = document.getElementById("contact-business").value.trim();
-    const plan = document.getElementById("contact-plan").value;
+    const plan = document.getElementById("contact-plan").selectedOptions[0].textContent;
     const message = document.getElementById("contact-message").value.trim();
     const isSpanish = currentLanguage === "es";
 

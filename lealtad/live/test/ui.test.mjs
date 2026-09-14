@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { chromium } from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+
+test('customer, tablet and admin UI', async t => {
+  const browser = await chromium.launch({ headless: true, channel: 'msedge' });
+  t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on('pageerror', value => errors.push(value.message));
+  page.on('dialog', dialog => dialog.accept());
+  const phone = `664${String(Date.now()).slice(-7)}`;
+
+  await page.goto('http://127.0.0.1:8787/renace/');
+  await page.click('a[href="#registro"]');
+  await page.fill('[name="name"]', 'Cliente visual');
+  await page.fill('[name="login"]', phone);
+  await page.fill('[name="secret"]', '7634');
+  await page.click('#auth-form button');
+  await page.waitForSelector('#qr svg');
+  assert.match(await page.locator('.pill').innerText(), /0 \/ 9/);
+  assert.match(await page.locator('.welcome').innerText(), new RegExp(phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')));
+  assert.equal(await page.locator('#share-card').innerText(), 'Compartir QR');
+  assert.match(await page.locator('#download-card').innerText(), /Descargar QR/);
+  assert.equal(await page.evaluate(() => typeof window.jsQR), 'function');
+  const decodedQr = await page.evaluate(async () => {
+    const source = new XMLSerializer().serializeToString(document.querySelector('#qr svg'));
+    const image = new Image();
+    image.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(source)))}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 600;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, 600, 600);
+    const frame = context.getImageData(0, 0, 600, 600);
+    return window.jsQR(frame.data, frame.width, frame.height)?.data || '';
+  });
+  assert.match(decodedQr, /^renace:/);
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+    Object.defineProperty(navigator, 'canShare', { value: undefined, configurable: true });
+  });
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#download-card');
+  const savedCard = await downloadPromise;
+  assert.equal(savedCard.suggestedFilename(), 'tarjeta-renace.png');
+  const manifest = await page.evaluate(() => fetch('/manifest.webmanifest').then(response => response.json()));
+  assert.equal(manifest.short_name, 'Renace');
+  assert.equal(manifest.display, 'standalone');
+
+  await page.click('#account-link');
+  await page.fill('[name="currentSecret"]', '7634');
+  await page.fill('[name="newSecret"]', '7635');
+  await page.fill('[name="confirmSecret"]', '7635');
+  await page.click('#secret-form button');
+  await page.waitForFunction(() => document.querySelector('#toast')?.textContent.includes('actualizado'));
+
+  await page.click('#logout');
+  await page.click('a[href="#equipo"]');
+  await page.fill('[name="login"]', 'mostrador_local');
+  await page.fill('[name="secret"]', 'Staff-test-928!');
+  await page.click('#auth-form button');
+  await page.waitForSelector('#lookup');
+  await page.fill('[name="value"]', phone);
+  await page.click('#lookup button');
+  await page.waitForSelector('#stamp:not([disabled])');
+  await page.click('#stamp');
+  await page.waitForSelector('#stamp[disabled]');
+  assert.match(await page.locator('.reward').innerText(), /sello de hoy/);
+
+  await page.click('#logout');
+  await page.click('a[href="#equipo"]');
+  await page.fill('[name="login"]', 'admin_local');
+  await page.fill('[name="secret"]', 'Admin-test-928!');
+  await page.click('#auth-form button');
+  await page.waitForSelector('.stats');
+  assert.ok(await page.getByText('Cliente visual').count());
+  assert.ok(await page.locator('.reset-pin').count());
+  assert.ok(await page.locator('.edit-customer').count());
+  assert.ok(await page.locator('.delete-customer').count());
+  assert.ok(await page.locator('.edit-employee').count());
+  assert.ok(await page.locator('.delete-employee').count());
+  assert.equal(await page.locator('text=Halo').count(), 0);
+  assert.equal(await page.locator('text=Facebook').count(), 0);
+  assert.deepEqual(errors, []);
+});

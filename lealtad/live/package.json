@@ -1,0 +1,15 @@
+{
+  "name": "renace-lealtad",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "check": "node --check worker/index.js && node --check public/assets/live.js"
+  },
+  "devDependencies": {
+    "jsqr": "1.4.0",
+    "wrangler": "4.131.1"
+  }
+}

@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="HalosWebs crea páginas web modernas, profesionales y adaptadas a cada negocio." />
+  <meta name="description" data-i18n-content="metaDescription" content="HalosWebs crea páginas web modernas, profesionales y adaptadas a cada negocio." />
   <meta name="theme-color" content="#0a0d14" />
   <link rel="canonical" href="https://haloswebs.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="HalosWebs" />
   <meta property="og:title" content="HalosWebs | Páginas web profesionales" />
-  <meta property="og:description" content="Creamos páginas web modernas, profesionales y adaptadas a cada negocio." />
+  <meta property="og:description" data-i18n-content="socialDescription" content="Creamos páginas web modernas, profesionales y adaptadas a cada negocio." />
   <meta property="og:url" content="https://haloswebs.com/" />
   <meta property="og:image" content="https://haloswebs.com/img/og-social.png" />
   <meta property="og:image:secure_url" content="https://haloswebs.com/img/og-social.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="HalosWebs — Tu negocio merece una presencia digital profesional." />
+  <meta property="og:image:alt" data-i18n-content="socialImageAlt" content="HalosWebs — Tu negocio merece una presencia digital profesional." />
   <meta property="og:locale" content="es_MX" />
   <meta property="og:locale:alternate" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="HalosWebs | Páginas web profesionales" />
-  <meta name="twitter:description" content="Creamos páginas web modernas, profesionales y adaptadas a cada negocio." />
+  <meta name="twitter:description" data-i18n-content="socialDescription" content="Creamos páginas web modernas, profesionales y adaptadas a cada negocio." />
   <meta name="twitter:image" content="https://haloswebs.com/img/og-social.png" />
   <meta name="twitter:image:alt" content="HalosWebs — Tu negocio merece una presencia digital profesional." />
   <title>HalosWebs | Páginas web profesionales</title>
@@ -41,7 +41,7 @@
 
   <header class="site-header" id="top">
     <div class="container nav-wrap">
-      <a class="brand brand--header" href="#inicio" aria-label="HalosWebs - Inicio">
+      <a class="brand brand--header" href="#inicio" aria-label="HalosWebs - Inicio" data-i18n-aria-label="homeLabel">
         <!--
           ICONO DE MARCA:
           Guarda tu emblema cuadrado (la H con el aro orbital) como: img/favicon.png
@@ -57,7 +57,7 @@
         </span>
       </a>
 
-      <nav class="desktop-nav" aria-label="Navegación principal">
+      <nav class="desktop-nav" aria-label="Navegación principal" data-i18n-aria-label="mainNav">
         <a href="#inicio" class="nav-link active" data-i18n="navHome">Inicio</a>
         <a href="#servicios" class="nav-link" data-i18n="navServices">Servicios</a>
         <a href="#planes" class="nav-link" data-i18n="navPlans">Planes</a>
@@ -68,7 +68,7 @@
       </nav>
 
       <div class="nav-actions">
-        <button class="language-toggle" type="button" aria-label="Cambiar idioma" title="Cambiar idioma">
+        <button class="language-toggle" type="button" aria-label="Cambiar idioma" title="Cambiar idioma" data-i18n-title="languageTitle">
           <span class="language-toggle__current">ES</span>
           <span class="language-toggle__divider">/</span>
           <span class="language-toggle__other">EN</span>
@@ -81,7 +81,7 @@
     </div>
 
     <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-      <nav aria-label="Navegación móvil">
+      <nav aria-label="Navegación móvil" data-i18n-aria-label="mobileNav">
         <a href="#inicio" data-i18n="navHome">Inicio</a>
         <a href="#servicios" data-i18n="navServices">Servicios</a>
         <a href="#planes" data-i18n="navPlans">Planes</a>
@@ -105,7 +105,7 @@
             <a class="button button--primary" href="#planes"><span data-i18n="heroPrimary">Ver niveles de página</span><span class="button-arrow">↗</span></a>
             <a class="button button--ghost" href="#portafolio" data-i18n="heroSecondary">Ver mi trabajo</a>
           </div>
-          <ul class="hero__pills" aria-label="Beneficios principales">
+          <ul class="hero__pills" aria-label="Beneficios principales" data-i18n-aria-label="benefitsLabel">
             <li data-i18n="pillOne">Diseño a tu medida</li>
             <li data-i18n="pillTwo">Adaptado a celular</li>
             <li data-i18n="pillThree">Atención directa</li>
@@ -136,11 +136,11 @@
       </div>
       <div class="container trust-bar reveal">
         <p data-i18n="trustText">Ideal para negocios locales, emprendedores, profesionistas y empresas.</p>
-        <div class="trust-bar__items" aria-hidden="true"><span>WEB</span><i></i><span>DESIGN</span><i></i><span>GROW</span><i></i><span>DIGITAL</span></div>
+        <div class="trust-bar__items" aria-hidden="true"><span>WEB</span><i></i><span data-i18n="trustDesign">DISEÑO</span><i></i><span data-i18n="trustGrow">CRECE</span><i></i><span>DIGITAL</span></div>
       </div>
     </section>
 
-    <section class="intro-strip" aria-label="Introducción">
+    <section class="intro-strip" aria-label="Introducción" data-i18n-aria-label="introLabel">
       <div class="container intro-strip__content reveal">
         <p class="eyebrow"><span></span><span data-i18n="introEyebrow">NO SOLO UNA PÁGINA BONITA</span></p>
         <p data-i18n-html="introText">Tu sitio debe explicar lo que haces, mostrar por qué elegirte y convertir visitas en <strong>clientes potenciales.</strong></p>
@@ -155,9 +155,9 @@
             <!-- FOTO PERSONAL: coloca tu foto dentro de la carpeta /img. Ejemplo: img/fernando.jpg.
                  Si usas otro nombre de archivo, cambia solamente el valor de src en la etiqueta img siguiente. -->
             <span class="about-photo__fallback" aria-hidden="true">F</span>
-            <img class="about-photo__image" src="img/fernando.jpg" alt="Fernando, creador de HalosWebs" loading="lazy" onerror="this.style.display='none'" />
+            <img class="about-photo__image" src="img/fernando.jpg" alt="Fernando, creador de HalosWebs" data-i18n-alt="photoAlt" loading="lazy" onerror="this.style.display='none'" />
             <div class="about-photo__caption">
-              <strong>Ing. Fernando</strong>
+              <strong data-i18n="profileName">Ing. Fernando</strong>
               <span data-i18n="aboutRole">Soluciones digitales y soporte técnico</span>
             </div>
           </div>
@@ -168,7 +168,7 @@
           <h2 data-i18n-html="aboutTitle">Tecnología y soluciones <em>hechas con propósito.</em></h2>
           <p class="about-content__lead" data-i18n="aboutLead">Hola, soy Fernando. Soy Ingeniero en Sistemas Computacionales y Técnico en Programación. Diseño y desarrollo páginas web y sistemas, administro servidores con usuarios y bases de datos MySQL, y doy mantenimiento a equipos tanto en hardware como software.</p>
 
-          <ul class="about-expertise" aria-label="Servicios y experiencia">
+          <ul class="about-expertise" aria-label="Servicios y experiencia" data-i18n-aria-label="expertiseLabel">
             <li><span>01</span><strong data-i18n="aboutFocusOne">Páginas web y sistemas</strong></li>
             <li><span>02</span><strong data-i18n="aboutFocusTwo">Servidores, usuarios y MySQL</strong></li>
             <li><span>03</span><strong data-i18n="aboutFocusThree">Mantenimiento de hardware y software</strong></li>
@@ -238,7 +238,7 @@
             </div>
             <h3 data-i18n="planOneTitle">Presencia inicial</h3>
             <p class="plan-card__summary" data-i18n="planOneSummary">Para presentar tu negocio de forma clara, limpia y profesional.</p>
-            <div class="plan-card__price" aria-label="Precio desde">
+            <div class="plan-card__price" aria-label="Precio desde" data-i18n-aria-label="priceLabel">
               <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
               <strong data-i18n="planOnePrice">$5,500 MXN</strong>
               <small data-i18n="planPriceNote">Pago único por desarrollo</small>
@@ -261,7 +261,7 @@
             </div>
             <h3 data-i18n="planTwoTitle">Página personalizada</h3>
             <p class="plan-card__summary" data-i18n="planTwoSummary">Para marcas que quieren destacar con una experiencia visual más completa.</p>
-            <div class="plan-card__price" aria-label="Precio desde">
+            <div class="plan-card__price" aria-label="Precio desde" data-i18n-aria-label="priceLabel">
               <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
               <strong data-i18n="planTwoPrice">$10,500 MXN</strong>
               <small data-i18n="planPriceNote">Pago único por desarrollo</small>
@@ -283,7 +283,7 @@
             </div>
             <h3 data-i18n="planThreeTitle">Tienda o sistema de ventas</h3>
             <p class="plan-card__summary" data-i18n="planThreeSummary">Para vender productos o recibir pedidos desde tu propia página.</p>
-            <div class="plan-card__price" aria-label="Precio desde">
+            <div class="plan-card__price" aria-label="Precio desde" data-i18n-aria-label="priceLabel">
               <span class="plan-card__price-label" data-i18n="planPriceLabel">Desarrollo web desde</span>
               <strong data-i18n="planThreePrice">$18,000 MXN</strong>
               <small data-i18n="planPriceNote">Pago único por desarrollo</small>
@@ -411,7 +411,7 @@
           <p data-i18n="contactLead">Cuéntame qué necesitas y te responderé con una propuesta clara para tu negocio.</p>
           <div class="contact-card__buttons">
             <a class="button button--primary js-whatsapp-link" href="#" target="_blank" rel="noopener"><span data-i18n="contactWhatsapp">Escribirme por WhatsApp</span><span class="button-arrow">↗</span></a>
-            <a class="contact-email js-email-link" href="#" title="Abrir correo con solicitud de cotización preparada"><span class="contact-email__label" data-i18n="contactEmailLabel">O por correo</span><strong class="js-email-text">ferhalo50@hotmail.com</strong></a>
+            <a class="contact-email js-email-link" href="#" title="Abrir correo con solicitud de cotización preparada" data-i18n-title="emailTitle"><span class="contact-email__label" data-i18n="contactEmailLabel">O por correo</span><strong class="js-email-text">ferhalo50@hotmail.com</strong></a>
           </div>
         </div>
         <form class="contact-form" id="contact-form">
@@ -445,7 +445,7 @@
 
   <footer class="site-footer">
     <div class="container site-footer__top">
-      <a class="brand brand--footer" href="#inicio" aria-label="HalosWebs - Inicio">
+      <a class="brand brand--footer" href="#inicio" aria-label="HalosWebs - Inicio" data-i18n-aria-label="homeLabel">
         <!-- Se reutiliza el emblema cuadrado: img/favicon.png -->
         <span class="brand-icon" aria-hidden="true">
           <img class="brand-icon__image" src="img/favicon.png" alt="" width="48" height="48" loading="lazy" decoding="async" />
@@ -459,7 +459,7 @@
       <p data-i18n="footerText">Diseño web moderno para negocios que quieren crecer.</p>
       <div class="footer-links">
         <a class="js-whatsapp-link" href="#" target="_blank" rel="noopener">WhatsApp</a>
-        <a class="js-email-link" href="#">Email</a>
+        <a class="js-email-link" href="#" data-i18n="footerEmail">Correo</a>
         <a href="#top" data-i18n="backToTop">Volver arriba ↑</a>
       </div>
     </div>
