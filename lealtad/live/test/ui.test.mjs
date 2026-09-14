@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { chromium } from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 
 test('customer, tablet and admin UI', async t => {
+  const publicEntry = await readFile(new URL('../../renace/index.html', import.meta.url), 'utf8');
+  assert.match(publicEntry, /class="splash"/);
+  assert.match(publicEntry, /logo-renace\.png/);
+  assert.doesNotMatch(publicEntry, /Abriendo la tarjeta/);
+
   const browser = await chromium.launch({ headless: true, channel: 'msedge' });
   t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -12,6 +18,8 @@ test('customer, tablet and admin UI', async t => {
   const phone = `664${String(Date.now()).slice(-7)}`;
 
   await page.goto('http://127.0.0.1:8787/renace/');
+  assert.equal(await page.locator('#app-loader').count(), 1);
+  await page.waitForSelector('#app-loader', { state: 'detached' });
   await page.click('a[href="#registro"]');
   await page.fill('[name="name"]', 'Cliente visual');
   await page.fill('[name="login"]', phone);

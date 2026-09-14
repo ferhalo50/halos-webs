@@ -3,13 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f1e7">
   <meta name="robots" content="noindex">
-  <meta http-equiv="refresh" content="0; url=https://renace-lealtad.renace-lealtad.workers.dev/renace/">
+  <meta http-equiv="refresh" content="5; url=https://renace-lealtad.renace-lealtad.workers.dev/renace/">
   <link rel="canonical" href="https://renace-lealtad.renace-lealtad.workers.dev/renace/">
   <title>Renace Café Shop · Tarjeta de lealtad</title>
+  <style>
+    :root{color-scheme:light;--cream:#f5f1e7;--olive:#424b32;--line:#d8d4c1}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{overflow:hidden;background:var(--cream);color:var(--olive);font-family:"Segoe UI",system-ui,sans-serif}
+    .splash{position:fixed;inset:0;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 50% 43%,#fffdf7 0,#f5f1e7 46%,#ece7d9 100%);opacity:1;transition:opacity .65s ease,visibility .65s ease}
+    .splash::before{content:"";position:absolute;inset:22px;border:1px solid rgba(66,75,50,.16);border-radius:24px;pointer-events:none}
+    .splash.is-leaving{opacity:0;visibility:hidden}
+    .brand{position:relative;width:min(78vw,460px);text-align:center;animation:brand-in .8s cubic-bezier(.2,.8,.2,1) both}
+    .brand::after{content:"";display:block;width:42px;height:1px;margin:22px auto 18px;background:var(--olive);opacity:.45;animation:line-grow 1.1s .2s ease both}
+    .brand img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 24px rgba(66,75,50,.09));animation:brand-breathe 1.8s .8s ease-in-out infinite}
+    .brand p{margin:0;font-size:10px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;opacity:.68}
+    .dots{display:flex;justify-content:center;gap:6px;margin-top:18px}
+    .dots i{width:4px;height:4px;border-radius:50%;background:var(--olive);opacity:.25;animation:dot 1.2s ease-in-out infinite}
+    .dots i:nth-child(2){animation-delay:.16s}.dots i:nth-child(3){animation-delay:.32s}
+    .fallback{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);font-size:11px;color:var(--olive);opacity:.65}
+    @keyframes brand-in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+    @keyframes brand-breathe{0%,100%{opacity:.78;transform:scale(.992)}50%{opacity:1;transform:scale(1)}}
+    @keyframes line-grow{from{opacity:0;transform:scaleX(0)}to{opacity:.45;transform:scaleX(1)}}
+    @keyframes dot{0%,100%{opacity:.2;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}
+    @media(prefers-reduced-motion:reduce){.brand,.brand img,.brand::after,.dots i{animation:none}.splash{transition-duration:.15s}}
+  </style>
 </head>
 <body>
-  <p>Abriendo la tarjeta de lealtad de Renace Café Shop…</p>
-  <p><a href="https://renace-lealtad.renace-lealtad.workers.dev/renace/">Continuar a Renace Lealtad</a></p>
+  <main id="splash" class="splash" aria-label="Cargando Renace Café Shop">
+    <div class="brand">
+      <img src="../live/public/assets/logo-renace.png" alt="Renace Café Shop" width="1073" height="464">
+      <p>Tu tarjeta de lealtad</p>
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    </div>
+  </main>
+  <noscript><a class="fallback" href="https://renace-lealtad.renace-lealtad.workers.dev/renace/">Continuar a Renace Lealtad</a></noscript>
+  <script>
+    (() => {
+      const destination = new URL('https://renace-lealtad.renace-lealtad.workers.dev/renace/');
+      destination.hash = location.hash;
+      const splash = document.querySelector('#splash');
+      const leave = () => {
+        splash.classList.add('is-leaving');
+        setTimeout(() => location.replace(destination), 620);
+      };
+      setTimeout(leave, 1050);
+    })();
+  </script>
 </body>
 </html>

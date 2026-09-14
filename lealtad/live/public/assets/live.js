@@ -1,12 +1,14 @@
 (() => {
 'use strict';
-const app=document.querySelector('#app'),logoutButton=document.querySelector('#logout');
+const app=document.querySelector('#app'),logoutButton=document.querySelector('#logout'),appLoader=document.querySelector('#app-loader'),loadingStarted=performance.now();
 const business={goal:9,instagram:'https://www.instagram.com/renacecafeshop/',tiktok:'https://www.tiktok.com/@renace.caf.shop?is_from_webapp=1&sender_device=pc',website:'https://renacecafe.com/#menu',maps:'https://maps.app.goo.gl/qGTTcQmMwrb7Y5WA7',address:'Blvd. Gustavo Díaz Ordaz 1111, Los Arboles, 22117 Tijuana, B.C.'};
 let user=null,currentCard=null,selectedCard=null,adminData=null,camera=null,scanTimer=null,adminQuery={page:1,q:''};
+let loadingFinished=false;
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const formatPhone=value=>{const digits=String(value||'').replace(/\D/g,'');return digits.length===10?`${digits.slice(0,3)} ${digits.slice(3,6)} ${digits.slice(6)}`:String(value||'');};
 const logo='<img class="renace-logo" src="../assets/logo-renace.png" alt="Renace Café Shop" width="1073" height="464">';
 function toast(text){const element=document.querySelector('#toast');element.textContent=text;clearTimeout(toast.timer);toast.timer=setTimeout(()=>element.textContent='',4500);}
+function finishLoading(){if(loadingFinished)return;loadingFinished=true;const delay=Math.max(0,900-(performance.now()-loadingStarted));setTimeout(()=>{appLoader?.classList.add('is-leaving');setTimeout(()=>appLoader?.remove(),700);},delay);}
 function updateNavigation(){const card=document.querySelector('#card-link'),staff=document.querySelector('#staff-link'),admin=document.querySelector('#admin-link'),account=document.querySelector('#account-link');card.hidden=user?.role!=='customer'||user?.mustChangeSecret;staff.href=['employee','admin'].includes(user?.role)?'#empleado':'#equipo';staff.textContent=['employee','admin'].includes(user?.role)?'Mostrador':'Acceso del equipo ↗';admin.hidden=user?.role!=='admin';account.hidden=!user;logoutButton.hidden=!user;}
 function downloadCsv(filename,headers,rows){const quote=value=>'"'+String(value??'').replaceAll('"','""')+'"';const csv='\uFEFF'+[headers,...rows].map(row=>row.map(quote).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function loadImage(source){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('No pudimos preparar la imagen de la tarjeta.'));image.src=source;});}
@@ -82,5 +84,6 @@ scan();
 }catch{stopCamera();toast('No se pudo abrir la cámara. Revisa sus permisos.');}}
 logoutButton.onclick=async()=>{await api('/api/logout',{method:'POST'}).catch(()=>{});user=null;currentCard=null;selectedCard=null;location.hash='inicio';};window.addEventListener('hashchange',render);window.addEventListener('focus',()=>{if(user?.role==='customer'&&location.hash==='#tarjeta')render();});window.addEventListener('pagehide',stopCamera);
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js').catch(()=>{}));
-(async()=>{try{user=(await api('/api/me')).user;}catch{}render();})();
+setTimeout(finishLoading,4500);
+(async()=>{try{user=(await api('/api/me')).user;}catch{}await render();finishLoading();})();
 })();

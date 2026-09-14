@@ -14,6 +14,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 ## Funciones implementadas
 
 - Registro e inicio de sesión de clientes con celular y PIN.
+- Pantalla de entrada con el logo de Renace y transición suave mientras se recupera la sesión.
 - Cambio de PIN o contraseña desde una sesión autenticada, cerrando las demás sesiones de la cuenta.
 - Inicio de sesión separado para empleados y administradores.
 - Sesión en cookie `HttpOnly`, `Secure` y `SameSite=Strict`; el navegador no expone el token a JavaScript.

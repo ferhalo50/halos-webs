@@ -1,4 +1,4 @@
-const CACHE='renace-shell-v2';
+const CACHE='renace-shell-v3';
 const SHELL=['/renace/','/manifest.webmanifest','/assets/style.css','/assets/logo-renace.png','/assets/app-icon.svg','/assets/qrcode.js','/assets/jsqr.js','/assets/live.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
