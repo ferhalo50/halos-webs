@@ -7,6 +7,8 @@ test('customer, tablet and admin UI', async t => {
   const publicEntry = await readFile(new URL('../../renace/index.html', import.meta.url), 'utf8');
   assert.match(publicEntry, /class="splash"/);
   assert.match(publicEntry, /logo-renace\.png/);
+  assert.match(publicEntry, /https:\/\/lealtad\.renace-lealtad\.workers\.dev\/renace\//);
+  assert.doesNotMatch(publicEntry, /renace-lealtad\.renace-lealtad\.workers\.dev/);
   assert.doesNotMatch(publicEntry, /Abriendo la tarjeta/);
 
   const browser = await chromium.launch({ headless: true, channel: 'msedge' });
