@@ -78,6 +78,19 @@ test('real backend flow', async () => {
 
   const adminLogin = await request('/api/login/staff', { method: 'POST', body: { business: 'renace', username: adminUsername, password: adminPassword } });
   assert.equal(adminLogin.status, 200);
+  const demoReset = await request('/api/admin/demo-customers/reset', { method: 'POST', cookie: adminLogin.cookie });
+  assert.equal(demoReset.status, 200);
+  assert.deepEqual(demoReset.data.demo.customers.map(customer => [customer.phone, customer.stamps]), [['0000000001', 0], ['0000000008', 8]]);
+  assert.equal(demoReset.data.demo.pin, '246810');
+  for (const [demoPhone, expectedStamps] of [['0000000001', 0], ['0000000008', 8]]) {
+    const demoLogin = await request('/api/login/customer', { method: 'POST', body: { business: 'renace', phone: demoPhone, pin: '246810' } });
+    assert.equal(demoLogin.status, 200);
+    const demoCard = await request('/api/card', { cookie: demoLogin.cookie });
+    assert.equal(demoCard.status, 200);
+    assert.equal(demoCard.data.card.stamps, expectedStamps);
+    assert.equal(demoCard.data.card.redeemed, 0);
+    assert.equal(demoCard.data.card.lastStampAt, null);
+  }
   const dashboard = await request('/api/admin/dashboard', { cookie: adminLogin.cookie });
   assert.equal(dashboard.status, 200);
   assert.ok(dashboard.data.customers.some(customer => customer.phone === phone));
@@ -148,6 +161,7 @@ test('real backend flow', async () => {
   assert.equal(invalidatedQr.status, 404);
 
   const dashboardAfterManagement = await request('/api/admin/dashboard', { cookie: adminLogin.cookie });
+  assert.ok(dashboardAfterManagement.data.events.some(event => event.event_type === 'demo_reset'));
   for (const action of ['customer_updated', 'customer_deleted', 'employee_updated', 'employee_deleted']) {
     assert.ok(dashboardAfterManagement.data.events.some(event => event.event_type === action));
   }

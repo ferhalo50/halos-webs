@@ -86,6 +86,10 @@ test('customer, tablet and admin UI', async t => {
   await page.fill('[name="secret"]', 'Admin-test-928!');
   await page.click('#auth-form button');
   await page.waitForSelector('.stats');
+  assert.equal(await page.locator('#reset-demo-customers').innerText(), 'Restablecer clientes de prueba');
+  assert.match(await page.locator('.demo-tools').innerText(), /000 000 0001[\s\S]*0\/9[\s\S]*000 000 0008[\s\S]*8\/9[\s\S]*246810/);
+  await page.click('#reset-demo-customers');
+  await page.waitForFunction(() => document.querySelector('#toast')?.textContent.includes('Clientes de prueba listos'));
   assert.ok(await page.getByText('Cliente visual').count());
   assert.ok(await page.locator('.reset-pin').count());
   assert.ok(await page.locator('.edit-customer').count());

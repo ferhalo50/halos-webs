@@ -28,6 +28,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 - Un sello por día calendario de la zona `America/Tijuana`, protegido además por un índice único en la base de datos.
 - Canje disponible al completar 9 sellos.
 - Panel administrador con métricas, clientes, empleados y bitácora.
+- Control de demostración para restaurar en un clic los clientes de prueba de 0/9 y 8/9 sellos.
 - Restablecimiento presencial de PIN por un administrador: el servidor genera un PIN temporal de un solo uso visible, cierra las sesiones y obliga al cliente a elegir uno nuevo antes de abrir su tarjeta.
 - Listado de clientes paginado y con búsqueda para evitar cargar toda la base a la vez.
 - Edición de nombre y acceso de clientes y empleados, cerrando sus sesiones después de cambios de identidad.

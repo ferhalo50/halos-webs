@@ -36,6 +36,11 @@ async function sha256(value) {
 }
 
 const PASSWORD_ITERATIONS = 100000;
+const DEMO_PIN = '246810';
+const DEMO_CUSTOMERS = [
+  { name: 'Cliente demo · 0 sellos', phone: '0000000001', stamps: 0 },
+  { name: 'Cliente demo · 8 sellos', phone: '0000000008', stamps: 8 }
+];
 
 async function hashSecret(secret, salt = randomToken(16), iterations = PASSWORD_ITERATIONS) {
   const material = await crypto.subtle.importKey('raw', encoder.encode(secret), 'PBKDF2', false, ['deriveBits']);
@@ -302,7 +307,9 @@ async function dashboard(request, env, admin) {
       SELECT e.id,e.created_at,e.event_type,e.card_id,customer.name AS customer,employee.name AS employee
       FROM loyalty_events e JOIN users customer ON customer.id=e.customer_id JOIN users employee ON employee.id=e.employee_id WHERE e.business_id=?
       UNION ALL
-      SELECT audit.id,audit.created_at,audit.action AS event_type,COALESCE(card.id,'') AS card_id,customer.name AS customer,administrator.name AS employee
+      SELECT audit.id,audit.created_at,
+        CASE WHEN audit.action='customer_updated' AND audit.metadata='{"kind":"demo_reset"}' THEN 'demo_reset' ELSE audit.action END AS event_type,
+        COALESCE(card.id,'') AS card_id,customer.name AS customer,administrator.name AS employee
       FROM admin_audit_log audit JOIN users customer ON customer.id=audit.target_user_id JOIN users administrator ON administrator.id=audit.admin_id
       LEFT JOIN loyalty_cards card ON card.customer_id=customer.id WHERE audit.business_id=?
     ) ORDER BY created_at DESC LIMIT 50`).bind(admin.business_id, admin.business_id).all()
@@ -373,6 +380,53 @@ async function resetCustomerPin(request, env, admin, customerId) {
       .bind(crypto.randomUUID(), admin.business_id, admin.id, customer.id, now)
   ]);
   return { id: customer.id, name: customer.name, phone: customer.phone, temporaryPin: pin };
+}
+
+async function resetDemoCustomers(env, admin) {
+  const now = new Date().toISOString();
+  const statements = [];
+  const restored = [];
+
+  for (const demo of DEMO_CUSTOMERS) {
+    const secret = await hashSecret(DEMO_PIN);
+    const existing = await env.DB.prepare(`SELECT u.id,c.id AS card_id
+      FROM users u LEFT JOIN loyalty_cards c ON c.customer_id=u.id
+      WHERE u.business_id=? AND u.role='customer' AND u.phone=?`).bind(admin.business_id, demo.phone).first();
+    const customerId = existing?.id || crypto.randomUUID();
+    const cardId = existing?.card_id || `REN-${randomToken(9).toUpperCase()}`;
+
+    if (existing) {
+      statements.push(env.DB.prepare(`UPDATE users SET name=?,active=1,secret_hash=?,secret_salt=?,secret_iterations=?,must_change_secret=0,deleted_at=NULL,updated_at=?
+        WHERE id=? AND business_id=? AND role='customer'`)
+        .bind(demo.name, secret.hash, secret.salt, secret.iterations, now, customerId, admin.business_id));
+      if (existing.card_id) {
+        statements.push(env.DB.prepare('UPDATE loyalty_cards SET stamps=?,redeemed_count=0,updated_at=? WHERE id=? AND business_id=?')
+          .bind(demo.stamps, now, cardId, admin.business_id));
+      } else {
+        statements.push(env.DB.prepare('INSERT INTO loyalty_cards (id,business_id,customer_id,qr_token,stamps,redeemed_count,updated_at) VALUES (?,?,?,?,?,0,?)')
+          .bind(cardId, admin.business_id, customerId, randomToken(24), demo.stamps, now));
+      }
+    } else {
+      statements.push(
+        env.DB.prepare("INSERT INTO users (id,business_id,role,name,phone,secret_hash,secret_salt,secret_iterations,must_change_secret) VALUES (?,?,'customer',?,?,?,?,?,0)")
+          .bind(customerId, admin.business_id, demo.name, demo.phone, secret.hash, secret.salt, secret.iterations),
+        env.DB.prepare('INSERT INTO loyalty_cards (id,business_id,customer_id,qr_token,stamps,redeemed_count,updated_at) VALUES (?,?,?,?,?,0,?)')
+          .bind(cardId, admin.business_id, customerId, randomToken(24), demo.stamps, now)
+      );
+    }
+
+    statements.push(
+      env.DB.prepare('DELETE FROM loyalty_events WHERE business_id=? AND customer_id=?').bind(admin.business_id, customerId),
+      env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(customerId),
+      env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ?').bind(`${admin.business_id}:customer:${demo.phone}:%`),
+      env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at,metadata) VALUES (?,?,?,?, 'customer_updated', ?, ?)")
+        .bind(crypto.randomUUID(), admin.business_id, admin.id, customerId, now, '{"kind":"demo_reset"}')
+    );
+    restored.push({ id: customerId, cardId, name: demo.name, phone: demo.phone, stamps: demo.stamps });
+  }
+
+  await env.DB.batch(statements);
+  return { customers: restored, pin: DEMO_PIN };
 }
 
 async function editCustomer(request, env, admin, customerId) {
@@ -538,6 +592,10 @@ async function api(request, env) {
   if (request.method === 'GET' && path === '/api/admin/dashboard') {
     const user = await requireRole(request, env, ['admin']);
     return response({ ok: true, ...(await dashboard(request, env, user)) });
+  }
+  if (request.method === 'POST' && path === '/api/admin/demo-customers/reset') {
+    const user = await requireRole(request, env, ['admin']);
+    return response({ ok: true, demo: await resetDemoCustomers(env, user) });
   }
   if (request.method === 'POST' && path === '/api/admin/employees') {
     const user = await requireRole(request, env, ['admin']);
