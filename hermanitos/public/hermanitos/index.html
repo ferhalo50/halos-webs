@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e10">
+  <meta name="description" content="Hermanitos Card. Un espacio para apoyarnos: sellitos, favores y hermanos que cumplen.">
+  <title>Hermanitos Card</title>
+  <link rel="icon" href="/hermanitos/assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/hermanitos/assets/style.css">
+  <script src="/hermanitos/assets/vendor/qrcode.js" defer></script>
+  <script src="/hermanitos/assets/vendor/jsqr.js" defer></script>
+  <script src="/hermanitos/assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Ir al contenido</a>
+  <header class="topbar">
+    <a class="brand" href="/hermanitos/" aria-label="Hermanitos Card, inicio"><span class="monogram">H</span><span>Hermanitos <span class="brand-card">Card</span></span></a>
+    <div class="top-actions"><button id="music-toggle" class="quiet" hidden aria-label="Activar música">♫ Música</button><button id="account-button" class="icon-button" hidden aria-label="Mi cuenta"></button><button id="logout-button" class="quiet" hidden>Salir</button></div>
+  </header>
+  <main id="main" tabindex="-1"><div class="loading-state"><span class="monogram">H</span><p>Preparando tu espacio…</p></div></main>
+  <footer class="footer"><span>HERMANITOS CARD</span><p>Los hermanos estamos para apoyarnos. Hoy por ti, mañana por mí.</p><span>HECHO PARA HERMANEAR</span></footer>
+  <dialog id="modal" aria-labelledby="modal-title"><div class="modal-head"><h2 id="modal-title"></h2><button class="icon-button" id="close-modal" aria-label="Cerrar">✕</button></div><div id="modal-body"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <audio id="music" loop preload="none"></audio>
+</body>
+</html>

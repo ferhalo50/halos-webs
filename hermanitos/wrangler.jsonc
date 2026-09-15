@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hermanitos-card",
+  "account_id": "80aae482f9dccd6087cc9daa93daf275",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-14",
+  "workers_dev": true,
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "d1_databases": [{ "binding": "DB", "database_name": "hermanitos-card", "database_id": "9a4a4263-f7c7-4122-862c-809c9f028868", "migrations_dir": "./migrations" }],
+  "vars": { "APP_TIMEZONE": "America/Tijuana", "MUSIC_ENABLED": "false" },
+  "triggers": { "crons": ["27 10 * * *"] },
+  "routes": [
+    { "pattern": "app.haloswebs.com/hermanitos/*", "zone_name": "haloswebs.com" },
+    { "pattern": "app.haloswebs.com/hermanitos", "zone_name": "haloswebs.com" }
+  ]
+}
