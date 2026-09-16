@@ -4,7 +4,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 
 ## Estado de la prueba remota
 
-- Aplicación: `https://renace.haloswebs.com/`
+- Aplicación: `https://renacecafe.haloswebs.com/`
 - Base D1: `renace-lealtad`, región WNAM.
 - Migraciones remotas aplicadas: `0001_initial.sql`, `0002_scale_indexes.sql`, `0003_password_iterations.sql`, `0004_admin_audit.sql`, `0005_user_management.sql` y `0006_stamp_adjustments.sql`.
 - Cuentas iniciales creadas y llave temporal de configuración retirada.

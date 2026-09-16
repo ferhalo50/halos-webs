@@ -1,5 +1,5 @@
 const encoder = new TextEncoder();
-const CANONICAL_HOST = 'renace.haloswebs.com';
+const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
 const jsonHeaders = { 'content-type': 'application/json; charset=utf-8' };
 
