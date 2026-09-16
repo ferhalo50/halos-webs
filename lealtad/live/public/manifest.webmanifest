@@ -2,7 +2,7 @@
   "name": "Renace Café Shop · Lealtad",
   "short_name": "Renace",
   "description": "Tarjeta digital de lealtad de Renace Café Shop",
-  "start_url": "/renace/#tarjeta",
+  "start_url": "/#tarjeta",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f1e7",

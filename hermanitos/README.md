@@ -4,12 +4,12 @@ Aplicación independiente de Renace, dentro del repositorio Halos Webs.
 
 ## Producción
 
-- URL publicada: https://app.haloswebs.com/hermanitos/
+- URL publicada: https://hermanitos.haloswebs.com/
 - Worker: `hermanitos-card`.
 - Base D1: `hermanitos-card`, ID `9a4a4263-f7c7-4122-862c-809c9f028868`.
-- Todas las rutas de aplicación, API y archivos están bajo `/hermanitos/`.
-- Cookie exclusiva `hermanitos_session`, ruta `/hermanitos`, HttpOnly, Secure y SameSite Strict.
-- Las rutas específicas del Worker toman precedencia únicamente en `/hermanitos/`. El dominio existente y Worker de Renace permanecen intactos.
+- La aplicación y su API se sirven desde la raíz del subdominio. Sus recursos gráficos conservan la carpeta `/hermanitos/assets/`.
+- Cookie exclusiva `hermanitos_session`, ruta `/`, HttpOnly, Secure y SameSite Strict.
+- Renace se publica de forma independiente en `renace.haloswebs.com`.
 - No se requiere suscripción de pago, SMS, correo ni servicios de terceros. Las cuotas gratuitas de Cloudflare se comparten por cuenta con otros proyectos.
 
 ## Reglas acordadas
@@ -37,7 +37,7 @@ Usar Node.js y pnpm:
 4. Crear un archivo ignorado `.private/accounts.json` con cuentas exclusivamente de prueba.
 5. `node scripts/seed.mjs .private/accounts.json`
 6. `pnpm exec wrangler d1 execute DB --local --file .private/seed.sql`
-7. `pnpm run dev`, abrir `http://localhost:8791/hermanitos/`.
+7. `pnpm run dev`, abrir `http://localhost:8791/`.
 
 `pnpm test` ejecuta pruebas aisladas con una base efímera de Miniflare. Cubre sesiones, origen, roles, QR propio/ajeno, cooldown concurrente, canje concurrente, permisos de cumplimiento, cierre mensual, limpieza administrativa, registro y bajas. Nunca usa datos de producción.
 

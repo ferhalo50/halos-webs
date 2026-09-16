@@ -12,7 +12,7 @@ async function request(path, { as, data, method, origin = base } = {}) {
   if(as)headers.cookie=sessions[as];
   if(data !== undefined)headers['content-type']='application/json';
   if(origin)headers.origin=origin;
-  const res=await mf.dispatchFetch(`${base}/hermanitos/api${path}`,{method:method||(data!==undefined?'POST':'GET'),headers,body:data!==undefined?JSON.stringify(data):undefined});
+  const res=await mf.dispatchFetch(`${base}/api${path}`,{method:method||(data!==undefined?'POST':'GET'),headers,body:data!==undefined?JSON.stringify(data):undefined});
   const payload=await res.json();return {status:res.status,body:payload,cookie:res.headers.get('set-cookie')};
 }
 async function scan(as,target,id=crypto.randomUUID()) { return request('/scan',{as,data:{qr:`hermanitos:v1:${target.repeat(43)}`,request_id:id}}); }
@@ -44,7 +44,7 @@ test('authentication, cookie isolation, CSRF and roles',async()=>{
   assert.equal((await request('/scan',{as:'z',data:{}})).status,403);
   assert.equal((await request('/logout',{as:'a',data:{},origin:'https://evil.test'})).status,403);
   const login=await request('/login',{data:{name:'ANA',password:'test-only-secret'}});
-  assert.match(login.cookie,/HttpOnly; Secure; SameSite=Strict/);assert.match(login.cookie,/Path=\/hermanitos/);
+  assert.match(login.cookie,/HttpOnly; Secure; SameSite=Strict/);assert.match(login.cookie,/Path=\//);
   assert.equal((await request('/me',{as:'a'})).body.user.name,'Ana');
 });
 test('self scan and unrelated QR rejected; scanner alone receives stamp; target notified',async()=>{

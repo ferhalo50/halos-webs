@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const qrcode = require('qrcode-generator');
 const jsQR = require('jsqr');
-const TARGET = 'https://app.haloswebs.com/hermanitos/';
+const TARGET = 'https://hermanitos.haloswebs.com/';
 const OUTPUT = fileURLToPath(new URL('../public/hermanitos/assets/hermanea-qr.png', import.meta.url));
 const WIDTH = 1200;
 const HEIGHT = 1500;

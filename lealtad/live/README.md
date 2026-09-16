@@ -4,7 +4,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 
 ## Estado de la prueba remota
 
-- Aplicación: `https://app.haloswebs.com/renace/`
+- Aplicación: `https://renace.haloswebs.com/`
 - Base D1: `renace-lealtad`, región WNAM.
 - Migraciones remotas aplicadas: `0001_initial.sql`, `0002_scale_indexes.sql`, `0003_password_iterations.sql`, `0004_admin_audit.sql`, `0005_user_management.sql` y `0006_stamp_adjustments.sql`.
 - Cuentas iniciales creadas y llave temporal de configuración retirada.
@@ -47,7 +47,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 1. Instala dependencias con `pnpm install` o `npm install`.
 2. Copia `.dev.vars.example` como `.dev.vars` y reemplaza el valor por un secreto largo solo para tu equipo.
 3. Ejecuta `pnpm run db:migrate:local`.
-4. Ejecuta `pnpm run dev` y abre `http://127.0.0.1:8787/renace/`.
+4. Ejecuta `pnpm run dev` y abre `http://127.0.0.1:8787/`.
 5. Configura las primeras cuentas una sola vez enviando `POST /api/setup` con la cabecera `X-Bootstrap-Secret`. Las contraseñas de empleados deben tener al menos 8 caracteres; la de administrador, 10.
 
 Los archivos `.dev.vars`, `.wrangler/` y `node_modules/` están ignorados. Nunca se deben subir secretos al repositorio.

@@ -1,4 +1,6 @@
-const ROOT = '/hermanitos';
+const ROOT = '';
+const CANONICAL_HOST = 'hermanitos.haloswebs.com';
+const LEGACY_HOST = 'app.haloswebs.com';
 const encoder = new TextEncoder();
 const iso = () => new Date().toISOString();
 const uuid = () => crypto.randomUUID();
@@ -27,7 +29,7 @@ export const username = name => String(name || '').normalize('NFD').replace(/[\u
 const publicUser = u => ({ id: u.id, name: u.name, phone: u.phone, role: u.role, active: u.active, created_at: u.created_at });
 const cookieValue = req => (req.headers.get('cookie') || '').split(';').map(s => s.trim()).find(s => s.startsWith('hermanitos_session='))?.slice(19) || '';
 function sessionCookie(token, maxAge = 2592000) {
-  return `hermanitos_session=${token}; Path=/hermanitos; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+  return `hermanitos_session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
 }
 async function body(req) {
   if (!req.headers.get('content-type')?.startsWith('application/json')) fail(415, 'json_required', 'Envía los datos como JSON.');
@@ -257,7 +259,7 @@ async function adminRoutes(req, env, u, path, url) {
 }
 
 async function api(req, env, url) {
-  const path = url.pathname.slice(`${ROOT}/api`.length);
+  const path = url.pathname.slice('/api'.length);
   if (req.method === 'GET' && path === '/config') return json({ music: env.MUSIC_ENABLED === 'true', timezone: env.APP_TIMEZONE || 'America/Tijuana' });
   if (req.method === 'POST' && ['/login', '/signup'].includes(path)) return authRoutes(req, env, path);
   const u = await authenticate(req, env);
@@ -332,10 +334,16 @@ function secure(response, apiRoute) {
 }
 export default {
   async fetch(req, env) {
-    const url = new URL(req.url), apiRoute = url.pathname.startsWith(`${ROOT}/api/`);
+    const url = new URL(req.url), apiRoute = url.pathname.startsWith('/api/');
     try {
-      if (url.pathname === ROOT || url.pathname === '/') return secure(Response.redirect(`${url.origin}${ROOT}/`, 308), false);
-      if (!url.pathname.startsWith(`${ROOT}/`)) return secure(new Response('Not found', { status: 404 }), false);
+      if (url.hostname === LEGACY_HOST && (url.pathname === '/hermanitos' || url.pathname.startsWith('/hermanitos/'))) {
+        const path = url.pathname.slice('/hermanitos'.length) || '/';
+        return secure(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+      }
+      if (url.hostname === CANONICAL_HOST && (url.pathname === '/hermanitos' || url.pathname.startsWith('/hermanitos/'))) {
+        const path = url.pathname.slice('/hermanitos'.length) || '/';
+        return secure(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+      }
       if (apiRoute) {
         if (!['GET', 'HEAD'].includes(req.method) && req.headers.get('origin') !== url.origin) fail(403, 'origin', 'Recarga la página para continuar de forma segura.');
         return secure(await api(req, env, url), true);

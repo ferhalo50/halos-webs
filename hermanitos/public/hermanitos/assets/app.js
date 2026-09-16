@@ -26,7 +26,7 @@ async function api(path, data, method) {
   const options = { credentials:'same-origin', method:method || (data !== undefined ? 'POST' : 'GET'), headers:{} };
   if (data !== undefined) { options.headers['content-type']='application/json'; options.body=JSON.stringify(data); }
   let response;
-  try { response=await fetch(`/hermanitos/api${path}`,options); }
+  try { response=await fetch(`/api${path}`,options); }
   catch { throw Error('No hay conexión. Tus cambios guardados siguen a salvo; vuelve a intentar.'); }
   let payload;
   try { payload=await response.json(); } catch { throw Error('La aplicación no está disponible en este momento. Vuelve a intentar.'); }

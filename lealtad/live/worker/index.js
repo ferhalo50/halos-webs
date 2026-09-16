@@ -1,4 +1,6 @@
 const encoder = new TextEncoder();
+const CANONICAL_HOST = 'renace.haloswebs.com';
+const LEGACY_HOST = 'app.haloswebs.com';
 const jsonHeaders = { 'content-type': 'application/json; charset=utf-8' };
 
 function response(data, status = 200, extraHeaders = {}) {
@@ -677,6 +679,14 @@ export default {
     const url = new URL(request.url);
     const isApi = url.pathname.startsWith('/api/');
     try {
+      if (url.hostname === LEGACY_HOST) {
+        const path = url.pathname === '/renace' ? '/' : url.pathname.startsWith('/renace/') ? url.pathname.slice('/renace'.length) : url.pathname;
+        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+      }
+      if (url.hostname === CANONICAL_HOST && (url.pathname === '/renace' || url.pathname.startsWith('/renace/'))) {
+        const path = url.pathname.slice('/renace'.length) || '/';
+        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+      }
       const result = isApi ? await api(request, env) : await env.ASSETS.fetch(request);
       return securityHeaders(result, isApi);
     } catch (cause) {
