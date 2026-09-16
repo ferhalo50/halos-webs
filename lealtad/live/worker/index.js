@@ -22,6 +22,17 @@ function securityHeaders(res, isApi = false) {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
+function legacyServiceWorker() {
+  const target = `https://${CANONICAL_HOST}`;
+  return new Response(`self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  const path = url.pathname === '/renace' ? '/' : (url.pathname.startsWith('/renace/') ? url.pathname.slice('/renace'.length) : url.pathname);
+  event.respondWith(Response.redirect('${target}' + path + url.search, 308));
+});`, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 function randomToken(bytes = 32) {
   const values = crypto.getRandomValues(new Uint8Array(bytes));
   return base64Url(values);
@@ -680,6 +691,7 @@ export default {
     const isApi = url.pathname.startsWith('/api/');
     try {
       if (url.hostname === LEGACY_HOST) {
+        if (url.pathname === '/renace/service-worker.js') return securityHeaders(legacyServiceWorker(), false);
         const path = url.pathname === '/renace' ? '/' : url.pathname.startsWith('/renace/') ? url.pathname.slice('/renace'.length) : url.pathname;
         return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
       }
