@@ -337,12 +337,11 @@ export default {
     const url = new URL(req.url), apiRoute = url.pathname.startsWith('/api/');
     try {
       if (url.hostname === LEGACY_HOST && (url.pathname === '/hermanitos' || url.pathname.startsWith('/hermanitos/'))) {
-        const path = url.pathname.slice('/hermanitos'.length) || '/';
+        const path = url.pathname.startsWith('/hermanitos/assets/') ? url.pathname : (url.pathname.slice('/hermanitos'.length) || '/');
         return secure(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
       }
-      if (url.hostname === CANONICAL_HOST && (url.pathname === '/hermanitos' || url.pathname.startsWith('/hermanitos/'))) {
-        const path = url.pathname.slice('/hermanitos'.length) || '/';
-        return secure(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+      if (url.hostname === CANONICAL_HOST && (url.pathname === '/hermanitos' || url.pathname === '/hermanitos/')) {
+        return secure(Response.redirect(`https://${CANONICAL_HOST}/${url.search}`, 308), false);
       }
       if (apiRoute) {
         if (!['GET', 'HEAD'].includes(req.method) && req.headers.get('origin') !== url.origin) fail(403, 'origin', 'Recarga la página para continuar de forma segura.');
