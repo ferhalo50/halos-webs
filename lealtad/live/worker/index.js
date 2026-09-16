@@ -99,12 +99,15 @@ async function getSession(request, env) {
   if (!token) return null;
   const tokenHash = await sha256(token);
   const session = await env.DB.prepare(`
-    SELECT s.id AS session_id, s.expires_at, u.id, u.business_id, u.role, u.name, u.phone, u.username, u.active, u.must_change_secret
+    SELECT s.id AS session_id, s.expires_at, s.last_seen_at, u.id, u.business_id, u.role, u.name, u.phone, u.username, u.active, u.must_change_secret
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ? AND s.expires_at > ? AND u.active = 1 AND u.deleted_at IS NULL
   `).bind(tokenHash, new Date().toISOString()).first();
   if (!session) return null;
-  env.DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE id = ?').bind(new Date().toISOString(), session.session_id).run().catch(() => {});
+  const lastSeen = Date.parse(session.last_seen_at.includes('T') ? session.last_seen_at : session.last_seen_at.replace(' ', 'T') + 'Z');
+  if (Date.now() - lastSeen > 15 * 60000) {
+    await env.DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE id = ?').bind(new Date().toISOString(), session.session_id).run();
+  }
   return session;
 }
 
@@ -211,7 +214,7 @@ async function register(request, env) {
 
 async function cardForCustomer(env, customerId, businessId) {
   return env.DB.prepare(`SELECT c.id, c.qr_token, c.stamps, c.redeemed_count, c.created_at, u.name, u.phone,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp') AS last_stamp_at,
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
     b.reward_goal, b.reward_name, b.timezone
     FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
     WHERE c.customer_id = ? AND c.business_id = ? AND u.active=1 AND u.deleted_at IS NULL`).bind(customerId, businessId).first();
@@ -228,7 +231,7 @@ async function lookupCard(request, env, staff) {
   const qrToken = value.startsWith('renace:') ? value.slice(7) : '';
   const phone = normalizePhone(value);
   const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp') AS last_stamp_at
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id
     WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL AND (c.id=? OR c.qr_token=? OR u.phone=?)`).bind(staff.business_id, value, qrToken, phone).first();
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
@@ -238,7 +241,7 @@ async function lookupCard(request, env, staff) {
 async function stamp(request, env, staff) {
   const input = await body(request);
   const card = await env.DB.prepare(`SELECT c.*,u.id AS customer_id,u.name,b.reward_goal,b.timezone,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp') AS last_stamp_at
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(input.cardId, staff.business_id).first();
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
   if (card.stamps >= card.reward_goal) throw new ApiError(409, 'reward_ready', 'La recompensa ya está disponible.');
@@ -261,7 +264,7 @@ async function stamp(request, env, staff) {
 
 async function cardById(env, cardId, businessId) {
   return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp') AS last_stamp_at
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
 }
 
@@ -297,22 +300,25 @@ async function dashboard(request, env, admin) {
   const customerBindings = search ? [admin.business_id, search, normalizePhone(search), search.toUpperCase()] : [admin.business_id];
   const [metrics, customerCount, customers, employees, events] = await Promise.all([
     env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
-      (SELECT COUNT(*) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND business_day=?) AS stamps_today,
+      (SELECT COUNT(*) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
       (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
       (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp') AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
-    env.DB.prepare(`SELECT id,created_at,event_type,card_id,customer,employee FROM (
-      SELECT e.id,e.created_at,e.event_type,e.card_id,customer.name AS customer,employee.name AS employee
+    env.DB.prepare(`SELECT id,created_at,event_type,card_id,customer,employee,reason FROM (
+      SELECT e.id,e.created_at,CASE WHEN e.voided=1 THEN 'stamp_voided' ELSE e.event_type END AS event_type,e.card_id,customer.name AS customer,employee.name AS employee,'' AS reason
       FROM loyalty_events e JOIN users customer ON customer.id=e.customer_id JOIN users employee ON employee.id=e.employee_id WHERE e.business_id=?
       UNION ALL
       SELECT audit.id,audit.created_at,
         CASE WHEN audit.action='customer_updated' AND audit.metadata='{"kind":"demo_reset"}' THEN 'demo_reset' ELSE audit.action END AS event_type,
-        COALESCE(card.id,'') AS card_id,customer.name AS customer,administrator.name AS employee
+        COALESCE(card.id,'') AS card_id,customer.name AS customer,administrator.name AS employee,'' AS reason
       FROM admin_audit_log audit JOIN users customer ON customer.id=audit.target_user_id JOIN users administrator ON administrator.id=audit.admin_id
       LEFT JOIN loyalty_cards card ON card.customer_id=customer.id WHERE audit.business_id=?
-    ) ORDER BY created_at DESC LIMIT 50`).bind(admin.business_id, admin.business_id).all()
+      UNION ALL
+      SELECT a.id,a.created_at,CASE WHEN a.after_stamps>a.before_stamps THEN 'stamp_added' ELSE 'stamp_removed' END,a.card_id,customer.name,administrator.name,a.reason
+      FROM stamp_adjustments a JOIN users customer ON customer.id=a.customer_id JOIN users administrator ON administrator.id=a.admin_id WHERE a.business_id=?
+    ) ORDER BY created_at DESC LIMIT 50`).bind(admin.business_id, admin.business_id, admin.business_id).all()
   ]);
   const total = Number(customerCount.total) || 0;
   return {
@@ -427,6 +433,36 @@ async function resetDemoCustomers(env, admin) {
 
   await env.DB.batch(statements);
   return { customers: restored, pin: DEMO_PIN };
+}
+
+
+async function adjustCustomerStamps(request, env, admin, customerId) {
+  const input = await body(request);
+  const reason = String(input.reason || '').trim();
+  if (![1, -1].includes(input.delta) || !Number.isInteger(input.expectedStamps) || reason.length < 5 || reason.length > 200 ||
+      (input.cancelToday !== undefined && typeof input.cancelToday !== 'boolean') || (input.cancelToday && input.delta !== -1)) {
+    throw new ApiError(400, 'invalid_adjustment', 'Elige sumar o quitar un sello y escribe un motivo de 5 a 200 caracteres.');
+  }
+  const card = await cardForCustomer(env, customerId, admin.business_id);
+  if (!card) throw new ApiError(404, 'customer_not_found', 'No encontramos ese cliente.');
+  if (card.stamps !== input.expectedStamps) throw new ApiError(409, 'card_changed', 'La tarjeta cambió. Actualízala antes de ajustar los sellos.');
+  const after = card.stamps + input.delta;
+  if (after < 0 || after > card.reward_goal) throw new ApiError(400, 'invalid_balance', `La tarjeta debe tener entre 0 y ${card.reward_goal} sellos.`);
+  const now = new Date();
+  let voidEvent = null;
+  if (input.cancelToday) {
+    voidEvent = await env.DB.prepare("SELECT id FROM loyalty_events WHERE card_id=? AND business_id=? AND event_type='stamp' AND voided=0 AND business_day=?")
+      .bind(card.id, admin.business_id, businessDay(card.timezone, now)).first();
+    if (!voidEvent) throw new ApiError(409, 'no_visit_today', 'No hay un sello de hoy para anular. Actualiza la tarjeta.');
+  }
+  try {
+    await env.DB.prepare('INSERT INTO stamp_adjustments (id,business_id,card_id,customer_id,admin_id,before_stamps,after_stamps,reason,void_event_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .bind(crypto.randomUUID(), admin.business_id, card.id, customerId, admin.id, card.stamps, after, reason, voidEvent?.id || null, now.toISOString()).run();
+  } catch (cause) {
+    if (String(cause).includes('stamp_adjustment_conflict')) throw new ApiError(409, 'card_changed', 'La tarjeta cambió. Actualízala antes de ajustar los sellos.');
+    throw cause;
+  }
+  return publicCard(await cardForCustomer(env, customerId, admin.business_id));
 }
 
 async function editCustomer(request, env, admin, customerId) {
@@ -613,6 +649,11 @@ async function api(request, env) {
   if (request.method === 'DELETE' && employeeMatch) {
     const user = await requireRole(request, env, ['admin']);
     return response({ ok: true, employee: await deleteEmployee(env, user, employeeMatch[1]) });
+  }
+  const stampAdjustmentMatch = path.match(/^\/api\/admin\/customers\/([^/]+)\/stamps$/);
+  if (request.method === 'POST' && stampAdjustmentMatch) {
+    const user = await requireRole(request, env, ['admin']);
+    return response({ ok: true, card: await adjustCustomerStamps(request, env, user, stampAdjustmentMatch[1]) });
   }
   const customerPinMatch = path.match(/^\/api\/admin\/customers\/([^/]+)\/pin$/);
   if (request.method === 'PATCH' && customerPinMatch) {

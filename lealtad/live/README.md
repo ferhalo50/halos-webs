@@ -6,7 +6,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 
 - Aplicación: `https://app.haloswebs.com/renace/`
 - Base D1: `renace-lealtad`, región WNAM.
-- Migraciones remotas aplicadas: `0001_initial.sql`, `0002_scale_indexes.sql`, `0003_password_iterations.sql`, `0004_admin_audit.sql` y `0005_user_management.sql`.
+- Migraciones remotas aplicadas: `0001_initial.sql`, `0002_scale_indexes.sql`, `0003_password_iterations.sql`, `0004_admin_audit.sql`, `0005_user_management.sql` y `0006_stamp_adjustments.sql`.
 - Cuentas iniciales creadas y llave temporal de configuración retirada.
 - Plan utilizado: Workers Free.
 - Prueba física completada con Android como empleado e iPhone como cliente: registro, cámara, lectura del QR, sello y actualización de la tarjeta.
@@ -28,6 +28,10 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 - Un sello por día calendario de la zona `America/Tijuana`, protegido además por un índice único en la base de datos.
 - Canje disponible al completar 9 sellos.
 - Panel administrador con métricas, clientes, empleados y bitácora.
+- Actualización automática de la tarjeta cada 5 segundos mientras está visible y conectada; pausa al ocultarla y reintenta tras recuperar conexión. Muestra sellos, correcciones y canjes sin recargar.
+- Ajustes administrativos de un sello por operación, entre cero y la meta, con motivo obligatorio e historial. Opcionalmente, retirar un sello anula la visita de hoy y permite volver a registrarla; el evento original se conserva marcado como anulado.
+- Los ajustes manuales son excepciones administrativas: añadir un sello no consume la visita diaria. Cada cambio comprueba el saldo esperado y se registra atómicamente para evitar sobrescribir otra operación.
+- Lector de QR con marco de cámara, estado de lectura y cierre de cámara al salir u ocultar la página. Escanear abre la tarjeta; registrar el sello sigue requiriendo confirmación.
 - Control de demostración para restaurar en un clic los clientes de prueba de 0/9 y 8/9 sellos.
 - Restablecimiento presencial de PIN por un administrador: el servidor genera un PIN temporal de un solo uso visible, cierra las sesiones y obliga al cliente a elegir uno nuevo antes de abrir su tarjeta.
 - Listado de clientes paginado y con búsqueda para evitar cargar toda la base a la vez.
