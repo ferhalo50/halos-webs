@@ -6,15 +6,15 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const qrcode = require('qrcode-generator');
 const jsQR = require('jsqr');
-const TARGET = 'https://hermanitos.haloswebs.com/';
-const OUTPUT = fileURLToPath(new URL('../public/hermanitos/assets/hermanea-qr.png', import.meta.url));
+const isRenace = process.argv.includes('--renace');
+const TARGET = isRenace ? 'https://renacecafe.haloswebs.com/' : 'https://hermanitos.haloswebs.com/';
+const OUTPUT = fileURLToPath(new URL(isRenace ? '../../lealtad/live/public/assets/renace-qr.png' : '../public/hermanitos/assets/hermanea-qr.png', import.meta.url));
 const WIDTH = 1200;
 const HEIGHT = 1500;
 const pixels = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
-const palette = {
-  background: '#0d0e10', panel: '#17181b', gold: '#d8b96e',
-  goldLight: '#f3dca3', muted: '#a7a59f', qr: '#111214', white: '#ffffff'
-};
+const palette = isRenace
+  ? { background: '#f5f1e7', panel: '#fffdf7', ink: '#303728', olive: '#424b32', muted: '#77796b', qr: '#303728', white: '#ffffff', line: '#dadbcb' }
+  : { background: '#0d0e10', panel: '#17181b', gold: '#d8b96e', goldLight: '#f3dca3', muted: '#a7a59f', qr: '#111214', white: '#ffffff' };
 
 function rgb(hex) {
   const value = Number.parseInt(hex.slice(1), 16);
@@ -47,15 +47,19 @@ const glyphs = {
   C:['01111','10000','10000','10000','10000','10000','01111'],
   D:['11110','10001','10001','10001','10001','10001','11110'],
   E:['11111','10000','10000','11110','10000','10000','11111'],
+  F:['11111','10000','10000','11110','10000','10000','10000'],
   H:['10001','10001','10001','11111','10001','10001','10001'],
   I:['11111','00100','00100','00100','00100','00100','11111'],
+  J:['00111','00010','00010','00010','00010','10010','01100'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],
   M:['10001','11011','10101','10101','10001','10001','10001'],
   N:['10001','11001','10101','10011','10001','10001','10001'],
   O:['01110','10001','10001','10001','10001','10001','01110'],
   P:['11110','10001','10001','11110','10000','10000','10000'],
   R:['11110','10001','10001','11110','10100','10010','10001'],
   S:['01111','10000','10000','01110','00001','00001','11110'],
-  T:['11111','00100','00100','00100','00100','00100','00100']
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  U:['10001','10001','10001','10001','10001','10001','01110']
 };
 function textWidth(text, scale, spacing = 2) { return text.length * 5 * scale + (text.length - 1) * spacing * scale; }
 function drawText(text, y, scale, color, spacing = 2) {
@@ -113,31 +117,41 @@ function decodeOwnPng(file) {
 }
 
 fill(palette.background);
-frame(35, 35, WIDTH - 70, HEIGHT - 70, 3, palette.gold);
-frame(51, 51, WIDTH - 102, HEIGHT - 102, 1, '#594a2e');
-// Art-deco corners and title rule.
-for (const [x, y, sx, sy] of [[70,70,1,1],[WIDTH-70,70,-1,1],[70,HEIGHT-70,1,-1],[WIDTH-70,HEIGHT-70,-1,-1]]) {
-  rect(x, y, 150*sx, 3*sy, palette.gold); rect(x, y, 3*sx, 150*sy, palette.gold);
+if (isRenace) {
+  rect(0, 0, WIDTH, 20, palette.olive);
+  rect(0, HEIGHT - 20, WIDTH, 20, palette.olive);
+  frame(42, 42, WIDTH - 84, HEIGHT - 84, 2, palette.olive);
+  drawText('RENACE', 126, 20, palette.ink, 2);
+  drawText('CAFE SHOP', 294, 6, palette.olive, 2);
+  rect(195, 356, 810, 1, palette.line);
+  circle(600, 356, 8, palette.olive);
+} else {
+  frame(35, 35, WIDTH - 70, HEIGHT - 70, 3, palette.gold);
+  frame(51, 51, WIDTH - 102, HEIGHT - 102, 1, '#594a2e');
+  // Art-deco corners and title rule.
+  for (const [x, y, sx, sy] of [[70,70,1,1],[WIDTH-70,70,-1,1],[70,HEIGHT-70,1,-1],[WIDTH-70,HEIGHT-70,-1,-1]]) {
+    rect(x, y, 150*sx, 3*sy, palette.gold); rect(x, y, 3*sx, 150*sy, palette.gold);
+  }
+  drawText('HERMANEA', 114, 18, palette.goldLight, 2);
+  drawText('HERMANITOS CARD', 260, 5, palette.gold, 2);
+  rect(210, 318, 780, 2, '#594a2e');
+  circle(600, 319, 7, palette.gold);
 }
-drawText('HERMANEA', 114, 18, palette.goldLight, 2);
-drawText('HERMANITOS CARD', 260, 5, palette.gold, 2);
-rect(210, 318, 780, 2, '#594a2e');
-circle(600, 319, 7, palette.gold);
 
 const qr = qrcode(0, 'H');
 qr.addData(TARGET); qr.make();
 const modules = qr.getModuleCount(), quiet = 4, cell = Math.floor(900 / (modules + quiet * 2));
-const qrSize = (modules + quiet * 2) * cell, qrX = Math.floor((WIDTH - qrSize) / 2), qrY = 375;
+const qrSize = (modules + quiet * 2) * cell, qrX = Math.floor((WIDTH - qrSize) / 2), qrY = 410;
 rect(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, palette.panel);
-frame(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 3, palette.gold);
+frame(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 3, isRenace ? palette.olive : palette.gold);
 rect(qrX, qrY, qrSize, qrSize, palette.white);
 for (let row = 0; row < modules; row++) for (let col = 0; col < modules; col++) {
   if (qr.isDark(row, col)) rect(qrX + (col + quiet) * cell, qrY + (row + quiet) * cell, cell, cell, palette.qr);
 }
 
 const footerY = qrY + qrSize + 70;
-drawText('ESCANEA PARA ENTRAR', footerY, 6, palette.goldLight, 2);
-drawText('HERMANITOS CARD', footerY + 88, 4, palette.muted, 2);
+drawText('ESCANEA PARA ENTRAR', footerY, 6, isRenace ? palette.olive : palette.goldLight, 2);
+drawText(isRenace ? 'TU TARJETA DE LEALTAD' : 'HERMANITOS CARD', footerY + 88, 4, palette.muted, 2);
 
 await writeFile(OUTPUT, encodePng());
 const file = await readFile(OUTPUT), decoded = decodeOwnPng(file), result = jsQR(decoded.rgba, decoded.width, decoded.height, { inversionAttempts: 'attemptBoth' });
