@@ -208,7 +208,7 @@ async function register(request, env) {
   const pin = String(input.pin || '');
   if (name.length < 2 || name.length > 60) throw new ApiError(400, 'invalid_name', 'Escribe un nombre válido.');
   if (!/^\d{10}$/.test(phone)) throw new ApiError(400, 'invalid_phone', 'Escribe un celular de 10 dígitos.');
-  if (!/^\d{4,8}$/.test(pin)) throw new ApiError(400, 'invalid_pin', 'El PIN debe tener entre 4 y 8 dígitos.');
+  if (!/^\d{4,6}$/.test(pin)) throw new ApiError(400, 'invalid_pin', 'El PIN debe tener entre 4 y 6 dígitos.');
   const existing = await env.DB.prepare('SELECT id FROM users WHERE business_id = ? AND phone = ?').bind(business.id, phone).first();
   if (existing) throw new ApiError(409, 'phone_exists', 'Ese celular ya tiene una tarjeta.');
   const customerId = crypto.randomUUID();
@@ -595,8 +595,8 @@ async function changeSecret(request, env, user) {
   if (!account || !(await verifySecret(currentSecret, account.secret_salt, account.secret_hash, account.secret_iterations))) {
     throw new ApiError(401, 'invalid_current_secret', user.role === 'customer' ? 'El PIN actual no es correcto.' : 'La contraseña actual no es correcta.');
   }
-  if (user.role === 'customer' && !/^\d{4,8}$/.test(newSecret)) {
-    throw new ApiError(400, 'invalid_new_pin', 'El PIN nuevo debe tener entre 4 y 8 dígitos.');
+  if (user.role === 'customer' && !/^\d{4,6}$/.test(newSecret)) {
+    throw new ApiError(400, 'invalid_new_pin', 'El PIN nuevo debe tener entre 4 y 6 dígitos.');
   }
   if (user.role !== 'customer' && newSecret.length < 10) {
     throw new ApiError(400, 'invalid_new_password', 'La contraseña nueva debe tener al menos 10 caracteres.');
