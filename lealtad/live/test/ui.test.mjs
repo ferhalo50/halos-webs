@@ -7,7 +7,7 @@ test('customer, tablet and admin UI', async t => {
   const publicEntry = await readFile(new URL('../../renace/index.html', import.meta.url), 'utf8');
   assert.match(publicEntry, /class="splash"/);
   assert.match(publicEntry, /logo-renace\.png/);
-  assert.match(publicEntry, /https:\/\/app\.haloswebs\.com\/renace\//);
+  assert.match(publicEntry, /https:\/\/renacecafe\.haloswebs\.com\//);
   assert.doesNotMatch(publicEntry, /renace-lealtad\.workers\.dev/);
   assert.doesNotMatch(publicEntry, /Abriendo la tarjeta/);
 
@@ -96,6 +96,9 @@ test('customer, tablet and admin UI', async t => {
   assert.ok(await page.locator('.delete-customer').count());
   assert.ok(await page.locator('.edit-employee').count());
   assert.ok(await page.locator('.delete-employee').count());
+  await page.getByText('Actividad reciente').scrollIntoViewIfNeeded();
+  assert.equal(await page.locator('.activity-table thead th').count(), 5);
+  assert.match(await page.locator('.activity-table').innerText(), /Fecha y hora[\s\S]*Cliente[\s\S]*Movimiento[\s\S]*Motivo[\s\S]*Registrado por/);
   assert.equal(await page.locator('text=Halo').count(), 0);
   assert.equal(await page.locator('text=Facebook').count(), 0);
   assert.deepEqual(errors, []);
