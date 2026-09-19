@@ -304,11 +304,11 @@ async function dashboard(request, env, admin) {
   const today = businessDay(business.timezone);
   const url = new URL(request.url);
   const page = positiveInteger(url.searchParams.get('page'), 1, 100000);
-  const perPage = positiveInteger(url.searchParams.get('perPage'), 25, 100);
+  const perPage = positiveInteger(url.searchParams.get('perPage'), 6, 100);
   const search = String(url.searchParams.get('q') || '').trim().slice(0, 60);
   const offset = (page - 1) * perPage;
   const eventPage = positiveInteger(url.searchParams.get('eventPage'), 1, 100000);
-  const eventPerPage = 25;
+  const eventPerPage = 6;
   const eventOffset = (eventPage - 1) * eventPerPage;
   const customerWhere = search
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
