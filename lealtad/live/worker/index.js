@@ -308,8 +308,15 @@ async function dashboard(request, env, admin) {
   const search = String(url.searchParams.get('q') || '').trim().slice(0, 60);
   const offset = (page - 1) * perPage;
   const eventPage = positiveInteger(url.searchParams.get('eventPage'), 1, 100000);
-  const eventPerPage = 6;
+  const eventPerPage = positiveInteger(url.searchParams.get('eventPerPage'), 6, 100);
   const eventOffset = (eventPage - 1) * eventPerPage;
+  const eventStart = String(url.searchParams.get('eventStart') || '');
+  const eventEnd = String(url.searchParams.get('eventEnd') || '');
+  const eventCustomer = String(url.searchParams.get('eventCustomer') || '').trim().slice(0, 60);
+  const eventType = String(url.searchParams.get('eventType') || '');
+  const eventEmployee = String(url.searchParams.get('eventEmployee') || '').trim().slice(0, 60);
+  const validEventDate = value => { const date = new Date(value); return value && !Number.isNaN(date.getTime()) ? date.toISOString() : ''; };
+  const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted']);
   const customerWhere = search
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
@@ -328,6 +335,14 @@ async function dashboard(request, env, admin) {
       FROM stamp_adjustments a JOIN users customer ON customer.id=a.customer_id JOIN users administrator ON administrator.id=a.admin_id WHERE a.business_id=?
     )`;
   const eventBindings = [admin.business_id, admin.business_id, admin.business_id];
+  const eventFilters = [];
+  const eventStartIso = validEventDate(eventStart), eventEndIso = validEventDate(eventEnd);
+  if (eventStartIso) { eventFilters.push('created_at >= ?'); eventBindings.push(eventStartIso); }
+  if (eventEndIso) { eventFilters.push('created_at < ?'); eventBindings.push(eventEndIso); }
+  if (eventCustomer) { eventFilters.push('instr(lower(customer), lower(?)) > 0'); eventBindings.push(eventCustomer); }
+  if (validEventTypes.has(eventType)) { eventFilters.push('event_type = ?'); eventBindings.push(eventType); }
+  if (eventEmployee) { eventFilters.push('instr(lower(employee), lower(?)) > 0'); eventBindings.push(eventEmployee); }
+  const eventWhere = eventFilters.length ? ` WHERE ${eventFilters.join(' AND ')}` : '';
   const [metrics, customerCount, customers, employees, eventCount, events] = await Promise.all([
     env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
       (SELECT COUNT(*) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
@@ -336,8 +351,8 @@ async function dashboard(request, env, admin) {
     env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
     env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
-    env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})`).bind(...eventBindings).first(),
-    env.DB.prepare(`${eventSource} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})${eventWhere}`).bind(...eventBindings).first(),
+    env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
   ]);
   const total = Number(customerCount.total) || 0;
   return {
@@ -345,7 +360,7 @@ async function dashboard(request, env, admin) {
     metrics,
     customers: customers.results,
     customerPage: { page, perPage, total, pages: Math.max(1, Math.ceil(total / perPage)), search },
-    eventPage: { page: eventPage, perPage: eventPerPage, total: Number(eventCount.total) || 0, pages: Math.max(1, Math.ceil((Number(eventCount.total) || 0) / eventPerPage)) },
+    eventPage: { page: eventPage, perPage: eventPerPage, total: Number(eventCount.total) || 0, pages: Math.max(1, Math.ceil((Number(eventCount.total) || 0) / eventPerPage)), filters: { eventStart: eventStartIso, eventEnd: eventEndIso, eventCustomer, eventType: validEventTypes.has(eventType) ? eventType : '', eventEmployee } },
     employees: employees.results,
     events: events.results
   };

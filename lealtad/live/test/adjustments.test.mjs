@@ -46,9 +46,12 @@ test('admin adjustments preserve daily visits, permissions and audit history',as
   assert.equal((await adjust(movement(8,1))).status,200);
   assert.equal((await request('/api/staff/redeem',{method:'POST',cookie:staff.cookie,body:{cardId:card.data.card.id}})).status,200);
   assert.equal((await adjust(movement(9,-1))).status,409);
-  const dashboard=await request('/api/admin/dashboard',{cookie:admin.cookie});
+  const dashboard=await request('/api/admin/dashboard?eventPerPage=100',{cookie:admin.cookie});
   assert.equal(dashboard.status,200);
   assert.ok(dashboard.data.events.some(e=>e.card_id===card.data.card.id&&e.event_type==='stamp_voided'));
   assert.ok(dashboard.data.events.some(e=>e.card_id===card.data.card.id&&e.event_type==='stamp_removed'&&e.reason==='Corrección de prueba'));
   assert.ok(dashboard.data.events.some(e=>e.card_id===card.data.card.id&&e.event_type==='stamp_added'));
+  const filtered=await request('/api/admin/dashboard?eventType=stamp_voided&eventCustomer=Ajustes%20de%20prueba',{cookie:admin.cookie});
+  assert.ok(filtered.data.events.length>0);
+  assert.ok(filtered.data.events.every(event=>event.event_type==='stamp_voided'&&event.customer.includes('Ajustes de prueba')));
 });
