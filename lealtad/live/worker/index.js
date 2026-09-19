@@ -307,19 +307,14 @@ async function dashboard(request, env, admin) {
   const perPage = positiveInteger(url.searchParams.get('perPage'), 25, 100);
   const search = String(url.searchParams.get('q') || '').trim().slice(0, 60);
   const offset = (page - 1) * perPage;
+  const eventPage = positiveInteger(url.searchParams.get('eventPage'), 1, 100000);
+  const eventPerPage = 25;
+  const eventOffset = (eventPage - 1) * eventPerPage;
   const customerWhere = search
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
   const customerBindings = search ? [admin.business_id, search, normalizePhone(search), search.toUpperCase()] : [admin.business_id];
-  const [metrics, customerCount, customers, employees, events] = await Promise.all([
-    env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
-      (SELECT COUNT(*) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
-      (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
-      (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
-    env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
-    env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
-    env.DB.prepare(`SELECT id,created_at,event_type,card_id,customer,employee,reason FROM (
+  const eventSource = `SELECT id,created_at,event_type,card_id,customer,employee,reason FROM (
       SELECT e.id,e.created_at,CASE WHEN e.voided=1 THEN 'stamp_voided' ELSE e.event_type END AS event_type,e.card_id,customer.name AS customer,employee.name AS employee,'' AS reason
       FROM loyalty_events e JOIN users customer ON customer.id=e.customer_id JOIN users employee ON employee.id=e.employee_id WHERE e.business_id=?
       UNION ALL
@@ -331,7 +326,18 @@ async function dashboard(request, env, admin) {
       UNION ALL
       SELECT a.id,a.created_at,CASE WHEN a.after_stamps>a.before_stamps THEN 'stamp_added' ELSE 'stamp_removed' END,a.card_id,customer.name,administrator.name,a.reason
       FROM stamp_adjustments a JOIN users customer ON customer.id=a.customer_id JOIN users administrator ON administrator.id=a.admin_id WHERE a.business_id=?
-    ) ORDER BY created_at DESC LIMIT 50`).bind(admin.business_id, admin.business_id, admin.business_id).all()
+    )`;
+  const eventBindings = [admin.business_id, admin.business_id, admin.business_id];
+  const [metrics, customerCount, customers, employees, eventCount, events] = await Promise.all([
+    env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
+      (SELECT COUNT(*) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
+      (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
+      (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})`).bind(...eventBindings).first(),
+    env.DB.prepare(`${eventSource} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
   ]);
   const total = Number(customerCount.total) || 0;
   return {
@@ -339,6 +345,7 @@ async function dashboard(request, env, admin) {
     metrics,
     customers: customers.results,
     customerPage: { page, perPage, total, pages: Math.max(1, Math.ceil(total / perPage)), search },
+    eventPage: { page: eventPage, perPage: eventPerPage, total: Number(eventCount.total) || 0, pages: Math.max(1, Math.ceil((Number(eventCount.total) || 0) / eventPerPage)) },
     employees: employees.results,
     events: events.results
   };
