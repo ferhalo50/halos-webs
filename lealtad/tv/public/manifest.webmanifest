@@ -1,0 +1,13 @@
+{
+  "name": "Renace Café TV",
+  "short_name": "Renace TV",
+  "description": "Reproductor de contenido para las pantallas de Renace Café Shop.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3eee2",
+  "theme_color": "#3f4b31",
+  "icons": [
+    { "src": "/assets/tv-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

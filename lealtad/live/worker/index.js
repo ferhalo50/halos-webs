@@ -17,7 +17,7 @@ function securityHeaders(res, isApi = false) {
   headers.set('x-frame-options', 'DENY');
   headers.set('referrer-policy', 'strict-origin-when-cross-origin');
   headers.set('permissions-policy', 'camera=(self), geolocation=(), microphone=()');
-  headers.set('content-security-policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  headers.set('content-security-policy', "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
   headers.set('cache-control', isApi ? 'no-store' : 'public, max-age=300');
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }

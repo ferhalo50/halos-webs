@@ -22,6 +22,7 @@ Versión con datos compartidos sobre Cloudflare Workers + D1. La aplicación pú
 - Bloqueo temporal tras cinco intentos de acceso fallidos.
 - Tarjeta y QR únicos generados con valores aleatorios.
 - Descarga o envío de una imagen de la tarjeta con el QR para usarla aun cuando el cliente no tenga internet.
+- La política de imágenes permite de forma limitada `blob:` porque el navegador lo usa para componer la tarjeta PNG. Scripts, conexiones y contenido externo continúan bloqueados. La prueba visual descarga el PNG y vuelve a leer el QR resultante antes de aprobar el cambio.
 - Manifiesto y caché de aplicación para añadir Renace a la pantalla de inicio del teléfono.
 - Búsqueda en mostrador por QR, identificador de tarjeta o celular.
 - Escáner con detección nativa y alternativa JavaScript para funcionar también en navegadores móviles sin `BarcodeDetector`.
@@ -75,4 +76,14 @@ Revisar el uso mensualmente y considerar Workers Paid antes de alcanzar cualquie
 
 Con el servidor local activo y las cuentas locales de prueba configuradas, `node --test --test-concurrency=1 test/*.test.mjs` valida API e interfaz: registro, sesiones, roles, QR, sello diario, rechazo de duplicado, panel, edición y baja de usuarios, recuperación forzada de PIN y protección de origen.
 
+Después de publicar, `node test/production-smoke.mjs` inicia sesión únicamente con la cuenta demo 0/9, descarga la tarjeta, lee el QR dentro del PNG y cierra la sesión. No registra sellos ni modifica clientes.
+
 Las credenciales dentro de los archivos de prueba son exclusivamente locales. No deben reutilizarse en producción.
+
+## Renace Café TV
+
+La pantalla del establecimiento vive en el proyecto separado `../tv/` y se publica en `https://renacecafetv.haloswebs.com/`. No comparte rutas, D1, sesiones, datos ni service worker con Renace Card. Sus cachés usan el prefijo exclusivo `renace-tv-*` y el contenido pesado solo se guarda cuando una persona pulsa **Preparar sin conexión**.
+
+La biblioteca se edita en `../tv/public/media.json`; las imágenes, videos y audio se organizan bajo `../tv/public/media/`. La interfaz reproduce las imágenes durante 10 segundos de forma predeterminada, deja terminar cada MP4, mantiene la música ambiental entre cambios y acepta Atrás, Escape y flechas del mando. El `README.md` del proyecto TV explica el formato y el cambio de versión del caché.
+
+Para una biblioteca pequeña se pueden publicar archivos ligeros con el Worker. Si crece el volumen de videos, `source` y `thumbnail` están preparados para apuntar a Cloudflare R2. Esa migración futura requerirá crear el bucket, configurar CORS y ampliar los dominios permitidos en las cabeceras de TV; R2 no está configurado ni contratado en esta versión.

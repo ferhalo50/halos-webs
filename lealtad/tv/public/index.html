@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3eee2">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex">
+  <title>Renace Café TV</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/tv-icon.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/tv.css">
+</head>
+<body>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Renace Café TV, inicio">
+      <span class="brand-mark" aria-hidden="true">R</span>
+      <span><strong>Renace</strong><small>Café TV</small></span>
+    </a>
+    <div class="connection" id="connection-status" role="status">
+      <span aria-hidden="true"></span><b>Conectado</b>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Pantalla del establecimiento</p>
+        <h1 id="page-title">Tu momento favorito<br>empieza con <em>café.</em></h1>
+      </div>
+      <p class="hero-note">Elige el contenido y déjalo listo para reproducirse durante el servicio.</p>
+    </section>
+
+    <section class="control-panel" aria-label="Controles de reproducción">
+      <div class="primary-actions">
+        <button class="button button-primary" id="play-selected" type="button" disabled>
+          <span class="button-icon" aria-hidden="true">▶</span>
+          <span>Reproducir selección<small id="selection-count">0 elementos</small></span>
+        </button>
+        <button class="button button-secondary" id="play-all" type="button">
+          <span class="button-icon" aria-hidden="true">▷</span>
+          <span>Reproducir todo<small>Lista completa</small></span>
+        </button>
+      </div>
+      <div class="utility-actions">
+        <button class="button button-quiet" id="select-all" type="button">Seleccionar todo</button>
+        <button class="button button-quiet" id="clear-selection" type="button" disabled>Limpiar selección</button>
+        <button class="button button-quiet" id="toggle-music" type="button" aria-pressed="false" disabled>♪ Música apagada</button>
+        <button class="button button-offline" id="prepare-offline" type="button">↓ Preparar sin conexión</button>
+      </div>
+      <div class="offline-status" id="offline-status" hidden aria-live="polite">
+        <div><strong id="offline-label">Preparando contenido…</strong><span id="offline-detail"></span></div>
+        <progress id="offline-progress" max="100" value="0">0%</progress>
+      </div>
+    </section>
+
+    <section class="library" aria-labelledby="library-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Biblioteca</p><h2 id="library-title">Contenido disponible</h2></div>
+        <p id="library-summary">Cargando contenido…</p>
+      </div>
+      <div class="media-grid" id="media-grid" aria-live="polite"></div>
+      <div class="empty-state" id="empty-state" hidden>
+        <span aria-hidden="true">R</span>
+        <h3>La biblioteca está lista</h3>
+        <p>Agrega imágenes o videos a <code>media.json</code> para comenzar.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Mando Fire TV:</strong> usa las flechas para moverte y el botón central para elegir.</p>
+    <p>Durante la presentación, usa <kbd>←</kbd> <kbd>→</kbd> para cambiar y <kbd>Atrás</kbd> para salir.</p>
+  </footer>
+
+  <section class="presentation" id="presentation" hidden aria-label="Presentación en curso">
+    <div class="presentation-chrome">
+      <div class="now-playing"><span></span><p>En pantalla<small id="now-playing-title"></small></p></div>
+      <div class="presentation-actions">
+        <button id="presentation-music" type="button" aria-pressed="false" disabled>♪ Música</button>
+        <button id="exit-presentation" type="button">Salir <kbd>Atrás</kbd></button>
+      </div>
+    </div>
+    <div class="media-stage" id="media-stage"></div>
+    <div class="presentation-progress"><span id="presentation-progress"></span></div>
+  </section>
+
+  <audio id="ambient-audio" loop preload="none"></audio>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/assets/tv.js" type="module"></script>
+</body>
+</html>

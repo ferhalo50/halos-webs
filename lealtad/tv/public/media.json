@@ -1,0 +1,14 @@
+{
+  "version": "2026.09.20-1",
+  "slideDurationSeconds": 10,
+  "music": null,
+  "items": [
+    {
+      "id": "bienvenida-renace",
+      "name": "Bienvenida Renace",
+      "type": "image",
+      "source": "/media/images/logo-renace.png",
+      "thumbnail": "/media/images/logo-renace.png"
+    }
+  ]
+}

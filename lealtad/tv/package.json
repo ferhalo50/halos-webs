@@ -1,0 +1,14 @@
+{
+  "name": "renace-cafe-tv",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8790",
+    "deploy": "wrangler deploy",
+    "check": "node --check worker/index.js && node --check public/assets/tv.js && node --check public/service-worker.js",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.131.1"
+  }
+}

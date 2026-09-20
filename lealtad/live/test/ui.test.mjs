@@ -56,6 +56,22 @@ test('customer, tablet and admin UI', async t => {
   await page.click('#download-card');
   const savedCard = await downloadPromise;
   assert.equal(savedCard.suggestedFilename(), 'tarjeta-renace.png');
+  const savedCardStream = await savedCard.createReadStream();
+  const savedCardChunks = [];
+  for await (const chunk of savedCardStream) savedCardChunks.push(chunk);
+  const decodedSavedCard = await page.evaluate(async encoded => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${encoded}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 648;
+    canvas.height = 648;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 216, 565, 648, 648, 0, 0, 648, 648);
+    const frame = context.getImageData(0, 0, 648, 648);
+    return window.jsQR(frame.data, frame.width, frame.height)?.data || '';
+  }, Buffer.concat(savedCardChunks).toString('base64'));
+  assert.match(decodedSavedCard, /^renace:/);
   const manifest = await page.evaluate(() => fetch('/manifest.webmanifest').then(response => response.json()));
   assert.equal(manifest.short_name, 'Renace');
   assert.equal(manifest.display, 'standalone');
@@ -96,9 +112,8 @@ test('customer, tablet and admin UI', async t => {
   assert.ok(await page.locator('.delete-customer').count());
   assert.ok(await page.locator('.edit-employee').count());
   assert.ok(await page.locator('.delete-employee').count());
-  await page.getByText('Actividad reciente').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('.activity-table thead th').count(), 5);
-  assert.match(await page.locator('.activity-table').innerText(), /Fecha y hora[\s\S]*Cliente[\s\S]*Movimiento[\s\S]*Motivo[\s\S]*Registrado por/);
+  assert.match(await page.locator('.activity-table').innerText(), /Fecha y hora[\s\S]*Cliente[\s\S]*Movimiento[\s\S]*Motivo[\s\S]*Registrado por/i);
   assert.equal(await page.locator('text=Halo').count(), 0);
   assert.equal(await page.locator('text=Facebook').count(), 0);
   assert.deepEqual(errors, []);
