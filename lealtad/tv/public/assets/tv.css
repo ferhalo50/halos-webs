@@ -386,3 +386,14 @@ kbd { padding: .15em .42em; border: 1px solid currentColor; border-radius: 5px; 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* Bound replaced elements to the viewport, including large portrait photographs. */
+.media-stage {width:100%;height:100%;min-width:0;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.media-stage img,.media-stage video {min-width:0;min-height:0;max-width:100%;max-height:100%;object-position:center}
+.media-thumb {height:auto;min-width:0;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.media-thumb img {position:absolute;inset:0;padding:0;object-fit:contain;object-position:center}
+.media-thumb .fallback-art {background:radial-gradient(ellipse at top,#7f896e,#35432d);color:#f8f4e9;font:normal 42px Georgia,serif}
+.media-meta>span {min-width:0}.media-meta strong {text-transform:none;letter-spacing:normal}
+
+/* One decoder, black stage, lightweight sequential fade. */
+.ambient{display:none}.presentation{background:#000;cursor:none;outline:none}.media-stage{background:#000;opacity:0;transition:opacity 160ms linear}.media-stage img,.media-stage video{animation:none;filter:none}.presenting>:not(.presentation):not(audio){visibility:hidden}.spotify-link{margin-top:16px;display:inline-flex;text-decoration:none}.spotify-note{font-size:.8rem;color:var(--muted);line-height:1.5;max-width:680px}@media(prefers-reduced-motion:reduce){.media-stage{transition:none!important;transition-duration:0s!important}}

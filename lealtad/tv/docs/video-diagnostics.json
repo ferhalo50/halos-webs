@@ -1,0 +1,119 @@
+[
+  {
+    "file": "public\\media\\videos\\renacevideo1.mp4",
+    "bytes": 7961376,
+    "avc": null,
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:12.30, start: 0.000000, bitrate: 5176 kb/s",
+      "Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p(tv, bt709), 1820x1024 [SAR 1:1 DAR 455:256], 4915 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 257 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\renacevideo2.mp4",
+    "bytes": 3357881,
+    "avc": null,
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:05.43, start: 0.000000, bitrate: 4946 kb/s",
+      "Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p(tv, bt709), 1820x1024 [SAR 1:1 DAR 455:256], 4717 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 252 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\videocoffee.mp4",
+    "bytes": 23662165,
+    "avc": null,
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:30.80, start: 0.000000, bitrate: 6146 kb/s",
+      "Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 1920x1080 [SAR 1:1 DAR 16:9], 5946 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 192 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\renacevideo1-h264.mp4",
+    "bytes": 2665372,
+    "avc": {
+      "profile_idc": 100,
+      "level": 4.0
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:12.30, start: 0.000000, bitrate: 1733 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1820x1024 [SAR 1:1 DAR 455:256], 1633 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 96 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\renacevideo1-tv720-v2.mp4",
+    "bytes": 1796127,
+    "avc": {
+      "profile_idc": 66,
+      "level": 3.1
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:12.30, start: 0.000000, bitrate: 1167 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (Constrained Baseline) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1280x720 [SAR 1:1 DAR 16:9], 1067 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 96 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\renacevideo2-h264.mp4",
+    "bytes": 1332555,
+    "avc": {
+      "profile_idc": 100,
+      "level": 4.0
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:05.43, start: 0.000000, bitrate: 1963 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1820x1024 [SAR 1:1 DAR 455:256], 1882 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 95 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\renacevideo2-tv720-v2.mp4",
+    "bytes": 905591,
+    "avc": {
+      "profile_idc": 66,
+      "level": 3.1
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:05.43, start: 0.000000, bitrate: 1334 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (Constrained Baseline) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1280x720 [SAR 1:1 DAR 16:9], 1246 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 95 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\videocoffee-h264.mp4",
+    "bytes": 10705725,
+    "avc": {
+      "profile_idc": 100,
+      "level": 4.0
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:30.81, start: 0.000000, bitrate: 2780 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 2676 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 98 kb/s (default)"
+    ]
+  },
+  {
+    "file": "public\\media\\videos\\web\\videocoffee-tv720-v2.mp4",
+    "bytes": 6347951,
+    "avc": {
+      "profile_idc": 66,
+      "level": 3.1
+    },
+    "streams": [
+      "Input #0, mov,mp4,m4a,3gp,3g2,mj2",
+      "Duration: 00:00:30.81, start: 0.000000, bitrate: 1648 kb/s",
+      "Stream #0:0[0x1](und): Video: h264 (Constrained Baseline) (avc1 / 0x31637661), yuv420p(progressive), 1280x720 [SAR 1:1 DAR 16:9], 1544 kb/s, 30 fps, 30 tbr, 15360 tbn (default)",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 98 kb/s (default)"
+    ]
+  }
+]

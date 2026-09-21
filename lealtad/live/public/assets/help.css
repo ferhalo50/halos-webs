@@ -1,0 +1,16 @@
+.help-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 24px}
+.help-actions button{min-height:44px;padding:11px 20px}
+dialog.renace-guide{width:min(760px,calc(100vw - 28px));max-height:85vh;max-height:85dvh;padding:0;border:1px solid #a5aa96;border-radius:24px;background:#fffdf7;color:#293120;box-shadow:0 30px 100px #17201055;overflow:hidden}
+dialog.renace-guide[open]{display:flex;flex-direction:column}
+.renace-guide::backdrop{background:#1e271bb3;backdrop-filter:blur(4px)}
+.renace-guide header{position:static;display:flex;flex-shrink:0;align-items:center;gap:20px;justify-content:space-between;width:100%;padding:24px 28px;border-bottom:1px solid #d3d5c5;background:#f3f1e7}
+.renace-guide h2{margin:0;font:normal clamp(23px,4vw,32px)/1.15 Georgia,serif}
+.renace-guide .guide-close{flex-shrink:0;margin:0;padding:10px 14px;min-height:44px}
+.guide-content{overflow-y:auto;overscroll-behavior:contain;padding:8px 28px 24px}
+.guide-content section{position:relative;padding:22px 0 22px 45px;border-bottom:1px solid #e0e1d5}
+.guide-content section:last-child{border:0}
+.guide-content section::before{content:attr(data-step);position:absolute;left:0;top:25px;font-size:12px;letter-spacing:.08em;color:#687455}
+.guide-content h3{margin:0 0 9px;font-size:18px;line-height:1.4}
+.guide-content p{margin:0;color:#51594a;line-height:1.7;font-size:16px}
+.renace-guide :focus-visible,.help-actions :focus-visible{outline:3px solid #9b742e;outline-offset:3px}
+@media(max-width:500px){.renace-guide header{padding:20px 16px;gap:10px}.guide-content{padding:0 18px 18px}.guide-content section{padding-left:30px}.renace-guide .guide-close{padding:10px;font-size:13px}}

@@ -6,7 +6,7 @@
     "dev": "wrangler dev --local",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "check": "node --check worker/index.js && node --check public/assets/live.js"
+    "check": "node --check worker/index.js && node --check public/assets/live.js && node --check public/assets/help.js && node --check public/service-worker.js"
   },
   "devDependencies": {
     "jsqr": "1.4.0",

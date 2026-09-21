@@ -226,15 +226,16 @@ async function register(request, env) {
 }
 
 async function cardForCustomer(env, customerId, businessId) {
-  return env.DB.prepare(`SELECT c.id, c.qr_token, c.stamps, c.redeemed_count, c.created_at, u.name, u.phone,
+  return env.DB.prepare(`SELECT c.id, c.qr_token, c.stamps, c.stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
     b.reward_goal, b.reward_name, b.timezone
     FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
     WHERE c.customer_id = ? AND c.business_id = ? AND u.active=1 AND u.deleted_at IS NULL`).bind(customerId, businessId).first();
 }
 
+const STAMP_STYLES = new Set(['classic', 'cowboy', 'bow']);
 function publicCard(card) {
-  return { id: card.id, qrValue: `renace:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, canStampToday: !card.last_stamp_at || businessDay(card.timezone, new Date(card.last_stamp_at)) !== businessDay(card.timezone) };
+  return { stampStyle: STAMP_STYLES.has(card.stamp_style) ? card.stamp_style : 'classic', id: card.id, qrValue: `renace:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, canStampToday: !card.last_stamp_at || businessDay(card.timezone, new Date(card.last_stamp_at)) !== businessDay(card.timezone) };
 }
 
 async function lookupCard(request, env, staff) {
@@ -243,7 +244,7 @@ async function lookupCard(request, env, staff) {
   if (!value) throw new ApiError(400, 'missing_value', 'Escribe o escanea una tarjeta.');
   const qrToken = value.startsWith('renace:') ? value.slice(7) : '';
   const phone = normalizePhone(value);
-  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
+  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id
     WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL AND (c.id=? OR c.qr_token=? OR u.phone=?)`).bind(staff.business_id, value, qrToken, phone).first();
@@ -276,7 +277,7 @@ async function stamp(request, env, staff) {
 }
 
 async function cardById(env, cardId, businessId) {
-  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
+  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
 }
@@ -349,7 +350,7 @@ async function dashboard(request, env, admin) {
       (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
       (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})${eventWhere}`).bind(...eventBindings).first(),
     env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
@@ -643,6 +644,14 @@ async function api(request, env) {
     if (user.must_change_secret) throw new ApiError(403, 'secret_change_required', 'Cambia tu PIN temporal para abrir tu tarjeta.');
     const card = await cardForCustomer(env, user.id, user.business_id);
     return response({ ok: true, card: publicCard(card) });
+  }
+  if (request.method === 'PATCH' && path === '/api/card/style') {
+    const user = await requireRole(request, env, ['customer']);
+    if (user.must_change_secret) throw new ApiError(403, 'secret_change_required', 'Cambia tu PIN temporal antes de personalizar tu tarjeta.');
+    const input = await body(request);
+    if (!STAMP_STYLES.has(input.stampStyle)) throw new ApiError(400, 'invalid_stamp_style', 'Elige un diseño de sellos disponible.');
+    await env.DB.prepare('UPDATE loyalty_cards SET stamp_style=? WHERE customer_id=? AND business_id=?').bind(input.stampStyle, user.id, user.business_id).run();
+    return response({ ok: true, stampStyle: input.stampStyle });
   }
   if (request.method === 'POST' && path === '/api/account/secret') {
     const user = await requireRole(request, env, ['customer', 'employee', 'admin']);

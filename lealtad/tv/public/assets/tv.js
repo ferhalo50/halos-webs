@@ -16,10 +16,6 @@ const elements = {
   connection: document.querySelector('#connection-status'),
   presentation: document.querySelector('#presentation'),
   stage: document.querySelector('#media-stage'),
-  nowPlaying: document.querySelector('#now-playing-title'),
-  presentationProgress: document.querySelector('#presentation-progress'),
-  presentationMusic: document.querySelector('#presentation-music'),
-  exit: document.querySelector('#exit-presentation'),
   audio: document.querySelector('#ambient-audio'),
   toast: document.querySelector('#toast')
 };
@@ -34,7 +30,8 @@ const state = {
   playing: false,
   musicPlaying: false,
   fullscreenWasActive: false,
-  returnFocus: null
+  returnFocus: null,
+  generation: 0, failed: new Set(), transitioning: false, transitionTimer: null, watchdog: null, mediaListeners: null
 };
 
 function showToast(message, duration = 4200) {
@@ -61,6 +58,7 @@ function normalizeItem(item, index) {
     name: String(item.name || `Contenido ${index + 1}`),
     type,
     source,
+    fit: item.fit === 'cover' ? 'cover' : 'contain',
     thumbnail: typeof item.thumbnail === 'string' ? item.thumbnail.trim() : '',
     durationSeconds: Number(item.durationSeconds) > 0 ? Number(item.durationSeconds) : null
   };
@@ -157,6 +155,7 @@ function toggleSelection(id) {
 }
 
 function updateSelection() {
+  try{localStorage.setItem('renace-tv-selection',JSON.stringify([...state.selected]));}catch{}
   const total = state.selected.size;
   document.querySelectorAll('.media-card').forEach(card => {
     const selected = state.selected.has(card.dataset.mediaId);
@@ -173,123 +172,92 @@ function selectedItems() {
 }
 
 function clearTimer() {
-  if (state.timer) clearTimeout(state.timer);
-  state.timer = null;
-  elements.presentationProgress.className = '';
-  elements.presentationProgress.style.animationDuration = '';
+  clearTimeout(state.timer);state.timer=null;
 }
-
-function scheduleNext(seconds) {
-  clearTimer();
-  elements.presentationProgress.style.animationDuration = `${seconds}s`;
-  elements.presentationProgress.className = 'is-timing';
-  state.timer = setTimeout(() => advance(1), seconds * 1000);
+function releaseMedia(){
+  clearTimer();clearInterval(state.watchdog);state.watchdog=null;
+  state.mediaListeners?.abort();state.mediaListeners=null;
+  const video=elements.stage.querySelector('video');
+  if(video){video.pause();video.removeAttribute('src');video.load();}
+  elements.stage.replaceChildren();
 }
-
-function mediaError(item) {
-  const message = document.createElement('p');
-  message.className = 'media-error';
-  message.textContent = `No se pudo abrir “${item.name}”. La presentación continuará.`;
-  elements.stage.replaceChildren(message);
-  scheduleNext(4);
-}
-
-function showCurrentItem() {
-  clearTimer();
-  const item = state.playlist[state.index];
-  if (!item) return exitPresentation();
-  elements.nowPlaying.textContent = `${item.name} · ${state.index + 1} de ${state.playlist.length}`;
-  elements.stage.textContent = '';
-
-  if (item.type === 'video') {
-    const video = document.createElement('video');
-    video.src = item.source;
-    if (item.thumbnail) video.poster = item.thumbnail;
-    video.muted = true;
-    video.autoplay = true;
-    video.controls = false;
-    video.loop = false;
-    video.playsInline = true;
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.addEventListener('ended', () => advance(1));
-    video.addEventListener('error', () => mediaError(item), { once: true });
-    elements.stage.append(video);
-    elements.presentationProgress.className = 'is-video';
-    video.play().catch(() => showToast('Presiona el botón central del mando para iniciar el video.'));
-    return;
-  }
-
-  const image = document.createElement('img');
-  image.src = item.source;
-  image.alt = item.name;
-  image.addEventListener('load', () => scheduleNext(item.durationSeconds || state.config.slideDurationSeconds), { once: true });
-  image.addEventListener('error', () => mediaError(item), { once: true });
-  elements.stage.append(image);
-}
-
-function advance(direction) {
-  if (!state.playing || !state.playlist.length) return;
-  state.index = (state.index + direction + state.playlist.length) % state.playlist.length;
-  showCurrentItem();
-}
-
-async function requestPresentationFullscreen() {
-  const request = elements.presentation.requestFullscreen || elements.presentation.webkitRequestFullscreen;
-  if (!request) return;
-  try {
-    await request.call(elements.presentation);
-    state.fullscreenWasActive = true;
-  } catch {
-    state.fullscreenWasActive = false;
-    showToast('La presentación sigue activa. Usa la opción de pantalla completa del navegador si la necesitas.');
+function fadeDuration(){return matchMedia('(prefers-reduced-motion: reduce)').matches?0:160;}
+function scheduleNext(seconds){clearTimer();state.timer=setTimeout(()=>advance(1),seconds*1000);}
+function showCurrentItem(){
+  releaseMedia();
+  const item=state.playlist[state.index];if(!item)return exitPresentation();
+  const generation=++state.generation,current=()=>state.playing&&generation===state.generation;
+  const controller=new AbortController();state.mediaListeners=controller;
+  const listen=(node,event,fn)=>node.addEventListener(event,fn,{signal:controller.signal});
+  elements.presentation.dataset.index=String(state.index);
+  elements.stage.style.opacity='0';
+  let failed=false,ready=false,lastProgress=performance.now(),lastTime=-1,frames=0;
+  const reveal=()=>{if(!current())return;ready=true;state.failed.delete(item.id);elements.stage.style.opacity='1';};
+  const fail=reason=>{
+    if(!current()||failed)return;failed=true;state.failed.add(item.id);
+    const v=elements.stage.querySelector('video');
+    console.warn('[Renace TV] Medio omitido', {id:item.id,reason,code:v?.error?.code,readyState:v?.readyState,width:v?.videoWidth,height:v?.videoHeight,currentTime:v?.currentTime});
+    if(state.playlist.every(x=>state.failed.has(x.id))){exitPresentation();showToast('No pudimos reproducir esta selección. Revisa tu conexión o elige otro contenido.');}
+    else advance(1);
+  };
+  const started=performance.now();
+  if(item.type==='video'){
+    const video=document.createElement('video');
+    video.muted=true;video.autoplay=true;video.controls=false;video.loop=false;video.playsInline=true;video.preload='auto';
+    video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.style.objectFit=item.fit;
+    let frameCallback;
+    if(video.requestVideoFrameCallback){const onFrame=()=>{if(!current())return;frames++;lastProgress=performance.now();if(!ready)reveal();frameCallback=video.requestVideoFrameCallback(onFrame);};frameCallback=video.requestVideoFrameCallback(onFrame);controller.signal.addEventListener('abort',()=>video.cancelVideoFrameCallback(frameCallback),{once:true});}
+    listen(video,'loadedmetadata',()=>{if(!video.videoWidth||!video.videoHeight)fail('metadata_without_video');});
+    listen(video,'canplay',()=>{if(!current())return;video.play().catch(()=>fail('play_rejected'));});
+    listen(video,'error',()=>fail('media_error'));
+    listen(video,'ended',()=>{if(current())advance(1);});
+    state.watchdog=setInterval(()=>{
+      if(!current())return;const now=performance.now();
+      if(!video.requestVideoFrameCallback&&video.currentTime>lastTime&&video.readyState>=2&&video.videoWidth>0){lastProgress=now;if(!ready&&video.currentTime>0)reveal();}
+      lastTime=video.currentTime;
+      if(!ready&&now-started>15000)fail('start_timeout');
+      else if(ready&&now-lastProgress>10000)fail('playback_stalled');
+    },1000);
+    elements.stage.append(video);video.src=item.source;video.play().catch(()=>fail('play_rejected'));
+  }else{
+    const img=document.createElement('img');img.alt='';img.style.objectFit=item.fit;
+    listen(img,'load',()=>{if(!current())return;clearInterval(state.watchdog);reveal();scheduleNext(item.durationSeconds||state.config.slideDurationSeconds);});
+    listen(img,'error',()=>fail('image_error'));
+    state.watchdog=setInterval(()=>{if(performance.now()-started>15000)fail('image_timeout');},1000);
+    elements.stage.append(img);img.src=item.source;
   }
 }
-
-function startPresentation(items, trigger) {
-  if (!items.length) return showToast('Selecciona al menos un elemento para reproducir.');
-  state.playlist = items.slice();
-  state.index = 0;
-  state.playing = true;
-  state.returnFocus = trigger || document.activeElement;
-  state.fullscreenWasActive = false;
-  elements.presentation.hidden = false;
-  document.body.style.overflow = 'hidden';
-  showCurrentItem();
-  requestPresentationFullscreen();
-  elements.exit.focus({ preventScroll: true });
+function advance(direction){
+  if(!state.playing||!state.playlist.length||state.transitioning)return;
+  state.transitioning=true;clearTimer();elements.stage.style.opacity='0';
+  state.transitionTimer=setTimeout(()=>{state.transitioning=false;if(!state.playing)return;state.index=(state.index+direction+state.playlist.length)%state.playlist.length;showCurrentItem();},fadeDuration());
 }
-
-async function exitPresentation() {
-  if (!state.playing) return;
-  state.playing = false;
-  clearTimer();
-  const video = elements.stage.querySelector('video');
-  if (video) {
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-  }
-  elements.stage.textContent = '';
-  elements.presentation.hidden = true;
-  document.body.style.overflow = '';
-  if (document.fullscreenElement || document.webkitFullscreenElement) {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen;
-    if (exit) {
-      try { await exit.call(document); } catch { /* The overlay is already closed. */ }
-    }
-  }
-  if (state.returnFocus?.isConnected) state.returnFocus.focus({ preventScroll: true });
+async function requestPresentationFullscreen(){
+  const request=elements.presentation.requestFullscreen||elements.presentation.webkitRequestFullscreen;
+  if(!request)return;
+  try{await request.call(elements.presentation);state.fullscreenWasActive=Boolean(document.fullscreenElement||document.webkitFullscreenElement);}catch{state.fullscreenWasActive=false;}
+}
+function startPresentation(items,trigger){
+  if(!items.length)return showToast('Selecciona al menos un elemento para reproducir.');
+  state.playlist=items.slice();state.index=0;state.failed=new Set();state.playing=true;state.returnFocus=trigger||document.activeElement;state.fullscreenWasActive=false;
+  elements.presentation.hidden=false;document.body.style.overflow='hidden';document.body.classList.add('presenting');elements.toast.hidden=true;
+  showCurrentItem();requestPresentationFullscreen();elements.presentation.focus({preventScroll:true});
+}
+async function exitPresentation(){
+  if(!state.playing)return;
+  state.playing=false;state.generation++;clearTimeout(state.transitionTimer);state.transitioning=false;releaseMedia();
+  elements.presentation.hidden=true;document.body.style.overflow='';document.body.classList.remove('presenting');
+  if(document.fullscreenElement||document.webkitFullscreenElement){const exit=document.exitFullscreen||document.webkitExitFullscreen;if(exit){try{await exit.call(document);}catch{}}}
+  if(state.returnFocus?.isConnected)state.returnFocus.focus({preventScroll:true});
 }
 
 function updateMusicButtons() {
   const available = Boolean(state.config.music);
-  [elements.music, elements.presentationMusic].forEach(button => {
+  [elements.music].forEach(button => {
     button.disabled = !available;
     button.setAttribute('aria-pressed', String(state.musicPlaying));
   });
-  elements.music.textContent = state.musicPlaying ? '♪ Música encendida' : '♪ Música apagada';
-  elements.presentationMusic.textContent = state.musicPlaying ? '♪ Música encendida' : '♪ Música';
+  elements.music.textContent = state.musicPlaying ? '♪ Música ambiental · Encendida' : '♪ Música ambiental · Apagada';
 }
 
 async function toggleMusic() {
@@ -311,16 +279,6 @@ async function toggleMusic() {
   }
 }
 
-function offlineUrls(items) {
-  const urls = ['/media.json'];
-  items.forEach(item => {
-    urls.push(item.source);
-    if (item.thumbnail) urls.push(item.thumbnail);
-  });
-  if (state.config.music) urls.push(state.config.music.source);
-  return Array.from(new Set(urls));
-}
-
 function setOfflineProgress(complete, total, label = 'Preparando contenido…') {
   const percent = total ? Math.round((complete / total) * 100) : 0;
   elements.offlineStatus.hidden = false;
@@ -337,19 +295,24 @@ async function prepareOffline() {
   elements.offline.disabled = true;
   setOfflineProgress(0, 0);
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => setTimeout(() => reject(new Error('El modo sin conexión no está listo. Recarga e intenta de nuevo.')), 10000))]);
     const worker = registration.active || registration.waiting || registration.installing;
     if (!worker) throw new Error('El modo sin conexión todavía no está listo. Intenta de nuevo.');
     const channel = new MessageChannel();
     const result = new Promise((resolve, reject) => {
+      let timer;
+      const finish = (fn, value) => { clearTimeout(timer); channel.port1.close(); fn(value); };
+      const arm = () => { clearTimeout(timer); timer = setTimeout(() => finish(reject, new Error('La descarga tardó demasiado. Revisa tu conexión e intenta de nuevo.')), 120000); };
+      arm();
       channel.port1.onmessage = event => {
+        arm();
         const message = event.data || {};
         if (message.type === 'progress') setOfflineProgress(message.complete, message.total);
-        if (message.type === 'complete') resolve(message);
-        if (message.type === 'error') reject(new Error(message.message));
+        if (message.type === 'complete') finish(resolve, message);
+        if (message.type === 'error') finish(reject, new Error(message.message));
       };
     });
-    worker.postMessage({ type: 'PREPARE_OFFLINE', version: state.config.version, urls: offlineUrls(items) }, [channel.port2]);
+    worker.postMessage({ type: 'PREPARE_OFFLINE', config: { ...state.config, items } }, [channel.port2]);
     const completed = await result;
     setOfflineProgress(completed.total, completed.total, 'Listo para usar sin conexión');
     if (navigator.storage?.estimate) {
@@ -375,24 +338,10 @@ function updateConnection() {
 }
 
 function handlePresentationKeys(event) {
-  if (!state.playing) return;
-  const exitKeys = ['Escape', 'BrowserBack', 'GoBack'];
-  if (exitKeys.includes(event.key) || (event.key === 'Backspace' && !/INPUT|TEXTAREA/.test(event.target.tagName))) {
-    event.preventDefault();
-    event.stopPropagation();
-    exitPresentation();
-    return;
-  }
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    advance(1);
-  } else if (event.key === 'ArrowLeft') {
-    event.preventDefault();
-    advance(-1);
-  } else if ((event.key === 'Enter' || event.key === ' ') && event.target === elements.stage) {
-    event.preventDefault();
-    elements.stage.querySelector('video')?.play().catch(() => {});
-  }
+  if(!state.playing)return moveLibraryFocus(event);
+  if(event.key==='Escape'){event.preventDefault();exitPresentation();}
+  else if(event.key==='ArrowRight'){event.preventDefault();advance(1);}
+  else if(event.key==='ArrowLeft'){event.preventDefault();advance(-1);}
 }
 
 async function registerServiceWorker() {
@@ -401,14 +350,32 @@ async function registerServiceWorker() {
   catch { showToast('El modo sin conexión no está disponible en este momento.'); }
 }
 
+function moveLibraryFocus(event) {
+  const direction = {ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]}[event.key];
+  if (!direction) return;
+  const buttons = [...document.querySelectorAll('main button:not(:disabled), main a.button')].filter(button => button.getClientRects().length);
+  const active = document.activeElement;
+  if (!buttons.includes(active)) { event.preventDefault(); buttons[0]?.focus(); return; }
+  const from = active.getBoundingClientRect(), x = from.x + from.width/2, y = from.y + from.height/2;
+  let target, score = Infinity;
+  buttons.filter(button => button !== active).forEach(button => {
+    const rect = button.getBoundingClientRect(), dx = rect.x + rect.width/2-x, dy = rect.y+rect.height/2-y;
+    const forward = dx*direction[0]+dy*direction[1], cross = Math.abs(direction[0] ? dy : dx);
+    const distance = forward+cross*3;
+    if (forward > 5 && distance < score) { target=button;score=distance; }
+  });
+  if(target){event.preventDefault();target.focus();target.scrollIntoView({block:'nearest'});}
+}
+
+elements.audio.addEventListener('error', () => { state.musicPlaying=false; updateMusicButtons(); showToast('No se pudo abrir la música. Revisa tu conexión o prepara el contenido sin conexión.'); });
 elements.playSelected.addEventListener('click', event => startPresentation(selectedItems(), event.currentTarget));
 elements.playAll.addEventListener('click', event => startPresentation(state.config.items, event.currentTarget));
 elements.selectAll.addEventListener('click', () => { state.config.items.forEach(item => state.selected.add(item.id)); updateSelection(); });
 elements.clearSelection.addEventListener('click', () => { state.selected.clear(); updateSelection(); });
 elements.music.addEventListener('click', toggleMusic);
-elements.presentationMusic.addEventListener('click', toggleMusic);
 elements.offline.addEventListener('click', prepareOffline);
-elements.exit.addEventListener('click', exitPresentation);
+elements.presentation.addEventListener('dblclick', exitPresentation);
+document.querySelector('#open-spotify').addEventListener('click',()=>{elements.audio.pause();state.musicPlaying=false;updateMusicButtons();});
 window.addEventListener('online', updateConnection);
 window.addEventListener('offline', updateConnection);
 window.addEventListener('keydown', handlePresentationKeys, true);
@@ -424,6 +391,7 @@ async function init() {
   registerServiceWorker();
   try {
     state.config = await loadConfig();
+    try{const saved=JSON.parse(localStorage.getItem('renace-tv-selection')||'[]');if(Array.isArray(saved))state.selected=new Set(saved.filter(id=>state.config.items.some(item=>item.id===id)));}catch{}
     if (state.config.music) {
       elements.audio.src = state.config.music.source;
       elements.audio.setAttribute('aria-label', state.config.music.name);

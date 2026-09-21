@@ -1,7 +1,7 @@
-const CACHE='renace-shell-v6';
-const SHELL=['/','/manifest.webmanifest','/assets/style.css','/assets/refinements.css','/assets/logo-renace.png','/assets/app-icon.svg','/assets/qrcode.js','/assets/jsqr.js','/assets/live.js'];
+const CACHE='renace-shell-v8';
+const SHELL=['/','/manifest.webmanifest','/assets/style.css','/assets/refinements.css','/assets/logo-renace.png','/assets/app-icon.svg','/assets/qrcode.js','/assets/jsqr.js','/assets/live.js','/assets/help.js','/assets/help.css','/assets/stamps/stamp-cowboy.webp','/assets/stamps/stamp-bow.webp'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('renace-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin||url.pathname.startsWith('/api/'))return;

@@ -87,3 +87,43 @@ La pantalla del establecimiento vive en el proyecto separado `../tv/` y se publi
 La biblioteca se edita en `../tv/public/media.json`; las imágenes, videos y audio se organizan bajo `../tv/public/media/`. La interfaz reproduce las imágenes durante 10 segundos de forma predeterminada, deja terminar cada MP4, mantiene la música ambiental entre cambios y acepta Atrás, Escape y flechas del mando. El `README.md` del proyecto TV explica el formato y el cambio de versión del caché.
 
 Para una biblioteca pequeña se pueden publicar archivos ligeros con el Worker. Si crece el volumen de videos, `source` y `thumbnail` están preparados para apuntar a Cloudflare R2. Esa migración futura requerirá crear el bucket, configurar CORS y ampliar los dominios permitidos en las cabeceras de TV; R2 no está configurado ni contratado en esta versión.
+
+
+## Guías integradas e instalación de la tarjeta
+
+El administrador y el mostrador tienen **Guía de uso**; el cliente tiene **Guía**. Un componente compartido (`public/assets/help.js` y `help.css`) abre un diálogo dentro de la app con contenido específico del rol. Tiene encabezado fijo, desplazamiento interno, cierre con botón/Escape, foco dentro del diálogo y devolución al botón de origen. No abre PDFs ni páginas externas.
+
+La guía explica únicamente funciones existentes: métricas, clientes, equipo, filtros y exportación visible, ajustes con motivo, PIN temporal presencial, bajas, escaneo, confirmación de compra, sello diario y canje. “Cafés disponibles” representa recompensas pendientes de canje, no inventario. Se conserva la regla de 9 sellos y el 10.º café gratis.
+
+**Instalar app** aparece en la tarjeta del cliente. Cuando Chromium proporciona `beforeinstallprompt`, el botón abre ese diálogo nativo y procesa aceptación/cancelación. Si aún no está disponible, muestra instrucciones para el menú del navegador. `appinstalled`, `display-mode: standalone` y `navigator.standalone` evitan ofrecer una instalación innecesaria.
+
+En iPhone/iPad la guía indica abrir en Safari → Compartir → Agregar a pantalla de inicio → Agregar; según la versión, Compartir puede estar dentro del menú. El sitio no puede abrir automáticamente esa opción ni descarga un APK. Se conservan el manifiesto, sus rutas, el modo standalone y los iconos actuales, que ya se habían comprobado instalables.
+
+El caché de interfaz incluye las guías. La consulta de saldos, acceso y operaciones de mostrador requieren internet; para mostrar un QR sin conexión se usa la imagen descargada. El caché de la PWA no replica la base de datos.
+
+`test/guides.test.mjs` comprueba los tres roles, diálogo, foco, Escape, pantalla móvil, instalación aceptada/cancelada, instrucciones de iOS, detección standalone y compartir PNG/cancelar. Los eventos nativos de instalación y compartir se simulan; las pruebas existentes descargan y decodifican el PNG y alimentan el QR real al escáner. La confirmación final del menú del sistema se hace físicamente en Android/iPhone. Todas estas pruebas utilizan la base local, no clientes de producción.
+
+
+## Diseños personales de sellos (septiembre 2026)
+
+El cliente elige **Clásico**, **Vaquero** o **Moño** debajo de su tarjeta. La vista cambia inmediatamente y `PATCH /api/card/style` guarda únicamente `loyalty_cards.stamp_style` en D1 para la cuenta autenticada y su negocio. No modifica progreso, visitas, canjes ni historial. La migración aditiva `0007_stamp_style.sql` usa `classic` como valor inicial y limita los valores a `classic`, `cowboy` y `bow`; la API rechaza otros valores y la lectura/renderizado usan Clásico para valores antiguos desconocidos. El cliente no puede proporcionar una ruta de imagen ni editar la preferencia de otro cliente. Un guardado fallido muestra un aviso y recupera la preferencia anterior; la sincronización posterior confirma el estado del servidor.
+
+Assets: `public/assets/stamps/stamp-cowboy.webp` y `stamp-bow.webp`, de aproximadamente 17 y 16 KB. Se prepararon a partir de `RenaceStickers.jpeg`, separando los personajes con la herramienta de imágenes y optimizando las salidas con FFmpeg ya disponible. Para sustituirlos, usar WebP con transparencia conservando esos nombres y proporciones; incrementar la versión de caché en `public/service-worker.js`. No se necesita otra migración si los identificadores de estilo se mantienen.
+
+El PNG descargado/compartido conserva QR, nombre y celular y ahora muestra el diseño y los sellos **al momento de guardarlo**, con fecha y aviso de consultar el saldo actual. No representa una recompensa verificable por sí mismo: mostrador siempre consulta el servidor. La corrección CSP para `blob:` se conserva. La guía del cliente explica el selector y la naturaleza estática del PNG.
+
+### QR público para impresión
+
+- `public/print/renace-acceso.png`: 1748 × 2480 px, apto para A5 (148 × 210 mm) a aproximadamente 300 ppp.
+- `public/print/renace-acceso.svg`: versión vectorial con el logo incorporado.
+- Destino único: `https://renacecafe.haloswebs.com/`, sin token, cuenta ni datos personales.
+- Quiet zone de 4 módulos, negro sobre blanco y corrección M; no hay decoración dentro del QR.
+- Reproducir con `node scripts/generate-public-qr.mjs` (usa el mismo Playwright disponible para las pruebas). El generador decodifica el QR antes de guardar el PNG final. La suite también decodifica la imagen resultante.
+
+### Validación y publicación
+
+`pnpm run check` y `pnpm test` incluyen estilos, conservación de 5/9, aislamiento entre cuentas, rechazo de valores no permitidos, persistencia tras cerrar sesión y otro contexto de navegador, recuperación del guardado fallido y PNG de los tres estilos con QR legible. Las pruebas usan D1 local, no cuentas de producción.
+
+Antes de desplegar este código, verificar la cuenta Cloudflare correcta y aplicar **solo** la migración pendiente: `pnpm exec wrangler d1 migrations list DB --remote`, después `pnpm exec wrangler d1 migrations apply DB --remote`. Si la cuenta no tiene acceso a Renace, detenerse; no publicar Card sin su columna nueva. La migración local ya se probó.
+
+Las guías y PWA existentes se mantienen: Android usa `beforeinstallprompt` si está disponible; iPhone/iPad explica Safari → Compartir → Agregar a pantalla de inicio → mantener “Abrir como app web” si aparece → Agregar. Chrome/Google/iOS reciben indicaciones para abrir la misma dirección en Safari. No se promete abrir ese menú automáticamente ni se ofrecen APK. El estado standalone o `appinstalled` desactiva la oferta.

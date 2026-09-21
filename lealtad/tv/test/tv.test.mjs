@@ -1,132 +1,98 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { chromium } from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
-
-const root = new URL('../', import.meta.url);
-
-test('TV files are isolated and configured without backend services', async () => {
-  const [wrangler, worker, serviceWorker, media, app] = await Promise.all([
-    readFile(new URL('wrangler.jsonc', root), 'utf8'),
-    readFile(new URL('worker/index.js', root), 'utf8'),
-    readFile(new URL('public/service-worker.js', root), 'utf8'),
-    readFile(new URL('public/media.json', root), 'utf8'),
-    readFile(new URL('public/assets/tv.js', root), 'utf8')
-  ]);
-  assert.match(wrangler, /renacecafetv\.haloswebs\.com/);
-  assert.doesNotMatch(wrangler, /d1_databases|r2_buckets/i);
-  assert.doesNotMatch(`${worker}\n${app}`, /\/api\/|login|password|admin/i);
-  assert.match(serviceWorker, /renace-tv-shell-/);
-  assert.match(serviceWorker, /renace-tv-media-/);
-  assert.match(serviceWorker, /PREPARE_OFFLINE/);
-  assert.match(serviceWorker, /content-range/);
-  const config = JSON.parse(media);
-  assert.ok(config.version);
-  assert.equal(config.slideDurationSeconds, 10);
-  assert.ok(Array.isArray(config.items));
+import {readFile,stat} from 'node:fs/promises';
+import {chromium} from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+const base='http://127.0.0.1:8790';
+const config=JSON.parse(await readFile(new URL('../public/media.json',import.meta.url)));
+const images=config.items.filter(x=>x.type==='image'),videos=config.items.filter(x=>x.type==='video');
+test('every configured demo file exists and is served with the correct type',async()=>{
+  assert.equal(config.slideDurationSeconds,10);
+  assert.equal(config.music.source,'/media/audio/musicacoffee.mp3');
+  assert.ok(!config.items.some(x=>/logo-renace|renace-qr/.test(x.source)));
+  for(const item of [...config.items,{source:config.music.source,type:'audio'}]){
+    const file=await stat(new URL('../public'+item.source,import.meta.url));assert.ok(file.size>0);
+    const response=await fetch(base+item.source,{method:'HEAD'});assert.equal(response.status,200,item.source);
+    assert.match(response.headers.get('content-type'),new RegExp('^'+item.type+'/'));
+  }
 });
 
-test('TV library, remote controls, looping, music and offline preparation', async t => {
-  const browser = await chromium.launch({ headless: true, channel: 'msedge' });
-  t.after(() => browser.close());
-  const context = await browser.newContext({ viewport: { width: 1920, height: 1080 }, serviceWorkers: 'allow' });
-  const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
-  await page.addInitScript(() => {
-    HTMLElement.prototype.requestFullscreen = function requestFullscreen() {
-      window.__fullscreenRequests = (window.__fullscreenRequests || 0) + 1;
-      return Promise.resolve();
-    };
-  });
-
-  await page.goto('http://127.0.0.1:8790/');
-  await page.waitForSelector('.media-card');
-  assert.equal(await page.title(), 'Renace Café TV');
-  assert.match(await page.locator('h1').innerText(), /Tu momento favorito[\s\S]*café/);
-  assert.equal(await page.locator('.media-card').count(), 1);
-  assert.equal(await page.locator('#toggle-music').isDisabled(), true);
-
-  await page.click('.media-card');
-  assert.match(await page.locator('#selection-count').innerText(), /1 elemento/);
+test('real photos, MP4s and MP3: sequences, loop, keyboard, full screen and mobile',async t=>{
+  const browser=await chromium.launch({headless:true,channel:'msedge'});t.after(()=>browser.close());
+  const page=await browser.newPage({viewport:{width:1920,height:1080}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  await page.goto(base);await page.waitForSelector('.media-card');
+  assert.equal(await page.locator('.media-card').count(),config.items.length);
+  for(const item of images){
+    const locator=page.locator(`[data-media-id="${item.id}"] img`);await locator.scrollIntoViewIfNeeded();
+    await locator.evaluate(async img=>{await img.decode();});
+    assert.equal(await locator.evaluate(img=>getComputedStyle(img).objectFit),'contain');
+  }
+  assert.equal(await page.locator('.media-card[data-media-id="'+videos[0].id+'"] img').count(),0);
+  await page.locator('#select-all').focus();await page.keyboard.press('ArrowDown');
+  assert.notEqual(await page.evaluate(()=>document.activeElement.id),'select-all');
+  await page.click('#toggle-music');await page.waitForFunction(()=>!document.querySelector('audio').paused&&document.querySelector('audio').currentTime>0);
+  const audioStart=await page.locator('audio').evaluate(a=>a.currentTime);
+  await page.click(`[data-media-id="${images[0].id}"]`);await page.click(`[data-media-id="${images[1].id}"]`);await page.click('#play-selected');
+  await page.waitForFunction(()=>!!document.fullscreenElement);
+  await page.waitForFunction(()=>document.querySelector('#presentation').dataset.index==='1',null,{timeout:14000});
+  const bounds=await page.locator('#media-stage img').evaluate(img=>{const r=img.getBoundingClientRect();return {fit:getComputedStyle(img).objectFit,w:r.width,h:r.height,iw:innerWidth,ih:innerHeight};});
+  assert.equal(bounds.fit,'contain');assert.ok(bounds.w<=bounds.iw&&bounds.h<=bounds.ih);
+  await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('#presentation').dataset.index==='0');
+  assert.ok(await page.locator('audio').evaluate(a=>a.currentTime)>audioStart);
+  await page.keyboard.press('Escape');await page.waitForSelector('#presentation',{state:'hidden'});
+  await page.click('#clear-selection');
+  for(const item of videos)await page.click(`[data-media-id="${item.id}"]`);
   await page.click('#play-selected');
-  await page.waitForSelector('#presentation:not([hidden]) .media-stage img');
-  assert.equal(await page.evaluate(() => window.__fullscreenRequests), 1);
-  const fit = await page.locator('.media-stage img').evaluate(node => getComputedStyle(node).objectFit);
-  assert.equal(fit, 'contain');
-  await page.keyboard.press('Backspace');
-  await page.waitForSelector('#presentation', { state: 'hidden' });
-
-  await page.click('#prepare-offline');
-  await page.waitForFunction(() => document.querySelector('#offline-label')?.textContent.includes('Listo para usar'), null, { timeout: 15000 });
-  assert.equal(await page.locator('#offline-progress').getAttribute('value'), '100');
-
-  const mediaConfiguration = {
-    version: 'test-loop-1',
-    slideDurationSeconds: .25,
-    music: { source: '/media/audio/test.mp3', name: 'Prueba ambiental' },
-    items: [
-      { id: 'one', name: 'Primera imagen', type: 'image', source: '/media/images/logo-renace.png' },
-      { id: 'two', name: 'Segunda imagen', type: 'image', source: '/media/images/logo-renace.png' },
-      { id: 'video', name: 'Video completo', type: 'video', source: '/media/videos/test.mp4', thumbnail: '/media/images/logo-renace.png' }
-    ]
-  };
-  const secondContext = await browser.newContext({ viewport: { width: 1920, height: 1080 }, serviceWorkers: 'block' });
-  const secondPage = await secondContext.newPage();
-  const secondErrors = [];
-  secondPage.on('pageerror', error => secondErrors.push(error.message));
-  await secondPage.route('**/media.json', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mediaConfiguration) }));
-  await secondPage.addInitScript(() => {
-    HTMLElement.prototype.requestFullscreen = () => Promise.resolve();
-    const addMediaListener = HTMLMediaElement.prototype.addEventListener;
-    HTMLMediaElement.prototype.addEventListener = function addEventListener(type, listener, options) {
-      if (type === 'error') return;
-      return addMediaListener.call(this, type, listener, options);
-    };
-    HTMLMediaElement.prototype.play = function play() { this.dataset.playRequested = 'true'; return Promise.resolve(); };
-    HTMLMediaElement.prototype.pause = function pause() { this.dataset.pauseRequested = 'true'; };
-  });
-  await secondPage.goto('http://127.0.0.1:8790/?test=media');
-  await secondPage.waitForSelector('.media-card:nth-child(3)');
-  assert.equal(await secondPage.locator('.media-card').count(), 3);
-
-  await secondPage.click('#toggle-music');
-  assert.equal(await secondPage.locator('#toggle-music').getAttribute('aria-pressed'), 'true');
-  assert.equal(await secondPage.locator('#ambient-audio').getAttribute('data-play-requested'), 'true');
-
-  await secondPage.click('#play-all');
-  await secondPage.waitForSelector('#presentation:not([hidden])');
-  await secondPage.waitForFunction(() => document.querySelector('#now-playing-title')?.textContent.includes('Segunda imagen'), null, { timeout: 2000 });
-  await secondPage.keyboard.press('ArrowRight');
-  await secondPage.waitForSelector('#media-stage video');
-  const videoState = await secondPage.locator('#media-stage video').evaluate(video => ({ muted: video.muted, controls: video.controls, loop: video.loop, playsInline: video.playsInline }));
-  assert.deepEqual(videoState, { muted: true, controls: false, loop: false, playsInline: true });
-  await secondPage.locator('#media-stage video').dispatchEvent('ended');
-  await secondPage.waitForFunction(() => document.querySelector('#now-playing-title')?.textContent.includes('Primera imagen'));
-  assert.equal(await secondPage.locator('#presentation-music').getAttribute('aria-pressed'), 'true');
-  await secondPage.keyboard.press('Escape');
-  await secondPage.waitForSelector('#presentation', { state: 'hidden' });
-  assert.deepEqual(secondErrors, []);
-  assert.deepEqual(errors, []);
-  await secondContext.close();
+  for(let index=0;index<videos.length;index++){
+    await page.waitForFunction(src=>document.querySelector('#media-stage video')?.getAttribute('src')===src,videos[index].source);
+    await page.waitForFunction(()=>{const v=document.querySelector('#media-stage video');return v&&v.readyState>=2&&v.currentTime>0;});
+    const dimensions=await page.locator('#media-stage video').evaluate(v=>({width:v.videoWidth,height:v.videoHeight,muted:v.muted,controls:v.controls,fit:getComputedStyle(v).objectFit}));
+    assert.ok(dimensions.width>0&&dimensions.height>0);assert.equal(dimensions.muted,true);assert.equal(dimensions.controls,false);assert.equal(dimensions.fit,'contain');
+    // Decode the actual MP4 to its end at increased speed (local assets do not support seeking).
+    await page.locator('#media-stage video').evaluate(v=>{v.playbackRate=8;});
+  }
+  await page.waitForFunction(src=>document.querySelector('#media-stage video')?.getAttribute('src')===src,videos[0].source);
+  await page.evaluate(()=>document.exitFullscreen());await page.waitForSelector('#presentation',{state:'hidden'});
+  await page.click('#clear-selection');await page.click(`[data-media-id="${images[0].id}"]`);await page.click(`[data-media-id="${videos[0].id}"]`);await page.click('#play-selected');
+  await page.waitForSelector('#media-stage video',{timeout:14000});
+  await page.waitForFunction(()=>document.querySelector('#media-stage video').currentTime>0);
+  await page.locator('#media-stage video').evaluate(v=>{v.playbackRate=8;});await page.waitForSelector('#media-stage img');
+  assert.equal(await page.locator('audio').evaluate(a=>a.paused),false);
+  await page.evaluate(()=>document.exitFullscreen());await page.click('#toggle-music');assert.equal(await page.locator('audio').evaluate(a=>a.paused),true);
+  const pausedAt=await page.locator('audio').evaluate(a=>a.currentTime);
+  await page.click('#toggle-music');await page.waitForFunction(time=>document.querySelector('audio').currentTime>time,pausedAt);
+  if(process.env.RENACE_SCREENSHOTS)await page.screenshot({path:process.env.RENACE_SCREENSHOTS+'/tv-desktop.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  if(process.env.RENACE_SCREENSHOTS)await page.screenshot({path:process.env.RENACE_SCREENSHOTS+'/tv-mobile.png',fullPage:true});
+  await page.evaluate(()=>{HTMLElement.prototype.requestFullscreen=()=>Promise.reject(new Error('Unavailable'));});
+  await page.click('#play-selected');await page.waitForSelector('#media-stage img');
+  assert.equal(await page.locator('#presentation button').count(),0);
+  await page.locator('#media-stage').dblclick();await page.waitForSelector('#presentation',{state:'hidden'});
+  assert.deepEqual(errors,[]);
 });
 
-test('TV controls remain usable on a phone-sized screen', async t => {
-  const browser = await chromium.launch({ headless: true, channel: 'msedge' });
-  t.after(() => browser.close());
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
-  await page.addInitScript(() => { HTMLElement.prototype.requestFullscreen = () => Promise.resolve(); });
-  await page.goto('http://127.0.0.1:8790/?test=mobile');
-  await page.waitForSelector('.media-card');
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
-  assert.equal(await page.locator('#play-all').isVisible(), true);
-  assert.equal(await page.locator('#prepare-offline').isVisible(), true);
-  await page.click('.media-card');
-  await page.click('#play-selected');
-  await page.waitForSelector('#presentation:not([hidden]) .media-stage img');
-  assert.equal(await page.locator('#exit-presentation').isVisible(), true);
-  assert.equal(await page.locator('.media-stage img').evaluate(node => getComputedStyle(node).objectFit), 'contain');
-  await page.keyboard.press('Escape');
-  await page.waitForSelector('#presentation', { state: 'hidden' });
+test('offline real media, byte ranges and atomic replacement preserve other caches',async t=>{
+  const browser=await chromium.launch({headless:true,channel:'msedge'});t.after(()=>browser.close());
+  const context=await browser.newContext(),page=await context.newPage();await page.goto(base);await page.waitForSelector('.media-card');
+  await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+  assert.equal((await page.evaluate(()=>caches.keys())).some(x=>x.startsWith('renace-tv-media-')),false);
+  await page.evaluate(async()=>{await caches.open('unrelated-test-cache');});
+  await page.click('#prepare-offline');await page.waitForFunction(()=>document.querySelector('#offline-label').textContent==='Listo para usar sin conexión',null,{timeout:120000});
+  const first=await page.evaluate(()=>caches.keys());assert.ok(first.includes('unrelated-test-cache'));
+  const replace=async next=>page.evaluate(async config=>{
+    const reg=await navigator.serviceWorker.ready,channel=new MessageChannel();
+    return new Promise(resolve=>{channel.port1.onmessage=e=>{if(['complete','error'].includes(e.data.type)){channel.port1.close();resolve(e.data);}};reg.active.postMessage({type:'PREPARE_OFFLINE',config},[channel.port2]);});
+  },next);
+  const next={...config,version:config.version+'-test-update'};
+  assert.equal((await replace(next)).type,'complete');
+  const keys=await page.evaluate(()=>caches.keys());assert.equal(keys.filter(x=>x.startsWith('renace-tv-media-')).length,1);assert.ok(keys.some(x=>x.includes('test-update')));assert.ok(keys.includes('unrelated-test-cache'));
+  await context.setOffline(true);await page.reload();await page.waitForSelector('.media-card');
+  assert.equal(await page.locator('.media-card').count(),config.items.length);
+  const range=await page.evaluate(async source=>{const r=await fetch(source,{headers:{Range:'bytes=-32'}});return {status:r.status,bytes:(await r.arrayBuffer()).byteLength};},videos[0].source);
+  assert.deepEqual(range,{status:206,bytes:32});
+  await page.click('#toggle-music');await page.waitForFunction(()=>document.querySelector('audio').currentTime>0);
+  await page.click(`[data-media-id="${videos[0].id}"]`);await page.click('#play-selected');await page.waitForFunction(()=>document.querySelector('#media-stage video')?.currentTime>0);
+  await page.evaluate(()=>document.exitFullscreen());
+  assert.equal((await replace({...config,version:'failed-offline-attempt'})).type,'error');
+  assert.deepEqual(await page.evaluate(()=>caches.keys()),keys);
 });

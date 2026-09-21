@@ -48,9 +48,11 @@
       <div class="utility-actions">
         <button class="button button-quiet" id="select-all" type="button">Seleccionar todo</button>
         <button class="button button-quiet" id="clear-selection" type="button" disabled>Limpiar selección</button>
-        <button class="button button-quiet" id="toggle-music" type="button" aria-pressed="false" disabled>♪ Música apagada</button>
+        <button class="button button-quiet" id="toggle-music" type="button" aria-pressed="false" disabled>♪ Música ambiental · Apagada</button>
         <button class="button button-offline" id="prepare-offline" type="button">↓ Preparar sin conexión</button>
       </div>
+      <a class="button button-quiet spotify-link" id="open-spotify" href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer">Abrir Spotify ↗</a>
+      <p class="spotify-note">Se abre fuera de Renace TV. Al regresar, el sonido depende de tu dispositivo. La música ambiental se pausa al abrir Spotify.</p>
       <div class="offline-status" id="offline-status" hidden aria-live="polite">
         <div><strong id="offline-label">Preparando contenido…</strong><span id="offline-detail"></span></div>
         <progress id="offline-progress" max="100" value="0">0%</progress>
@@ -73,19 +75,11 @@
 
   <footer>
     <p><strong>Mando Fire TV:</strong> usa las flechas para moverte y el botón central para elegir.</p>
-    <p>Durante la presentación, usa <kbd>←</kbd> <kbd>→</kbd> para cambiar y <kbd>Atrás</kbd> para salir.</p>
+    <p>Durante la presentación, usa <kbd>←</kbd> <kbd>→</kbd> para cambiar y <kbd>Atrás</kbd> para salir. En pantalla táctil, toca dos veces.</p>
   </footer>
 
-  <section class="presentation" id="presentation" hidden aria-label="Presentación en curso">
-    <div class="presentation-chrome">
-      <div class="now-playing"><span></span><p>En pantalla<small id="now-playing-title"></small></p></div>
-      <div class="presentation-actions">
-        <button id="presentation-music" type="button" aria-pressed="false" disabled>♪ Música</button>
-        <button id="exit-presentation" type="button">Salir <kbd>Atrás</kbd></button>
-      </div>
-    </div>
+  <section class="presentation" id="presentation" tabindex="-1" hidden aria-label="Presentación en curso">
     <div class="media-stage" id="media-stage"></div>
-    <div class="presentation-progress"><span id="presentation-progress"></span></div>
   </section>
 
   <audio id="ambient-audio" loop preload="none"></audio>

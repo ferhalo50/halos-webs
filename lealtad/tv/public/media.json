@@ -1,14 +1,94 @@
 {
-  "version": "2026.09.20-1",
+  "version": "2026.09.21-1",
   "slideDurationSeconds": 10,
-  "music": null,
+  "music": {
+    "source": "/media/audio/musicacoffee.mp3",
+    "name": "Música ambiental Renace"
+  },
   "items": [
     {
-      "id": "bienvenida-renace",
-      "name": "Bienvenida Renace",
+      "id": "renace-1",
+      "name": "Renace 1",
       "type": "image",
-      "source": "/media/images/logo-renace.png",
-      "thumbnail": "/media/images/logo-renace.png"
+      "source": "/media/images/renace1.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-2",
+      "name": "Renace 2",
+      "type": "image",
+      "source": "/media/images/renace2.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-3",
+      "name": "Renace 3",
+      "type": "image",
+      "source": "/media/images/renace3.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-4",
+      "name": "Renace 4",
+      "type": "image",
+      "source": "/media/images/renace4.png",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-5",
+      "name": "Renace 5",
+      "type": "image",
+      "source": "/media/images/renace5.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-6",
+      "name": "Renace 6",
+      "type": "image",
+      "source": "/media/images/renace6.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-7",
+      "name": "Renace 7",
+      "type": "image",
+      "source": "/media/images/renace7.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-8",
+      "name": "Renace 8",
+      "type": "image",
+      "source": "/media/images/renace8.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-9",
+      "name": "Renace 9",
+      "type": "image",
+      "source": "/media/images/renace9.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-video-1",
+      "name": "Video Renace 1",
+      "type": "video",
+      "source": "/media/videos/web/renacevideo1-tv720-v2.mp4",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-video-2",
+      "name": "Video Renace 2",
+      "type": "video",
+      "source": "/media/videos/web/renacevideo2-tv720-v2.mp4",
+      "fit": "contain"
+    },
+    {
+      "id": "video-coffee",
+      "name": "Coffee",
+      "type": "video",
+      "source": "/media/videos/web/videocoffee-tv720-v2.mp4",
+      "fit": "contain"
     }
   ]
 }

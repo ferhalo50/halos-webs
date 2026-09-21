@@ -1,0 +1,7 @@
+# Keep original demonstration videos locally; publish compatible web copies only.
+/media/videos/renacevideo1.mp4
+/media/videos/renacevideo2.mp4
+/media/videos/videocoffee.mp4
+
+# Previous web variants kept locally; publish the lighter TV versions only.
+/media/videos/web/*-h264.mp4
