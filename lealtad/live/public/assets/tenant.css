@@ -1,0 +1,30 @@
+/* Tenant styling: shared layout, distinct Moon palette. */
+html[data-tenant="mooncoffee"]{--cream:#fbf3e4;--olive:#563b29;--ink:#39291e;--muted:#80715f;--line:#d8c7ac}
+[data-tenant="mooncoffee"] .card{background:linear-gradient(135deg,#fff8e9,#efdcba);border-color:#cbae81;box-shadow:0 22px 55px #5f381619}
+[data-tenant="mooncoffee"] .stamps{grid-template-columns:repeat(4,1fr);gap:15px}
+[data-tenant="mooncoffee"] .stamp{border-color:#b5976b;color:#816441}
+[data-tenant="mooncoffee"] .stamp.filled{background:#503725;color:#fff8e9}
+[data-tenant="mooncoffee"] .card-line{background:#cbae81}
+[data-tenant="mooncoffee"] .reward,[data-tenant="mooncoffee"] .visit-detail,[data-tenant="mooncoffee"] .customer-summary{background:#f6ead5}
+[data-tenant="mooncoffee"] .steps b{color:#aa773e}
+[data-tenant="mooncoffee"] .scanner-shell{background:radial-gradient(ellipse at center,#f7e8cc,#e2caa5);border-color:#bca17c}
+[data-tenant="mooncoffee"] .scan-symbol,[data-tenant="mooncoffee"] .empty-emblem{color:#a47135;background:#f1e2c9;border-color:#d3b98f}
+[data-tenant="mooncoffee"] .stamp-option[aria-pressed="true"]{border-color:#b18041;background:#f7e8cf;box-shadow:0 0 0 1px #b18041}
+[data-tenant="mooncoffee"] .stamp-picker,[data-tenant="mooncoffee"] .staff-badge{border-color:#d8c7ac}
+[data-tenant="mooncoffee"] input:focus,[data-tenant="mooncoffee"] select:focus,[data-tenant="mooncoffee"] button:focus-visible,[data-tenant="mooncoffee"] a:focus-visible{outline-color:#c89959}
+[data-tenant="mooncoffee"] .card-brand .renace-logo{width:260px}
+[data-tenant="mooncoffee"] .brand{width:156px}
+@media(max-width:760px){[data-tenant="mooncoffee"] .card-brand .renace-logo{width:225px}}
+
+[data-tenant="mooncoffee"] .camera-placeholder{background:radial-gradient(ellipse at 50% 35%,#67482e,#302219)}
+[data-tenant="mooncoffee"] .camera-placeholder span{color:#e4d0ac}
+[data-tenant="mooncoffee"] .scanner-guide{box-shadow:0 0 0 100vmax #21130b66}
+[data-tenant="mooncoffee"] .scanner-guide i{background:#f3d6a3;box-shadow:0 0 12px #f3d6a3}
+[data-tenant="mooncoffee"] .sync-status i{background:#b88948;box-shadow:0 0 0 4px #b8894815}
+[data-tenant="mooncoffee"] .stamp-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+[data-tenant="mooncoffee"] .stamp-option{color:var(--ink);background:#f7efdf}
+[data-tenant="mooncoffee"] .stamp-picker p,[data-tenant="mooncoffee"] .guide-content p{color:var(--muted)}
+[data-tenant="mooncoffee"] .guide-content section::before{color:#996b35}
+[data-tenant="mooncoffee"] .activity-customer,[data-tenant="mooncoffee"] .activity-employee,[data-tenant="mooncoffee"] .activity-motive{color:var(--ink)}
+[data-tenant="mooncoffee"] .activity-type:not(.activity-type--stamp_removed):not(.activity-type--stamp_voided):not(.activity-type--customer_deleted):not(.activity-type--employee_deleted){background:#f8edda;border-color:#d6bd94;color:#70502b}
+[data-tenant="mooncoffee"] .customers-panel .eyebrow,[data-tenant="mooncoffee"] .activity-table th{color:#70502b}

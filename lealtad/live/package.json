@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local",
+    "dev": "wrangler dev --local --host localhost",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "check": "node --check worker/index.js && node --check public/assets/live.js && node --check public/assets/help.js && node --check public/service-worker.js"
   },
   "devDependencies": {
+    "exceljs": "4.4.0",
     "jsqr": "1.4.0",
     "wrangler": "4.131.1"
   }

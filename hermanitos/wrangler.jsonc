@@ -7,7 +7,7 @@
   "workers_dev": true,
   "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
   "d1_databases": [{ "binding": "DB", "database_name": "hermanitos-card", "database_id": "9a4a4263-f7c7-4122-862c-809c9f028868", "migrations_dir": "./migrations" }],
-  "vars": { "APP_TIMEZONE": "America/Tijuana", "MUSIC_ENABLED": "false" },
+  "vars": { "APP_TIMEZONE": "America/Tijuana", "MUSIC_ENABLED": "true" },
   "triggers": { "crons": ["27 10 * * *"] },
   "routes": [
     { "pattern": "hermanitos.haloswebs.com", "custom_domain": true },

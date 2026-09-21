@@ -24,6 +24,7 @@
     "crons": ["17 10 * * *"]
   },
   "routes": [
+    { "pattern": "mooncoffee.haloswebs.com", "custom_domain": true },
     { "pattern": "renacecafe.haloswebs.com", "custom_domain": true },
     { "pattern": "app.haloswebs.com/renace", "zone_name": "haloswebs.com" },
     { "pattern": "app.haloswebs.com/renace/*", "zone_name": "haloswebs.com" }

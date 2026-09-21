@@ -1,3 +1,6 @@
+import { TENANTS, resolveTenant } from './tenants.js';
+import { tenantAssets } from './tenant-assets.js';
+import { activitySource } from './activity.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
@@ -101,7 +104,7 @@ class ApiError extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code; }
 }
 
-async function getBusiness(env, slug = 'renace') {
+async function getBusiness(env, slug = env.TENANT.slug) {
   const business = await env.DB.prepare('SELECT * FROM businesses WHERE slug = ? AND active = 1').bind(slug).first();
   if (!business) throw new ApiError(404, 'business_not_found', 'No encontramos este negocio.');
   return business;
@@ -113,9 +116,9 @@ async function getSession(request, env) {
   const tokenHash = await sha256(token);
   const session = await env.DB.prepare(`
     SELECT s.id AS session_id, s.expires_at, s.last_seen_at, u.id, u.business_id, u.role, u.name, u.phone, u.username, u.active, u.must_change_secret
-    FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ? AND s.expires_at > ? AND u.active = 1 AND u.deleted_at IS NULL
-  `).bind(tokenHash, new Date().toISOString()).first();
+    FROM sessions s JOIN users u ON u.id = s.user_id JOIN businesses b ON b.id=u.business_id
+    WHERE s.token_hash = ? AND s.expires_at > ? AND u.active = 1 AND u.deleted_at IS NULL AND b.slug=? AND b.active=1
+  `).bind(tokenHash, new Date().toISOString(), env.TENANT.slug).first();
   if (!session) return null;
   const lastSeen = Date.parse(session.last_seen_at.includes('T') ? session.last_seen_at : session.last_seen_at.replace(' ', 'T') + 'Z');
   if (Date.now() - lastSeen > 15 * 60000) {
@@ -158,7 +161,7 @@ async function failedLogin(env, key) {
 
 async function login(request, env, kind) {
   const input = await body(request);
-  const business = await getBusiness(env, input.business || 'renace');
+  const business = await getBusiness(env);
   const ip = request.headers.get('cf-connecting-ip') || 'local';
   const identifier = kind === 'customer' ? normalizePhone(input.phone) : String(input.username || '').trim().toLowerCase();
   const loginKey = `${business.id}:${kind}:${identifier}:${ip}`;
@@ -202,7 +205,7 @@ async function setup(request, env) {
 
 async function register(request, env) {
   const input = await body(request);
-  const business = await getBusiness(env, input.business || 'renace');
+  const business = await getBusiness(env);
   const phone = normalizePhone(input.phone);
   const name = String(input.name || '').trim();
   const pin = String(input.pin || '');
@@ -212,7 +215,7 @@ async function register(request, env) {
   const existing = await env.DB.prepare('SELECT id FROM users WHERE business_id = ? AND phone = ?').bind(business.id, phone).first();
   if (existing) throw new ApiError(409, 'phone_exists', 'Ese celular ya tiene una tarjeta.');
   const customerId = crypto.randomUUID();
-  const cardId = `REN-${randomToken(9).toUpperCase()}`;
+  const cardId = `${env.TENANT.cardPrefix}-${randomToken(9).toUpperCase()}`;
   const qrToken = randomToken(24);
   const secret = await hashSecret(pin);
   await env.DB.batch([
@@ -226,25 +229,27 @@ async function register(request, env) {
 }
 
 async function cardForCustomer(env, customerId, businessId) {
-  return env.DB.prepare(`SELECT c.id, c.qr_token, c.stamps, c.stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
+  return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
-    b.reward_goal, b.reward_name, b.timezone
+    b.slug AS business_slug,b.reward_goal, b.reward_name, b.timezone
     FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
     WHERE c.customer_id = ? AND c.business_id = ? AND u.active=1 AND u.deleted_at IS NULL`).bind(customerId, businessId).first();
 }
 
-const STAMP_STYLES = new Set(['classic', 'cowboy', 'bow']);
+
 function publicCard(card) {
-  return { stampStyle: STAMP_STYLES.has(card.stamp_style) ? card.stamp_style : 'classic', id: card.id, qrValue: `renace:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, canStampToday: !card.last_stamp_at || businessDay(card.timezone, new Date(card.last_stamp_at)) !== businessDay(card.timezone) };
+  return { stampStyle: Object.hasOwn(TENANTS[card.business_slug].stampStyles,card.stamp_style) ? card.stamp_style : 'classic', customerId: card.customer_id, id: card.id, qrValue: `${card.business_slug}:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, canStampToday: !card.last_stamp_at || businessDay(card.timezone, new Date(card.last_stamp_at)) !== businessDay(card.timezone) };
 }
 
 async function lookupCard(request, env, staff) {
   const url = new URL(request.url);
   const value = String(url.searchParams.get('value') || '').trim();
   if (!value) throw new ApiError(400, 'missing_value', 'Escribe o escanea una tarjeta.');
-  const qrToken = value.startsWith('renace:') ? value.slice(7) : '';
+  const prefix=env.TENANT.slug+':';
+  if(value.includes(':')&&!value.startsWith(prefix))throw new ApiError(404,'card_not_found','Esta tarjeta pertenece a otra cafetería.');
+  const qrToken = value.startsWith(prefix) ? value.slice(prefix.length) : '';
   const phone = normalizePhone(value);
-  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
+  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id
     WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL AND (c.id=? OR c.qr_token=? OR u.phone=?)`).bind(staff.business_id, value, qrToken, phone).first();
@@ -254,7 +259,7 @@ async function lookupCard(request, env, staff) {
 
 async function stamp(request, env, staff) {
   const input = await body(request);
-  const card = await env.DB.prepare(`SELECT c.*,u.id AS customer_id,u.name,b.reward_goal,b.timezone,
+  const card = await env.DB.prepare(`SELECT c.*,u.id AS customer_id,u.name,b.slug AS business_slug,b.reward_goal,b.timezone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(input.cardId, staff.business_id).first();
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
@@ -277,7 +282,7 @@ async function stamp(request, env, staff) {
 }
 
 async function cardById(env, cardId, businessId) {
-  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.reward_goal,b.reward_name,b.timezone,
+  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
 }
@@ -322,19 +327,7 @@ async function dashboard(request, env, admin) {
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
   const customerBindings = search ? [admin.business_id, search, normalizePhone(search), search.toUpperCase()] : [admin.business_id];
-  const eventSource = `SELECT id,created_at,event_type,card_id,customer,employee,reason FROM (
-      SELECT e.id,e.created_at,CASE WHEN e.voided=1 THEN 'stamp_voided' ELSE e.event_type END AS event_type,e.card_id,customer.name AS customer,employee.name AS employee,'' AS reason
-      FROM loyalty_events e JOIN users customer ON customer.id=e.customer_id JOIN users employee ON employee.id=e.employee_id WHERE e.business_id=?
-      UNION ALL
-      SELECT audit.id,audit.created_at,
-        CASE WHEN audit.action='customer_updated' AND audit.metadata='{"kind":"demo_reset"}' THEN 'demo_reset' ELSE audit.action END AS event_type,
-        COALESCE(card.id,'') AS card_id,customer.name AS customer,administrator.name AS employee,'' AS reason
-      FROM admin_audit_log audit JOIN users customer ON customer.id=audit.target_user_id JOIN users administrator ON administrator.id=audit.admin_id
-      LEFT JOIN loyalty_cards card ON card.customer_id=customer.id WHERE audit.business_id=?
-      UNION ALL
-      SELECT a.id,a.created_at,CASE WHEN a.after_stamps>a.before_stamps THEN 'stamp_added' ELSE 'stamp_removed' END,a.card_id,customer.name,administrator.name,a.reason
-      FROM stamp_adjustments a JOIN users customer ON customer.id=a.customer_id JOIN users administrator ON administrator.id=a.admin_id WHERE a.business_id=?
-    )`;
+  const eventSource = activitySource();
   const eventBindings = [admin.business_id, admin.business_id, admin.business_id];
   const eventFilters = [];
   const eventStartIso = validEventDate(eventStart), eventEndIso = validEventDate(eventEnd);
@@ -350,7 +343,7 @@ async function dashboard(request, env, admin) {
       (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
       (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})${eventWhere}`).bind(...eventBindings).first(),
     env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
@@ -418,8 +411,8 @@ async function resetCustomerPin(request, env, admin, customerId) {
       .bind(secret.hash, secret.salt, secret.iterations, now, customer.id, admin.business_id),
     env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(customer.id),
     env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ?').bind(`${admin.business_id}:customer:${customer.phone}:%`),
-    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at) VALUES (?,?,?,?, 'pin_reset', ?)")
-      .bind(crypto.randomUUID(), admin.business_id, admin.id, customer.id, now)
+    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,actor_id,target_user_id,action,created_at) VALUES (?,?,?,?,?, 'pin_reset', ?)")
+      .bind(crypto.randomUUID(), admin.business_id, admin.id, admin.id, customer.id, now)
   ]);
   return { id: customer.id, name: customer.name, phone: customer.phone, temporaryPin: pin };
 }
@@ -435,7 +428,7 @@ async function resetDemoCustomers(env, admin) {
       FROM users u LEFT JOIN loyalty_cards c ON c.customer_id=u.id
       WHERE u.business_id=? AND u.role='customer' AND u.phone=?`).bind(admin.business_id, demo.phone).first();
     const customerId = existing?.id || crypto.randomUUID();
-    const cardId = existing?.card_id || `REN-${randomToken(9).toUpperCase()}`;
+    const cardId = existing?.card_id || `${env.TENANT.cardPrefix}-${randomToken(9).toUpperCase()}`;
 
     if (existing) {
       statements.push(env.DB.prepare(`UPDATE users SET name=?,active=1,secret_hash=?,secret_salt=?,secret_iterations=?,must_change_secret=0,deleted_at=NULL,updated_at=?
@@ -517,8 +510,8 @@ async function editCustomer(request, env, admin, customerId) {
       env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(customer.id),
       env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ? OR login_key LIKE ?')
         .bind(`${admin.business_id}:customer:${customer.phone}:%`, `${admin.business_id}:customer:${phone}:%`),
-      env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at) VALUES (?,?,?,?, 'customer_updated', ?)")
-        .bind(crypto.randomUUID(), admin.business_id, admin.id, customer.id, now)
+      env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,actor_id,target_user_id,action,created_at) VALUES (?,?,?,?,?, 'customer_updated', ?)")
+        .bind(crypto.randomUUID(), admin.business_id, admin.id, admin.id, customer.id, now)
     ]);
   } catch (cause) {
     if (String(cause).includes('UNIQUE')) throw new ApiError(409, 'phone_exists', 'Ese número de celular ya está registrado.');
@@ -539,8 +532,8 @@ async function deleteCustomer(env, admin, customerId) {
       .bind(randomToken(32), now, customer.id, admin.business_id),
     env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(customer.id),
     env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ?').bind(`${admin.business_id}:customer:${customer.phone}:%`),
-    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at) VALUES (?,?,?,?, 'customer_deleted', ?)")
-      .bind(crypto.randomUUID(), admin.business_id, admin.id, customer.id, now)
+    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,actor_id,target_user_id,action,created_at) VALUES (?,?,?,?,?, 'customer_deleted', ?)")
+      .bind(crypto.randomUUID(), admin.business_id, admin.id, admin.id, customer.id, now)
   ]);
   return { id: customer.id, deleted: true };
 }
@@ -624,15 +617,15 @@ async function api(request, env) {
   const path = url.pathname;
   if (request.method === 'GET' && path === '/api/health') {
     await env.DB.prepare('SELECT 1 AS healthy').first();
-    return response({ ok: true, service: 'renace-lealtad', database: 'connected', checkedAt: new Date().toISOString() });
+    return response({ ok: true, service: env.TENANT.slug+'-lealtad', database: 'connected', checkedAt: new Date().toISOString() });
   }
   if (request.method === 'POST' && path === '/api/setup') return setup(request, env);
   if (request.method === 'POST' && path === '/api/register') return register(request, env);
   if (request.method === 'POST' && path === '/api/login/customer') return login(request, env, 'customer');
   if (request.method === 'POST' && path === '/api/login/staff') return login(request, env, 'staff');
   if (request.method === 'POST' && path === '/api/logout') {
-    const token = cookie(request, 'renace_session');
-    if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run();
+    const session=await getSession(request,env);
+    if(session)await env.DB.prepare('DELETE FROM sessions WHERE id=?').bind(session.session_id).run();
     return response({ ok: true }, 200, { 'set-cookie': clearSessionCookie() });
   }
   if (request.method === 'GET' && path === '/api/me') {
@@ -649,8 +642,8 @@ async function api(request, env) {
     const user = await requireRole(request, env, ['customer']);
     if (user.must_change_secret) throw new ApiError(403, 'secret_change_required', 'Cambia tu PIN temporal antes de personalizar tu tarjeta.');
     const input = await body(request);
-    if (!STAMP_STYLES.has(input.stampStyle)) throw new ApiError(400, 'invalid_stamp_style', 'Elige un diseño de sellos disponible.');
-    await env.DB.prepare('UPDATE loyalty_cards SET stamp_style=? WHERE customer_id=? AND business_id=?').bind(input.stampStyle, user.id, user.business_id).run();
+    if (typeof input.stampStyle!=='string'||!Object.hasOwn(env.TENANT.stampStyles,input.stampStyle)) throw new ApiError(400, 'invalid_stamp_style', 'Elige un diseño de sellos disponible.');
+    await env.DB.prepare(`INSERT INTO loyalty_card_preferences(card_id,business_id,stamp_style) SELECT id,business_id,? FROM loyalty_cards WHERE customer_id=? AND business_id=? ON CONFLICT(card_id) DO UPDATE SET stamp_style=excluded.stamp_style`).bind(input.stampStyle,user.id,user.business_id).run();
     return response({ ok: true, stampStyle: input.stampStyle });
   }
   if (request.method === 'POST' && path === '/api/account/secret') {
@@ -669,11 +662,23 @@ async function api(request, env) {
     const user = await requireRole(request, env, ['employee', 'admin']);
     return response({ ok: true, card: await redeem(request, env, user) });
   }
+  if (request.method === 'GET' && ['/api/admin/export/clients','/api/admin/export/activity'].includes(path)) {
+    const user=await requireRole(request,env,['admin']), business=await getBusiness(env);
+    const offset=Math.max(0,Number.parseInt(url.searchParams.get('offset')||'0',10)||0);
+    const clients=path.endsWith('/clients');
+    const query=clients ? `SELECT c.id,u.name,u.phone,c.stamps,c.redeemed_count,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL ORDER BY u.created_at,u.id LIMIT 500 OFFSET ?` : `${activitySource()} ORDER BY created_at,id LIMIT 500 OFFSET ?`;
+    const binds=clients?[user.business_id,user.business_id,offset]:[user.business_id,user.business_id,user.business_id,offset];
+    const rows=(await env.DB.prepare(query).bind(...binds).all()).results;
+    return response({ok:true,rows,nextOffset:rows.length===500?offset+500:null,business:{name:business.name,slug:business.slug,reward_goal:business.reward_goal,timezone:business.timezone},generatedAt:new Date().toISOString()});
+  }
+  const staffPin=path.match(/^\/api\/staff\/customers\/([^/]+)\/pin$/);
+  if(request.method==='PATCH'&&staffPin){const user=await requireRole(request,env,['employee','admin']);return response({ok:true,customer:await resetCustomerPin(request,env,user,staffPin[1])});}
   if (request.method === 'GET' && path === '/api/admin/dashboard') {
     const user = await requireRole(request, env, ['admin']);
     return response({ ok: true, ...(await dashboard(request, env, user)) });
   }
   if (request.method === 'POST' && path === '/api/admin/demo-customers/reset') {
+    if(!env.TENANT.demo)throw new ApiError(404,'not_found','Ruta no disponible.');
     const user = await requireRole(request, env, ['admin']);
     return response({ ok: true, demo: await resetDemoCustomers(env, user) });
   }
@@ -730,7 +735,10 @@ export default {
         const path = url.pathname.slice('/renace'.length) || '/';
         return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
       }
-      const result = isApi ? await api(request, env) : await env.ASSETS.fetch(request);
+      const tenant=resolveTenant(url,env);
+      if(!tenant)return securityHeaders(error('Negocio no disponible.',404,'unknown_host'),true);
+      const tenantEnv={...env,TENANT:tenant};
+      const result = isApi ? await api(request, tenantEnv) : await tenantAssets(request,tenantEnv);
       return securityHeaders(result, isApi);
     } catch (cause) {
       if (cause instanceof ApiError) return securityHeaders(error(cause.message, cause.status, cause.code), isApi);

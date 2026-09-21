@@ -24,7 +24,7 @@ test('role guides, focus, QR share and PWA installation states',async t=>{
   await page.evaluate(()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.sharedCard={name:data.files[0].name,size:data.files[0].size,type:data.files[0].type};}});});
   await page.click('#share-card');await page.waitForFunction(()=>window.sharedCard?.size>0);assert.equal(await page.evaluate(()=>window.sharedCard.type),'image/png');
   await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async()=>{throw new DOMException('Cancelled','AbortError');}});});await page.click('#share-card');await page.waitForSelector('#share-card:not([disabled])');
-  for(const [username,password,route,text] of [['mostrador_local','Staff-test-928!','empleado','Escanear todavía no añade un sello'],['admin_local','Admin-test-928!','admin','Cafés disponibles']]){
+  for(const [username,password,route,text] of [['mostrador_local','Staff-test-928!','empleado','Escanear todavía no añade un sello'],['admin_local','Admin-test-928!','admin','Recompensas pendientes']]){
     await ctx.request.post(base+'/api/logout');await ctx.request.post(base+'/api/login/staff',{data:{username,password}});await page.goto(base+'/?role='+route+'#'+route);await page.waitForSelector('#role-guide');await page.click('#role-guide');assert.ok((await page.locator('dialog').innerText()).includes(text));await page.keyboard.press('Escape');
   }
   const ios=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});

@@ -219,7 +219,7 @@ async function refresh(silent=false){
     else if(!silent){if(!state.data){$('#main').innerHTML=`<div class="loading-state"><p>${esc(e.message)}</p><button class="button section-gap" id="reload-app">Volver a intentar</button></div>`;$('#reload-app').onclick=()=>refresh();}else toast(e.message,true);}
   }finally{state.busy=false;}
 }
-function musicLabel(){const b=$('#music-toggle');b.textContent=state.musicPlaying?'♫ Silenciar':'♫ Música';b.classList.toggle('music-on',state.musicPlaying);b.setAttribute('aria-label',state.musicPlaying?'Silenciar música':'Reproducir música');b.setAttribute('aria-pressed',String(state.musicPlaying));}
+function musicLabel(){const b=$('#music-toggle');b.textContent=state.musicPlaying?'Pausar música':'Reproducir música';b.classList.toggle('music-on',state.musicPlaying);b.setAttribute('aria-label',state.musicPlaying?'Pausar música':'Reproducir música');b.setAttribute('aria-pressed',String(state.musicPlaying));}
 async function tryMusic(){
   if(!state.config.music)return;
   try{if(localStorage.getItem('hermanitos-muted')==='1')return;}catch{}
@@ -231,7 +231,7 @@ async function start(){
   $('#account-button').onclick=account;
   $('#logout-button').onclick=async()=>{try{await api('/logout',{});state.data=null;closeModal();renderAuth();}catch(e){toast(e.message,true);}};
   $('#music-toggle').onclick=async()=>{if(state.musicPlaying){$('#music').pause();state.musicPlaying=false;try{localStorage.setItem('hermanitos-muted','1');}catch{}}else{try{localStorage.setItem('hermanitos-muted','0');}catch{}await tryMusic();}musicLabel();};
-  try{state.config=await api('/config');if(state.config.music){$('#music-toggle').hidden=false;$('#music').src='/hermanitos/assets/hermanitos.mp3';await tryMusic();document.addEventListener('pointerdown',()=>tryMusic(),{once:true});}}catch{}
+  try{state.config=await api('/config');if(state.config.music){$('#music-toggle').hidden=false;$('#music').src='/media/audio/Hermanitos.mp3';$('#music').loop=true;musicLabel();}}catch{}
   await refresh();
   setInterval(updateCooldown,1000);
   // Only foreground member pages poll, keeping shared free-tier requests modest.
