@@ -4,17 +4,17 @@ Pantalla independiente en `https://renacecafetv.haloswebs.com/`, sin D1, cuentas
 
 ## Biblioteca de demostración
 
-Las 9 fotografías, 3 videos y `musicacoffee.mp3` actuales son **material temporal para demostrar el sistema**. Pueden sustituirse por el contenido definitivo del negocio sin cambiar el reproductor.
+La biblioteca actual contiene 15 imágenes, 2 videos compatibles para TV y `musicacoffee.mp3`. Puede actualizarse con contenido definitivo del negocio sin cambiar el reproductor.
 
 `public/media.json` contiene `version`, `slideDurationSeconds` (10), `music` y `items`. Cada elemento tiene `id`, `name`, `type` (`image` o `video`), `source`, y opcionalmente `thumbnail` y `fit`. Solo se reproduce lo declarado en `items`; no se exploran carpetas automáticamente.
 
 - Fotos: `public/media/images/`. JPG/JPEG, PNG o WEBP.
-- Videos para web: `public/media/videos/web/`. MP4 con H.264, píxeles yuv420p y audio AAC.
+- Videos: `public/media/videos/`. MP4 con H.264, píxeles yuv420p y audio AAC.
 - Música: `public/media/audio/musicacoffee.mp3`.
 - `logo-renace.png` se conserva como recurso de identidad y no forma parte de la lista. Los videos sin miniatura real muestran una tarjeta VIDEO con su nombre.
-- `renace-qr.png` es un cartel de acceso a la tarjeta de lealtad. Se conserva en la carpeta, fuera de la lista automática; puede añadirse intencionalmente para una campaña.
+- `renace-qr-tv.png` es el cartel de acceso a la tarjeta de lealtad y forma parte de la lista de reproducción.
 
-Los tres originales `.mp4` usan MPEG-4 Part 2 (`mp4v`), que no produjo fotogramas en el navegador de prueba. Se conservaron intactos y se crearon copias H.264 en `videos/web/`. `public/.assetsignore` excluye los originales del despliegue del Worker para no duplicar la transferencia. No basta con renombrar una extensión para cambiar el códec.
+No basta con renombrar una extensión para cambiar el códec. Antes de publicar un video, debe comprobarse que sea H.264/AAC y compatible con la Fire TV del establecimiento.
 
 ### Sustituir medios
 
@@ -55,7 +55,7 @@ Las rutas `source` y `thumbnail` pueden apuntar posteriormente a R2. Requerirá 
 
 ## Compatibilidad y presentación limpia (septiembre 2026)
 
-Los originales `renacevideo1.mp4`, `renacevideo2.mp4` y `videocoffee.mp4` usan MPEG-4 Part 2 (`mp4v`) y pueden verse negros en navegadores. Las primeras copias `*-h264.mp4` eran AVC High nivel 4.0. Las variantes actuales `*-tv720-v2.mp4` usan **H.264 Constrained Baseline nivel 3.1, yuv420p, 1280×720, 30 FPS**, AAC-LC estéreo 44.1 kHz y faststart. Ocupan alrededor de 9.05 MB en total. Se conservan todos los archivos anteriores; `.assetsignore` excluye originales y variantes anteriores de la publicación para no duplicar descargas. Solo se reproduce lo declarado en `media.json`, versión `2026.09.21-1`; fotos de 10 segundos, material DEMO.
+`VideoMenu-tv576-v1.mp4` es una copia de TV de `VideoMenu.mp4`: H.264 Constrained Baseline nivel 3.1, yuv420p, 1024×576, 30 FPS, AAC-LC estéreo a 44.1 kHz y faststart; ocupa 19.1 MB para respetar el límite de Cloudflare. `VideoCafe-tv720-v1.mp4` es una copia de TV de `VideoCafe.mp4`: H.264 Constrained Baseline nivel 3.1, yuv420p, 1280×720, 30 FPS, AAC-LC estéreo a 44.1 kHz y faststart. Solo se reproduce lo declarado en `media.json`, versión `2026.09.21-2`; las imágenes duran 10 segundos.
 
 `docs/video-diagnostics.json` contiene contenedor, codec/tag, perfil/nivel cuando AVC, resolución, FPS, bitrate, audio, frecuencia/canales y duración de los nueve archivos. No había `ffprobe` en PATH. El diagnóstico se hizo con el FFmpeg ya disponible y la cabecera `avcC`; no se instaló software. Los originales MPEG-4 no declaran nivel AVC. Se decodificaron por completo las tres nuevas variantes antes de cambiar la playlist. No es una garantía de compatibilidad con cada generación de Fire TV: falta repetir la prueba en el dispositivo que falló.
 

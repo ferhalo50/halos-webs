@@ -1,3 +1,7 @@
 node_modules/
 .wrangler/
 *.log
+
+# Original upload sources retained locally; the TV uses the optimized copies.
+/public/media/videos/VideoCafe.mp4
+/public/media/videos/VideoMenu.mp4

@@ -1,7 +1,3 @@
-# Keep original demonstration videos locally; publish compatible web copies only.
-/media/videos/renacevideo1.mp4
-/media/videos/renacevideo2.mp4
-/media/videos/videocoffee.mp4
-
-# Previous web variants kept locally; publish the lighter TV versions only.
-/media/videos/web/*-h264.mp4
+# Preserve uploaded sources locally; publish only their Fire TV-compatible copies.
+/media/videos/VideoCafe.mp4
+/media/videos/VideoMenu.mp4

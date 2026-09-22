@@ -8,7 +8,8 @@ const images=config.items.filter(x=>x.type==='image'),videos=config.items.filter
 test('every configured demo file exists and is served with the correct type',async()=>{
   assert.equal(config.slideDurationSeconds,10);
   assert.equal(config.music.source,'/media/audio/musicacoffee.mp3');
-  assert.ok(!config.items.some(x=>/logo-renace|renace-qr/.test(x.source)));
+  assert.ok(!config.items.some(x=>/logo-renace/.test(x.source)));
+  assert.ok(config.items.some(x=>x.source==='/media/images/renace-qr-tv.png'));
   for(const item of [...config.items,{source:config.music.source,type:'audio'}]){
     const file=await stat(new URL('../public'+item.source,import.meta.url));assert.ok(file.size>0);
     const response=await fetch(base+item.source,{method:'HEAD'});assert.equal(response.status,200,item.source);
@@ -21,6 +22,15 @@ test('real photos, MP4s and MP3: sequences, loop, keyboard, full screen and mobi
   const page=await browser.newPage({viewport:{width:1920,height:1080}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto(base);await page.waitForSelector('.media-card');
+  const brand=page.locator('.brand');
+  assert.equal(await brand.locator('.brand-logo').getAttribute('src'),'/media/images/logo-renace.png');
+  assert.equal(await brand.locator('.brand-tv').innerText(),'TV');
+  assert.equal(await brand.getAttribute('aria-label'),'Renace Café TV, inicio');
+  assert.ok(await brand.locator('.brand-logo').evaluate(img=>img.complete&&img.naturalWidth===1073&&img.naturalHeight===464));
+  for(const id of ['now-playing-title','presentation-progress','presentation-music','exit-presentation']){
+    assert.equal(await page.locator(`#${id}`).count(),1,`legacy cache compatibility: ${id}`);
+    assert.equal(await page.locator(`#${id}`).evaluate(element=>element.closest('[hidden]')!==null),true);
+  }
   assert.equal(await page.locator('.media-card').count(),config.items.length);
   for(const item of images){
     const locator=page.locator(`[data-media-id="${item.id}"] img`);await locator.scrollIntoViewIfNeeded();
@@ -48,12 +58,13 @@ test('real photos, MP4s and MP3: sequences, loop, keyboard, full screen and mobi
     await page.waitForFunction(()=>{const v=document.querySelector('#media-stage video');return v&&v.readyState>=2&&v.currentTime>0;});
     const dimensions=await page.locator('#media-stage video').evaluate(v=>({width:v.videoWidth,height:v.videoHeight,muted:v.muted,controls:v.controls,fit:getComputedStyle(v).objectFit}));
     assert.ok(dimensions.width>0&&dimensions.height>0);assert.equal(dimensions.muted,true);assert.equal(dimensions.controls,false);assert.equal(dimensions.fit,'contain');
-    // Decode the actual MP4 to its end at increased speed (local assets do not support seeking).
-    await page.locator('#media-stage video').evaluate(v=>{v.playbackRate=8;});
+    // The menu video is intentionally long. Verify it starts, then use the same manual next action available on Fire TV.
+    if(index<videos.length-1)await page.keyboard.press('ArrowRight');
+    else await page.locator('#media-stage video').evaluate(v=>{v.playbackRate=8;});
   }
   await page.waitForFunction(src=>document.querySelector('#media-stage video')?.getAttribute('src')===src,videos[0].source);
   await page.evaluate(()=>document.exitFullscreen());await page.waitForSelector('#presentation',{state:'hidden'});
-  await page.click('#clear-selection');await page.click(`[data-media-id="${images[0].id}"]`);await page.click(`[data-media-id="${videos[0].id}"]`);await page.click('#play-selected');
+  await page.click('#clear-selection');await page.click(`[data-media-id="${images[0].id}"]`);await page.click(`[data-media-id="${videos[1].id}"]`);await page.click('#play-selected');
   await page.waitForSelector('#media-stage video',{timeout:14000});
   await page.waitForFunction(()=>document.querySelector('#media-stage video').currentTime>0);
   await page.locator('#media-stage video').evaluate(v=>{v.playbackRate=8;});await page.waitForSelector('#media-stage img');

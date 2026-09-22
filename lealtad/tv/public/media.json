@@ -1,5 +1,5 @@
 {
-  "version": "2026.09.21-1",
+  "version": "2026.09.21-2",
   "slideDurationSeconds": 10,
   "music": {
     "source": "/media/audio/musicacoffee.mp3",
@@ -70,24 +70,59 @@
       "fit": "contain"
     },
     {
-      "id": "renace-video-1",
-      "name": "Video Renace 1",
-      "type": "video",
-      "source": "/media/videos/web/renacevideo1-tv720-v2.mp4",
+      "id": "menu-1",
+      "name": "Menú 1",
+      "type": "image",
+      "source": "/media/images/menu1.jpg",
       "fit": "contain"
     },
     {
-      "id": "renace-video-2",
-      "name": "Video Renace 2",
-      "type": "video",
-      "source": "/media/videos/web/renacevideo2-tv720-v2.mp4",
+      "id": "menu-2",
+      "name": "Menú 2",
+      "type": "image",
+      "source": "/media/images/menu2.jpg",
       "fit": "contain"
     },
     {
-      "id": "video-coffee",
-      "name": "Coffee",
+      "id": "menu-texto-1",
+      "name": "Menú con texto 1",
+      "type": "image",
+      "source": "/media/images/MenuTexto1.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "menu-texto-2",
+      "name": "Menú con texto 2",
+      "type": "image",
+      "source": "/media/images/MenuTexto2.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "foto-renace",
+      "name": "Foto Renace",
+      "type": "image",
+      "source": "/media/images/Foto.jpg",
+      "fit": "contain"
+    },
+    {
+      "id": "renace-qr-tv",
+      "name": "Código QR Renace",
+      "type": "image",
+      "source": "/media/images/renace-qr-tv.png",
+      "fit": "contain"
+    },
+    {
+      "id": "video-menu",
+      "name": "Video menú",
       "type": "video",
-      "source": "/media/videos/web/videocoffee-tv720-v2.mp4",
+      "source": "/media/videos/VideoMenu-tv576-v1.mp4",
+      "fit": "contain"
+    },
+    {
+      "id": "video-cafe",
+      "name": "Video café",
+      "type": "video",
+      "source": "/media/videos/VideoCafe-tv720-v1.mp4",
       "fit": "contain"
     }
   ]

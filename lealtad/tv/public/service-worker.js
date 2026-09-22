@@ -1,8 +1,8 @@
-const SHELL_CACHE = 'renace-tv-shell-1.2.0';
+const SHELL_CACHE = 'renace-tv-shell-1.2.2';
 const MEDIA_PREFIX = 'renace-tv-media-';
 const META_CACHE = 'renace-tv-state';
 const POINTER = '/__tv_offline_state__';
-const SHELL = ['/', '/manifest.webmanifest', '/assets/tv.css', '/assets/tv.js', '/assets/tv-icon.svg'];
+const SHELL = ['/', '/manifest.webmanifest', '/assets/tv.css', '/assets/tv.js', '/assets/tv-icon.svg', '/media/images/logo-renace.png'];
 self.addEventListener('install', event => event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('renace-tv-shell-') && key !== SHELL_CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 

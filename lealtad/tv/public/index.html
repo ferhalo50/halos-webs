@@ -17,8 +17,8 @@
 
   <header class="site-header">
     <a class="brand" href="/" aria-label="Renace Café TV, inicio">
-      <span class="brand-mark" aria-hidden="true">R</span>
-      <span><strong>Renace</strong><small>Café TV</small></span>
+      <img class="brand-logo" src="/media/images/logo-renace.png" alt="" width="1073" height="464">
+      <span class="brand-tv" aria-hidden="true">TV</span>
     </a>
     <div class="connection" id="connection-status" role="status">
       <span aria-hidden="true"></span><b>Conectado</b>
@@ -81,6 +81,13 @@
   <section class="presentation" id="presentation" tabindex="-1" hidden aria-label="Presentación en curso">
     <div class="media-stage" id="media-stage"></div>
   </section>
+
+  <div hidden aria-hidden="true">
+    <span id="now-playing-title"></span>
+    <span id="presentation-progress"></span>
+    <button id="presentation-music" type="button" tabindex="-1" disabled></button>
+    <button id="exit-presentation" type="button" tabindex="-1"></button>
+  </div>
 
   <audio id="ambient-audio" loop preload="none"></audio>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
