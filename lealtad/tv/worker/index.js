@@ -1,3 +1,5 @@
+import { handleAdmin } from './admin.js';
+
 function withSecurityHeaders(response, pathname) {
   const headers = new Headers(response.headers);
   headers.set('x-content-type-options', 'nosniff');
@@ -16,6 +18,7 @@ function withSecurityHeaders(response, pathname) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return handleAdmin(request, env);
     const response = await env.ASSETS.fetch(request);
     return withSecurityHeaders(response, url.pathname);
   }

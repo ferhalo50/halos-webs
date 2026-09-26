@@ -8,6 +8,10 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
+  "vars": {
+    "TV_ADMIN_ENABLED": "false",
+    "R2_MEDIA_ENABLED": "false"
+  },
   "routes": [
     { "pattern": "renacecafetv.haloswebs.com", "custom_domain": true }
   ]

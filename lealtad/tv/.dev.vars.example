@@ -1,0 +1,9 @@
+# Copia local de referencia. No contiene credenciales válidas.
+# Usa `node scripts/setup-local-admin.mjs 5` para crear .dev.vars con secretos aleatorios.
+TV_ADMIN_ENABLED=true
+TV_ADMIN_LOCAL_HTTP=true
+R2_MEDIA_ENABLED=false
+TV_ADMIN_USERNAME=renace-tv-admin
+TV_ADMIN_PASSWORD_HASH=GENERAR_CON_SCRIPT
+TV_SESSION_SECRET=GENERAR_CON_SCRIPT
+TV_STORAGE_LIMIT_BYTES=5368709120
