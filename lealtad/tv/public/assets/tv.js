@@ -65,7 +65,8 @@ function normalizeItem(item, index) {
 }
 
 async function loadConfig() {
-  const response = await fetch('/media.json', { cache: 'no-store' });
+  let response = await fetch('/playlist.json', { cache: 'no-store' });
+  if (!response.ok) response = await fetch('/media.json', { cache: 'no-store' });
   if (!response.ok) throw new Error('No se pudo abrir la biblioteca de contenido.');
   const value = await response.json();
   const items = Array.isArray(value.items) ? value.items.map(normalizeItem).filter(Boolean) : [];

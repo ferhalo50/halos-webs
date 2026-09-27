@@ -8,6 +8,26 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
+  "vars": {
+    "TV_ADMIN_ENABLED": "false",
+    "R2_MEDIA_ENABLED": "false",
+    "TV_BOOTSTRAP_ENABLED": "false",
+    "TV_MAX_UPLOAD_BYTES": "99614720"
+  },
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "renace-cafe-tv-media"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "TV_DB",
+      "database_name": "renace-cafe-tv",
+      "database_id": "f6b22318-7594-498f-87da-aa72772936e9",
+      "migrations_dir": "migrations"
+    }
+  ],
   "routes": [
     { "pattern": "renacecafetv.haloswebs.com", "custom_domain": true }
   ]

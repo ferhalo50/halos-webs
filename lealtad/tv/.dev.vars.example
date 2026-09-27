@@ -1,0 +1,8 @@
+# Copia local de referencia. No contiene credenciales válidas.
+# Usa `node scripts/setup-local-admin.mjs` para crear .dev.vars con un secreto aleatorio.
+TV_ADMIN_ENABLED=true
+TV_ADMIN_LOCAL_HTTP=true
+R2_MEDIA_ENABLED=true
+TV_BOOTSTRAP_ENABLED=true
+TV_BOOTSTRAP_SECRET=GENERAR_CON_SCRIPT
+TV_MAX_UPLOAD_BYTES=99614720
