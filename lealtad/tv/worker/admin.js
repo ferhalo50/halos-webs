@@ -5,7 +5,7 @@ import {
 } from './admin-auth.js';
 import {
   audit, configuredUploadMax, listMedia, safeStorageKey, storageSummary,
-  validateUploadMetadata, verifyFileSignature,
+  validateUploadMetadata, verifyFileSignature, verifySignatureBytes,
 } from './admin-media.js';
 import { objectResponse } from './media.js';
 
@@ -97,6 +97,51 @@ async function login(request, env) {
   return json({ ok: true, displayName: user.display_name }, 200, { 'Set-Cookie': session.setCookie });
 }
 
+async function readStreamPrefix(stream, maximum = 16) {
+  const reader = stream.getReader();
+  const prefix = new Uint8Array(maximum);
+  let length = 0;
+  try {
+    while (length < maximum) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+      const take = Math.min(bytes.byteLength, maximum - length);
+      prefix.set(bytes.subarray(0, take), length);
+      length += take;
+    }
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+  return prefix.subarray(0, length);
+}
+
+async function readUpload(request) {
+  const contentType = (request.headers.get('content-type') || '').toLowerCase();
+  if (/^multipart\/form-data(?:;|$)/i.test(contentType)) {
+    let form;
+    try { form = await request.formData(); }
+    catch { return { error: 'No se pudo leer el archivo. Selecciónalo de nuevo e intenta otra vez.', status: 400, stage: 'multipart' }; }
+    const file = form.get('file');
+    if (!file || typeof file.name !== 'string' || typeof file.stream !== 'function') return { error: 'Selecciona una imagen o video.', status: 400, stage: 'missing_file' };
+    return { name: file.name, size: Number(file.size), declaredMime: file.type || '', stream: file.stream(), file, transport: 'multipart' };
+  }
+
+  const encodedName = request.headers.get('x-upload-filename');
+  const declaredSize = Number(request.headers.get('x-upload-size'));
+  const contentLengthHeader = request.headers.get('content-length');
+  const contentLength = contentLengthHeader === null ? null : Number(contentLengthHeader);
+  let name = '';
+  try { name = encodedName ? decodeURIComponent(encodedName) : ''; }
+  catch { return { error: 'El nombre del archivo no es válido.', status: 400, stage: 'filename' }; }
+  if (!request.body) return { error: 'Selecciona una imagen o video.', status: 400, stage: 'missing_body' };
+  if (!Number.isSafeInteger(declaredSize) || declaredSize <= 0) return { error: 'El archivo debe tener un tamaño válido.', status: 400, stage: 'declared_size' };
+  if (Number.isFinite(contentLength) && contentLength !== declaredSize) return { error: 'La subida llegó incompleta. Intenta nuevamente.', status: 400, stage: 'content_length' };
+  const [signatureStream, uploadStream] = request.body.tee();
+  const signature = await readStreamPrefix(signatureStream);
+  return { name, size: declaredSize, declaredMime: contentType.split(';')[0], stream: uploadStream, signature, transport: 'raw' };
+}
+
 export async function upload(request, env, auth) {
   const requestId = request.headers.get('cf-ray') || crypto.randomUUID();
   const context = { requestId };
@@ -107,21 +152,21 @@ export async function upload(request, env, auth) {
   const maximum = configuredUploadMax(env);
   const lengthHeader = request.headers.get('content-length');
   const length = lengthHeader === null ? null : Number(lengthHeader);
+  const multipart = /^multipart\/form-data(?:;|$)/i.test(request.headers.get('content-type') || '');
   uploadLog('info', 'upload.start', { ...context, contentLength: Number.isFinite(length) ? length : null });
-  if (Number.isFinite(length) && length > maximum + 1_000_000) {
+  if (Number.isFinite(length) && length > maximum + (multipart ? 1_000_000 : 0)) {
     uploadLog('warn', 'upload.validation_error', { ...context, stage: 'request_size', status: 413 });
     return uploadJson({ error: 'El archivo supera el tamaño máximo permitido.' }, 413, requestId);
   }
-  let form;
-  try { form = await request.formData(); }
+  let incoming;
+  try { incoming = await readUpload(request); }
   catch {
     uploadLog('warn', 'upload.form_error', { ...context, status: 400 });
     return uploadJson({ error: 'No se pudo leer el archivo. Selecciónalo de nuevo e intenta otra vez.' }, 400, requestId);
   }
-  const file = form.get('file');
-  if (!file || typeof file.name !== 'string' || typeof file.stream !== 'function') {
-    uploadLog('warn', 'upload.validation_error', { ...context, stage: 'missing_file', status: 400 });
-    return uploadJson({ error: 'Selecciona una imagen o video.' }, 400, requestId);
+  if (incoming.error) {
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: incoming.stage, status: incoming.status });
+    return uploadJson({ error: incoming.error }, incoming.status, requestId);
   }
   let storage;
   try { storage = await storageSummary(env); }
@@ -129,23 +174,24 @@ export async function upload(request, env, auth) {
     uploadLog('error', 'upload.database_error', { ...context, stage: 'storage_summary', status: 503 });
     return uploadJson({ error: 'No se pudo consultar el espacio disponible. Intenta nuevamente.' }, 503, requestId);
   }
-  const checked = validateUploadMetadata(file, storage, maximum);
+  const metadata = { name: incoming.name, size: incoming.size, type: incoming.declaredMime };
+  const checked = validateUploadMetadata(metadata, storage, maximum);
   if (!checked.valid) {
-    uploadLog('warn', 'upload.validation_error', { ...context, stage: checked.code || 'metadata', status: checked.status, size: Number(file.size) || null });
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: checked.code || 'metadata', status: checked.status, size: incoming.size || null });
     return uploadJson({ error: checked.message }, checked.status, requestId);
   }
   let signatureValid = false;
-  try { signatureValid = await verifyFileSignature(file, checked); } catch {}
+  try { signatureValid = incoming.file ? await verifyFileSignature(incoming.file, checked) : verifySignatureBytes(incoming.signature, checked); } catch {}
   if (!signatureValid) {
     uploadLog('warn', 'upload.validation_error', { ...context, stage: 'signature', status: 415, size: checked.size, canonicalMime: checked.mime });
     return uploadJson({ error: 'Este formato no es compatible.' }, 415, requestId);
   }
-  uploadLog('info', 'upload.validation_ok', { ...context, size: checked.size, canonicalMime: checked.mime });
+  uploadLog('info', 'upload.validation_ok', { ...context, size: checked.size, canonicalMime: checked.mime, transport: incoming.transport });
   const id = crypto.randomUUID();
   const storageKey = safeStorageKey(id, checked.extension);
-  const displayName = (file.name.replace(/\.[^.]+$/, '').trim() || 'Contenido').slice(0, 120);
+  const displayName = (incoming.name.replace(/\.[^.]+$/, '').trim() || 'Contenido').slice(0, 120);
   try {
-    await env.MEDIA_BUCKET.put(storageKey, file.stream(), { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
+    await env.MEDIA_BUCKET.put(storageKey, incoming.stream, { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
     uploadLog('info', 'upload.r2_ok', { ...context, mediaId: id, size: checked.size, canonicalMime: checked.mime });
   } catch {
     uploadLog('error', 'upload.r2_error', { ...context, mediaId: id, status: 503, size: checked.size, canonicalMime: checked.mime });
@@ -155,7 +201,7 @@ export async function upload(request, env, auth) {
     const statements = [
       env.TV_DB.prepare(`INSERT INTO media(id,original_filename,display_name,storage_key,media_type,mime_type,size_bytes,active,sort_order,created_by)
         SELECT ?,?,?,?,?,?,?,1,COALESCE((SELECT MAX(sort_order)+1 FROM media),1),? FROM settings
-        WHERE id='main' AND used_bytes+?<=storage_limit_bytes`).bind(id, file.name, displayName, storageKey, checked.type, checked.mime, checked.size, auth.user_id, checked.size),
+        WHERE id='main' AND used_bytes+?<=storage_limit_bytes`).bind(id, incoming.name, displayName, storageKey, checked.type, checked.mime, checked.size, auth.user_id, checked.size),
       env.TV_DB.prepare(`UPDATE settings SET used_bytes=used_bytes+?,updated_at=CURRENT_TIMESTAMP
         WHERE id='main' AND EXISTS(SELECT 1 FROM media WHERE id=?)`).bind(checked.size, id),
     ];

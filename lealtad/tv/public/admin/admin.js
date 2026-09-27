@@ -34,12 +34,15 @@ function formatBytes(bytes) {
   return `${value.toLocaleString('es-MX', { maximumFractionDigits: 1 })} ${unit}`;
 }
 
-function uploadRequest(form, onProgress) {
+function uploadRequest(file, onProgress) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open('POST', '/admin/api/uploads');
     request.withCredentials = true;
     request.timeout = 10 * 60 * 1000;
+    request.setRequestHeader('content-type', file.type || 'application/octet-stream');
+    request.setRequestHeader('x-upload-filename', encodeURIComponent(file.name));
+    request.setRequestHeader('x-upload-size', String(file.size));
     request.upload.addEventListener('progress', event => {
       if (event.lengthComputable && event.total > 0) onProgress(Math.min(100, Math.round(event.loaded / event.total * 100)));
     });
@@ -54,7 +57,7 @@ function uploadRequest(form, onProgress) {
     request.addEventListener('error', () => reject(new Error('No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.')));
     request.addEventListener('timeout', () => reject(new Error('La subida tardó demasiado. Revisa tu conexión e intenta nuevamente.')));
     request.addEventListener('abort', () => reject(new Error('La subida fue cancelada.')));
-    request.send(form);
+    request.send(file);
   });
 }
 
@@ -170,9 +173,8 @@ byId('upload-button').addEventListener('click', async () => {
   const file = byId('upload-file').files?.[0]; if (!file) return;
   const button = byId('upload-button'); if (button.disabled) return;
   button.disabled = true; button.textContent = 'Subiendo…'; uploadMessage.textContent = 'Subiendo contenido…';
-  const form = new FormData(); form.set('file', file);
   try {
-    await uploadRequest(form, percent => { uploadMessage.textContent = `Subiendo… ${percent}%`; });
+    await uploadRequest(file, percent => { uploadMessage.textContent = `Subiendo… ${percent}%`; });
     byId('upload-file').value = ''; uploadMessage.textContent = 'Contenido subido correctamente.'; await loadDashboard();
   } catch (error) {
     const detail = typeof error?.message === 'string' ? error.message.trim() : '';

@@ -57,6 +57,7 @@ test('selector móvil es visible, usa unidades decimales y sube una sola vez con
     const page = await browser.newPage({ viewport });
     let uploads=0;
     let failUpload=false;
+    const received=[];
     await page.route('**/*', async route => {
       const url = new URL(route.request().url());
       if (url.pathname === '/admin') return route.fulfill({ contentType: 'text/html; charset=utf-8', body: panel });
@@ -66,6 +67,7 @@ test('selector móvil es visible, usa unidades decimales y sube una sola vez con
       if (url.pathname === '/admin/api/uploads') {
         uploads++;
         if (failUpload) return route.abort('internetdisconnected');
+        received.push({headers:route.request().headers(),body:route.request().postDataBuffer()});
         await new Promise(resolve => setTimeout(resolve,100));
         return route.fulfill({ status: 201, json: { ok:true,id:'media-test' } });
       }
@@ -84,6 +86,11 @@ test('selector móvil es visible, usa unidades decimales y sube una sola vez con
     await page.locator('#upload-button').dblclick({delay:10});
     await page.waitForFunction(() => document.querySelector('#upload-message').textContent === 'Contenido subido correctamente.');
     assert.equal(uploads,1,'el doble toque no duplica la subida');
+    assert.equal(received[0].headers['content-type'],'image/jpeg');
+    assert.equal(received[0].headers['x-upload-filename'],'captura-android.jpg');
+    assert.equal(Number(received[0].headers['x-upload-size']),1_500_000);
+    assert.equal(received[0].body.byteLength,1_500_000);
+    assert.doesNotMatch(received[0].headers['content-type'],/multipart\/form-data/i);
 
     failUpload=true;
     await input.setInputFiles({name:'captura-iphone.jpg',mimeType:'image/jpeg',buffer:Buffer.from([0xff,0xd8,0xff,0x00])});

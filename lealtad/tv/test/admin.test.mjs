@@ -6,7 +6,7 @@ import {
   authenticate, checkRateLimit, createSession, hashPassword, normalizeUsername,
   recordLoginFailure, revokeSession, verifyPassword,
 } from '../worker/admin-auth.js';
-import { safeStorageKey, storageState, validateUploadMetadata, verifyFileSignature } from '../worker/admin-media.js';
+import { safeStorageKey, storageState, validateUploadMetadata, verifyFileSignature, verifySignatureBytes } from '../worker/admin-media.js';
 import { upload } from '../worker/admin.js';
 import { handlePlaylist, objectResponse, parseRange } from '../worker/media.js';
 
@@ -100,6 +100,7 @@ test('validación backend cubre formatos, firmas, tamaño, cuota y claves segura
   const badFile={name:'falso.jpg',type:'image/jpeg',size:8,slice(){return new Blob([Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])]);}};
   const badChecked=validateUploadMetadata(badFile,storage,100);
   assert.equal(await verifyFileSignature(badFile,badChecked),false);
+  assert.equal(verifySignatureBytes(Uint8Array.from([0xff,0xd8,0xff]),{mime:'image/jpeg'}),true);
   assert.equal(safeStorageKey('12345678-1234-1234-1234-123456789abc','.png'),'library/12/12345678-1234-1234-1234-123456789abc.png');
   assert.throws(()=>safeStorageKey('../escape','.png'));
 });
@@ -136,7 +137,17 @@ function uploadRequest(bytes, filename='captura.jpg', type='application/octet-st
   return new Request(`${origin}/admin/api/uploads`,{method:'POST',body:form});
 }
 
-test('subida acepta multipart móvil y devuelve errores humanos de R2 y D1', async () => {
+function rawUploadRequest(bytes, filename='captura móvil.jpg', type='image/jpeg') {
+  const body=Uint8Array.from(bytes);
+  return new Request(`${origin}/admin/api/uploads`,{method:'POST',headers:{
+    'content-type':type,
+    'content-length':String(body.byteLength),
+    'x-upload-filename':encodeURIComponent(filename),
+    'x-upload-size':String(body.byteLength),
+  },body});
+}
+
+test('subida mantiene compatibilidad multipart y devuelve errores humanos de R2 y D1', async () => {
   const bytes=[0xff,0xd8,0xff,0x00,0x01];
   const stored=[];
   const bucket={
@@ -160,6 +171,25 @@ test('subida acepta multipart móvil y devuelve errores humanos de R2 y D1', asy
   assert.equal(d1Failure.status,503);
   assert.equal((await d1Failure.json()).error,'No se pudo registrar el contenido. Intenta nuevamente.');
   assert.equal(cleaned,true);
+});
+
+test('subida binaria directa conserva bytes y nombre sin depender de FormData', async () => {
+  const bytes=[0xff,0xd8,0xff,0x00,0x01,0x02];
+  const stored=[];
+  const bucket={
+    async put(key,stream,options){stored.push({key,bytes:new Uint8Array(await new Response(stream).arrayBuffer()),options});},
+    async delete(){},
+  };
+  const response=await upload(rawUploadRequest(bytes),{TV_DB:new UploadDb(),MEDIA_BUCKET:bucket,TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  assert.equal(response.status,201);
+  assert.deepEqual([...stored[0].bytes],bytes);
+  assert.equal(stored[0].options.httpMetadata.contentType,'image/jpeg');
+
+  const incomplete=await upload(new Request(`${origin}/admin/api/uploads`,{method:'POST',headers:{
+    'content-type':'image/jpeg','content-length':'6','x-upload-filename':'foto.jpg','x-upload-size':'7',
+  },body:Uint8Array.from(bytes)}),{TV_DB:new UploadDb(),MEDIA_BUCKET:bucket,TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  assert.equal(incomplete.status,400);
+  assert.equal((await incomplete.json()).error,'La subida llegó incompleta. Intenta nuevamente.');
 });
 
 test('Range devuelve 206, Content-Range y nunca carga el objeto completo', async () => {
