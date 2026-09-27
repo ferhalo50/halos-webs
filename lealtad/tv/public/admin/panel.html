@@ -48,20 +48,20 @@
 
       <div id="dashboard" hidden>
         <div class="notice" role="status">
-          <strong>Primera fase</strong>
-          <span>La biblioteca actual se muestra en solo lectura. Las subidas y los cambios de reproducción aún están desactivados.</span>
+          <strong>Biblioteca de la pantalla</strong>
+          <span>Los cambios se guardan aquí y aparecerán en la TV cuando la nueva biblioteca sea activada.</span>
         </div>
 
         <section class="overview" aria-label="Resumen del contenido">
           <div class="panel metric">
             <span>Contenido base</span>
             <strong id="base-count">—</strong>
-            <small>Archivos del proyecto actual</small>
+            <small>Elementos disponibles</small>
           </div>
           <div class="panel metric">
             <span>Contenido de Renace</span>
             <strong id="uploaded-count">0</strong>
-            <small>Subidas disponibles en la siguiente fase</small>
+            <small>Administrados por Renace</small>
           </div>
           <div class="panel storage" id="storage-panel">
             <div class="storage-heading"><span>Espacio para nuevas subidas</span><strong id="storage-summary">Cargando…</strong></div>
@@ -74,13 +74,15 @@
           <div>
             <p class="eyebrow">Nuevo contenido</p>
             <h2 id="upload-title">Prepara una imagen o video</h2>
-            <p>Formatos previstos: JPG, PNG, WebP y MP4. En esta fase se comprueba el formato y el espacio; todavía no se envía el archivo.</p>
+            <p>Formatos: JPG, PNG, WebP y MP4. Los MP4 pueden usar codecs que algunos televisores no reproducen.</p>
           </div>
           <div class="upload-control">
             <label class="file-button" for="upload-file">Elegir archivo</label>
             <input id="upload-file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4">
+            <label class="sr-only" for="upload-name">Nombre visible</label>
+            <input id="upload-name" type="text" maxlength="120" placeholder="Nombre visible (opcional)">
             <p id="upload-message" role="status" aria-live="polite">Ningún archivo seleccionado.</p>
-            <button class="button primary" type="button" disabled title="Disponible al conectar R2">Subir contenido</button>
+            <button class="button primary" id="upload-button" type="button" disabled>Subir contenido</button>
           </div>
         </section>
 
@@ -90,6 +92,16 @@
             <p id="library-count">Cargando…</p>
           </div>
           <div class="library-list" id="library-list"></div>
+        </section>
+
+        <section class="panel password-panel" aria-labelledby="password-title">
+          <div><p class="eyebrow">Seguridad</p><h2 id="password-title">Cambiar contraseña</h2><p>Al cambiarla se cierran las demás sesiones abiertas.</p></div>
+          <form id="password-form">
+            <input id="current-password" type="password" autocomplete="current-password" placeholder="Contraseña actual" required>
+            <input id="new-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Nueva contraseña (mínimo 12 caracteres)" required>
+            <button class="button" type="submit">Actualizar contraseña</button>
+            <p id="password-message" class="form-message" role="status"></p>
+          </form>
         </section>
       </div>
     </main>

@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
   const request=event.request,url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin)return;
   if(url.pathname==='/admin'||url.pathname.startsWith('/admin/'))return;
-  if(url.origin===self.location.origin&&url.pathname==='/media.json') event.respondWith(configuration(request));
+  if(url.origin===self.location.origin&&['/media.json','/playlist.json'].includes(url.pathname)) event.respondWith(configuration(request));
   else if(['image','audio','video'].includes(request.destination)||url.pathname.startsWith('/media/')) event.respondWith(media(request));
   else if(url.origin===self.location.origin) event.respondWith(shell(request));
 });
