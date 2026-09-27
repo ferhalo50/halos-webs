@@ -111,6 +111,35 @@ footer {
 .connection span { width: 9px; height: 9px; border-radius: 50%; background: #62834e; box-shadow: 0 0 0 5px rgba(98,131,78,.12); }
 .connection.is-offline span { background: #a66b45; box-shadow: 0 0 0 5px rgba(166,107,69,.12); }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255,253,247,.72);
+  color: var(--olive-deep);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.admin-link:hover {
+  border-color: var(--olive);
+  background: var(--paper);
+  transform: translateY(-1px);
+}
+
 main { padding-block: clamp(45px, 5.2vw, 94px) 72px; }
 
 .hero {
@@ -385,6 +414,8 @@ kbd { padding: .15em .42em; border: 1px solid currentColor; border-radius: 5px; 
 }
 
 @media (max-width: 500px) {
+  .site-header { flex-wrap: wrap; padding-block: 14px; }
+  .header-actions { width: 100%; }
   .utility-actions, .media-grid { grid-template-columns: 1fr; }
   .media-meta strong { font-size: 21px; }
   .presentation-actions #presentation-music { display: none; }
