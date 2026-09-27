@@ -1,7 +1,10 @@
 const encoder = new TextEncoder();
 const COOKIE = 'renace_tv_session';
 const SESSION_SECONDS = 8 * 60 * 60;
-const PBKDF2_ROUNDS = 310000;
+// Cloudflare Workers caps one PBKDF2 deriveBits call at 100,000 iterations.
+// Chaining three independently salted stages preserves a 300,000-iteration cost.
+const PBKDF2_ROUNDS = 100000;
+const PBKDF2_STAGES = 3;
 const RATE_WINDOW_SECONDS = 15 * 60;
 const RATE_BLOCK_SECONDS = 15 * 60;
 const RATE_MAX_FAILURES = 5;
@@ -32,19 +35,25 @@ export async function hashPassword(password, salt = randomToken(16)) {
   if (typeof password !== 'string' || password.length < 12 || password.length > 128) throw new Error('La contraseña debe tener entre 12 y 128 caracteres.');
   const saltBytes = bytesFromHex(salt);
   if (!saltBytes || saltBytes.length !== 16) throw new Error('Salt no válido.');
-  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const digest = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: PBKDF2_ROUNDS, hash: 'SHA-256' }, key, 256));
-  return `pbkdf2-sha256:${PBKDF2_ROUNDS}:${salt}:${hex(digest)}`;
+  let material = encoder.encode(password);
+  for (let stage = 1; stage <= PBKDF2_STAGES; stage++) {
+    const stageSalt = new Uint8Array(saltBytes.length + 1);
+    stageSalt.set(saltBytes);
+    stageSalt[saltBytes.length] = stage;
+    const key = await crypto.subtle.importKey('raw', material, 'PBKDF2', false, ['deriveBits']);
+    material = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: stageSalt, iterations: PBKDF2_ROUNDS, hash: 'SHA-256' }, key, 256));
+  }
+  return `pbkdf2-sha256-chain:${PBKDF2_ROUNDS}:${PBKDF2_STAGES}:${salt}:${hex(material)}`;
 }
 
 export async function verifyPassword(password, encoded) {
   if (typeof password !== 'string' || typeof encoded !== 'string') return false;
-  const [method, rounds, salt, expectedHex] = encoded.split(':');
-  if (method !== 'pbkdf2-sha256' || Number(rounds) !== PBKDF2_ROUNDS) return false;
+  const [method, rounds, stages, salt, expectedHex] = encoded.split(':');
+  if (method !== 'pbkdf2-sha256-chain' || Number(rounds) !== PBKDF2_ROUNDS || Number(stages) !== PBKDF2_STAGES) return false;
   const expected = bytesFromHex(expectedHex);
   if (!expected || expected.length !== 32) return false;
   let actual;
-  try { actual = bytesFromHex((await hashPassword(password, salt)).split(':')[3]); } catch { return false; }
+  try { actual = bytesFromHex((await hashPassword(password, salt)).split(':')[4]); } catch { return false; }
   let difference = 0;
   for (let index = 0; index < expected.length; index++) difference |= expected[index] ^ actual[index];
   return difference === 0;

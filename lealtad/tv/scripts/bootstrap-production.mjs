@@ -16,7 +16,7 @@ function wranglerCommand(args,input){
 function hidden(prompt){
   if(!process.stdin.isTTY)throw new Error('Ejecuta este comando en una terminal interactiva.');
   process.stdout.write(prompt);process.stdin.setRawMode(true);process.stdin.resume();process.stdin.setEncoding('utf8');
-  return new Promise((resolve,reject)=>{let value='';const finish=(error)=>{process.stdin.setRawMode(false);process.stdin.pause();process.stdin.off('data',onData);process.stdout.write('\n');error?reject(error):resolve(value);};const onData=key=>{if(key==='\u0003')return finish(new Error('Operación cancelada.'));if(key==='\r'||key==='\n')return finish();if(key==='\u007f'||key==='\b'){if(value){value=value.slice(0,-1);process.stdout.write('\b \b');}return;}if(key>=' '){value+=key;process.stdout.write('*');}};process.stdin.on('data',onData);});
+  return new Promise((resolve,reject)=>{let value='';let done=false;const finish=(error)=>{if(done)return;done=true;process.stdin.setRawMode(false);process.stdin.pause();process.stdin.off('data',onData);process.stdout.write('\n');error?reject(error):resolve(value);};const onData=chunk=>{for(const key of chunk){if(key==='\u0003')return finish(new Error('Operación cancelada.'));if(key==='\r'||key==='\n')return finish();if(key==='\u007f'||key==='\b'){if(value){value=value.slice(0,-1);process.stdout.write('\b \b');}continue;}if(key>=' '){value+=key;process.stdout.write('*');}}};process.stdin.on('data',onData);});
 }
 
 async function api(path,options={}){
@@ -45,6 +45,7 @@ const authHeaders={origin,cookie};
 const session=await api('/admin/api/session',{headers:{cookie}});if(session.response.status!==200)throw new Error('Refresh de sesión falló.');
 const before=await api('/admin/api/content',{headers:{cookie}});if(before.response.status!==200||before.data.items.length!==17)throw new Error('La biblioteca inicial no contiene 17 elementos.');
 const baseline=before.data.storage.usedBytes;
+const originalIds=before.data.items.map(item=>item.id);
 const preview=await fetch(origin+before.data.items[0].preview,{headers:{cookie}});if(preview.status!==200)throw new Error('La vista previa protegida falló.');
 
 const bytes=await readFile(new URL('../public/media/images/renace1.jpg',import.meta.url));
@@ -57,6 +58,7 @@ try{
   const on=await api(`/admin/api/content/${id}`,{method:'PATCH',headers:{...authHeaders,'content-type':'application/json'},body:JSON.stringify({active:true})});if(on.response.status!==200)throw new Error('Activar falló.');
   content=await api('/admin/api/content',{headers:{cookie}});const ids=content.data.items.map(item=>item.id);const moved=[id,...ids.filter(value=>value!==id)];
   const reorder=await api('/admin/api/reorder',{method:'POST',headers:{...authHeaders,'content-type':'application/json'},body:JSON.stringify({ids:moved})});if(reorder.response.status!==200)throw new Error('Reordenar falló.');
+  const restoreOrder=await api('/admin/api/reorder',{method:'POST',headers:{...authHeaders,'content-type':'application/json'},body:JSON.stringify({ids:[...originalIds,id]})});if(restoreOrder.response.status!==200)throw new Error('Restaurar el orden original falló.');
 }finally{
   const removed=await api(`/admin/api/content/${id}`,{method:'DELETE',headers:authHeaders});if(removed.response.status!==200)throw new Error(`No se pudo limpiar el archivo temporal: ${removed.data.error||removed.response.status}`);
 }
