@@ -7,6 +7,7 @@ import {
   recordLoginFailure, revokeSession, verifyPassword,
 } from '../worker/admin-auth.js';
 import { safeStorageKey, storageState, validateUploadMetadata, verifyFileSignature } from '../worker/admin-media.js';
+import { upload } from '../worker/admin.js';
 import { handlePlaylist, objectResponse, parseRange } from '../worker/media.js';
 
 const origin = 'https://renacecafetv.haloswebs.com';
@@ -81,11 +82,84 @@ test('validación backend cubre formatos, firmas, tamaño, cuota y claves segura
     const checked=validateUploadMetadata(file,storage,100);
     assert.equal(checked.valid,true,name);assert.equal(await verifyFileSignature(file,checked),true,name);
   }
+  for(const type of ['', 'application/octet-stream', 'image/png']) {
+    const bytes=[0xff,0xd8,0xff,0x00];
+    const file={name:'captura.jpg',type,size:bytes.length,slice(){return new Blob([Uint8Array.from(bytes)]);}};
+    const checked=validateUploadMetadata(file,storage,100);
+    assert.equal(checked.valid,true,`MIME declarado ${type || 'vacío'}`);
+    assert.equal(checked.mime,'image/jpeg');
+    assert.equal(await verifyFileSignature(file,checked),true);
+  }
   assert.equal(validateUploadMetadata({name:'mal.exe',type:'image/png',size:10},storage,100).status,415);
+  assert.equal(validateUploadMetadata({name:'foto.heic',type:'image/heic',size:10},storage,100).status,415);
+  assert.equal(validateUploadMetadata({name:'video.mov',type:'video/quicktime',size:10},storage,100).status,415);
   assert.equal(validateUploadMetadata({name:'foto.png',type:'image/png',size:101},storage,100).status,413);
   assert.equal(validateUploadMetadata({name:'foto.png',type:'image/png',size:901},storage,1000).status,413);
+  assert.equal(validateUploadMetadata({name:'limite.jpg',type:'image/jpeg',size:95_000_000},storageState(0,5_000_000_000),95_000_000).valid,true);
+  assert.equal(validateUploadMetadata({name:'exceso.jpg',type:'image/jpeg',size:95_000_001},storageState(0,5_000_000_000),95_000_000).status,413);
+  const badFile={name:'falso.jpg',type:'image/jpeg',size:8,slice(){return new Blob([Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])]);}};
+  const badChecked=validateUploadMetadata(badFile,storage,100);
+  assert.equal(await verifyFileSignature(badFile,badChecked),false);
   assert.equal(safeStorageKey('12345678-1234-1234-1234-123456789abc','.png'),'library/12/12345678-1234-1234-1234-123456789abc.png');
   assert.throws(()=>safeStorageKey('../escape','.png'));
+});
+
+class UploadDb {
+  constructor({ failBatch=false }={}) { this.failBatch=failBatch; this.used=0; this.limit=5_000_000_000; this.rows=[]; }
+  prepare(sql) {
+    const db=this;
+    const first=async () => {
+      if(sql.includes('FROM settings')) return {storage_limit_bytes:db.limit,used_bytes:db.used};
+      throw new Error(`Consulta first no simulada: ${sql}`);
+    };
+    return { first, bind(...args) { return {
+      async first() {
+        if(sql.includes('FROM settings')) return {storage_limit_bytes:db.limit,used_bytes:db.used};
+        throw new Error(`Consulta first no simulada: ${sql}`);
+      },
+      async run() {
+        if(sql.startsWith('INSERT INTO audit_log')) return {meta:{changes:1}};
+        throw new Error(`Consulta run no simulada: ${sql}`);
+      },
+    }; } };
+  }
+  async batch(statements) {
+    if(this.failBatch) throw new Error('D1 no disponible');
+    this.rows.push(statements);
+    return [{meta:{changes:1}},{meta:{changes:1}}];
+  }
+}
+
+function uploadRequest(bytes, filename='captura.jpg', type='application/octet-stream') {
+  const form=new FormData();
+  form.set('file',new Blob([Uint8Array.from(bytes)],{type}),filename);
+  return new Request(`${origin}/admin/api/uploads`,{method:'POST',body:form});
+}
+
+test('subida acepta multipart móvil y devuelve errores humanos de R2 y D1', async () => {
+  const bytes=[0xff,0xd8,0xff,0x00,0x01];
+  const stored=[];
+  const bucket={
+    async put(key,stream,options){stored.push({key,bytes:new Uint8Array(await new Response(stream).arrayBuffer()),options});},
+    async delete(key){stored.push({deleted:key});},
+  };
+  const db=new UploadDb();
+  const response=await upload(uploadRequest(bytes),{TV_DB:db,MEDIA_BUCKET:bucket,TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  assert.equal(response.status,201);
+  assert.equal((await response.json()).ok,true);
+  assert.match(response.headers.get('x-request-id'),/\S+/);
+  assert.deepEqual([...stored[0].bytes],bytes);
+  assert.equal(stored[0].options.httpMetadata.contentType,'image/jpeg');
+
+  const r2Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb(),MEDIA_BUCKET:{async put(){throw new Error('R2 no disponible');}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  assert.equal(r2Failure.status,503);
+  assert.equal((await r2Failure.json()).error,'No se pudo guardar el archivo. Intenta nuevamente.');
+
+  let cleaned=false;
+  const d1Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb({failBatch:true}),MEDIA_BUCKET:{async put(){},async delete(){cleaned=true;}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  assert.equal(d1Failure.status,503);
+  assert.equal((await d1Failure.json()).error,'No se pudo registrar el contenido. Intenta nuevamente.');
+  assert.equal(cleaned,true);
 });
 
 test('Range devuelve 206, Content-Range y nunca carga el objeto completo', async () => {

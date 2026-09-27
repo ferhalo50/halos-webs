@@ -26,12 +26,36 @@ function showLogin(message = '') {
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes)) return 'Tamaño no disponible';
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1000) return `${bytes} B`;
   const units = ['KB', 'MB', 'GB'];
-  let value = bytes / 1024;
+  let value = bytes / 1000;
   let unit = units[0];
-  for (let index = 1; index < units.length && value >= 1024; index++) { value /= 1024; unit = units[index]; }
+  for (let index = 1; index < units.length && value >= 1000; index++) { value /= 1000; unit = units[index]; }
   return `${value.toLocaleString('es-MX', { maximumFractionDigits: 1 })} ${unit}`;
+}
+
+function uploadRequest(form, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', '/admin/api/uploads');
+    request.withCredentials = true;
+    request.timeout = 10 * 60 * 1000;
+    request.upload.addEventListener('progress', event => {
+      if (event.lengthComputable && event.total > 0) onProgress(Math.min(100, Math.round(event.loaded / event.total * 100)));
+    });
+    request.addEventListener('load', () => {
+      let data = {};
+      try { data = request.responseText ? JSON.parse(request.responseText) : {}; } catch {}
+      if (request.status >= 200 && request.status < 300) return resolve(data);
+      const error = new Error(typeof data.error === 'string' && data.error.trim() ? data.error : 'No se pudo completar la subida. Intenta nuevamente.');
+      error.status = request.status;
+      reject(error);
+    });
+    request.addEventListener('error', () => reject(new Error('No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.')));
+    request.addEventListener('timeout', () => reject(new Error('La subida tardó demasiado. Revisa tu conexión e intenta nuevamente.')));
+    request.addEventListener('abort', () => reject(new Error('La subida fue cancelada.')));
+    request.send(form);
+  });
 }
 
 function storageView(storage) {
@@ -136,18 +160,25 @@ byId('logout').addEventListener('click', async () => {
 
 byId('upload-file').addEventListener('change', event => {
   const file = event.currentTarget.files?.[0];
-  byId('upload-button').disabled = !file;
-  uploadMessage.textContent = file ? `${file.name} · ${formatBytes(file.size)}` : 'Ningún archivo seleccionado.';
+  const extension = file ? /\.[a-z0-9]+$/i.exec(file.name)?.[0]?.toLowerCase() : '';
+  const compatible = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'].includes(extension);
+  byId('upload-button').disabled = !file || !compatible;
+  uploadMessage.textContent = !file ? 'Ningún archivo seleccionado.' : compatible ? `${file.name} · ${formatBytes(file.size)}` : 'Este formato no es compatible. Usa JPG, PNG, WebP o MP4.';
 });
 
 byId('upload-button').addEventListener('click', async () => {
   const file = byId('upload-file').files?.[0]; if (!file) return;
-  const button = byId('upload-button'); button.disabled = true; uploadMessage.textContent = 'Subiendo y verificando…';
-  const form = new FormData(); form.set('file', file); form.set('name', byId('upload-name').value.trim());
+  const button = byId('upload-button'); if (button.disabled) return;
+  button.disabled = true; button.textContent = 'Subiendo…'; uploadMessage.textContent = 'Subiendo contenido…';
+  const form = new FormData(); form.set('file', file);
   try {
-    await api('uploads', { method: 'POST', body: form });
-    byId('upload-file').value = ''; byId('upload-name').value = ''; uploadMessage.textContent = 'Contenido subido correctamente.'; await loadDashboard();
-  } catch (error) { uploadMessage.textContent = error.message; button.disabled = false; }
+    await uploadRequest(form, percent => { uploadMessage.textContent = `Subiendo… ${percent}%`; });
+    byId('upload-file').value = ''; uploadMessage.textContent = 'Contenido subido correctamente.'; await loadDashboard();
+  } catch (error) {
+    const detail = typeof error?.message === 'string' ? error.message.trim() : '';
+    uploadMessage.textContent = detail && !/^(failed to fetch|typeerror|null|undefined|\[object Object\])$/i.test(detail) ? detail : 'No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
+    button.disabled = false;
+  } finally { button.textContent = 'Subir contenido'; }
 });
 
 byId('password-form').addEventListener('submit', async event => {

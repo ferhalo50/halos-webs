@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 INSERT OR IGNORE INTO settings(id, storage_limit_bytes, used_bytes)
-VALUES ('main', 5368709120, 0);
+VALUES ('main', 5000000000, 0);
 
 CREATE TABLE IF NOT EXISTS media (
   id TEXT PRIMARY KEY,

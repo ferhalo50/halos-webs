@@ -74,13 +74,10 @@
           <div>
             <p class="eyebrow">Nuevo contenido</p>
             <h2 id="upload-title">Prepara una imagen o video</h2>
-            <p>Formatos: JPG, PNG, WebP y MP4, hasta 95 MiB por archivo. Los MP4 pueden usar codecs que algunos televisores no reproducen.</p>
+            <p>Formatos: JPG, PNG, WebP y MP4, hasta 95 MB por archivo. Para TV recomendamos MP4 H.264. HEIC, HEIF y MOV todavía requieren conversión externa.</p>
           </div>
           <div class="upload-control">
-            <label class="file-button" for="upload-file">Elegir archivo</label>
-            <input id="upload-file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4">
-            <label class="sr-only" for="upload-name">Nombre visible</label>
-            <input id="upload-name" type="text" maxlength="120" placeholder="Nombre visible (opcional)">
+            <input id="upload-file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4" aria-label="Elegir una imagen o video">
             <p id="upload-message" role="status" aria-live="polite">Ningún archivo seleccionado.</p>
             <button class="button primary" id="upload-button" type="button" disabled>Subir contenido</button>
           </div>

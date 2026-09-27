@@ -29,6 +29,17 @@ function json(body, status = 200, headers = {}) {
   return protectedResponse(Response.json(body, { status, headers }));
 }
 
+function uploadJson(body, status, requestId) {
+  return json(body, status, { 'x-request-id': requestId });
+}
+
+function uploadLog(level, event, details = {}) {
+  const entry = JSON.stringify({ component: 'admin-upload', event, ...details });
+  if (level === 'error') console.error(entry);
+  else if (level === 'warn') console.warn(entry);
+  else console.log(entry);
+}
+
 async function readJson(request, maximum = 8192) {
   if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') || '')) return null;
   const length = Number(request.headers.get('content-length'));
@@ -86,23 +97,60 @@ async function login(request, env) {
   return json({ ok: true, displayName: user.display_name }, 200, { 'Set-Cookie': session.setCookie });
 }
 
-async function upload(request, env, auth) {
-  if (!env.MEDIA_BUCKET) return json({ error: 'Almacenamiento no configurado.' }, 503);
+export async function upload(request, env, auth) {
+  const requestId = request.headers.get('cf-ray') || crypto.randomUUID();
+  const context = { requestId };
+  if (!env.MEDIA_BUCKET) {
+    uploadLog('error', 'upload.storage_unavailable', context);
+    return uploadJson({ error: 'El almacenamiento no está disponible. Intenta nuevamente.' }, 503, requestId);
+  }
   const maximum = configuredUploadMax(env);
-  const length = Number(request.headers.get('content-length'));
-  if (Number.isFinite(length) && length > maximum + 1024 * 1024) return json({ error: 'El archivo supera el tamaño máximo permitido.' }, 413);
+  const lengthHeader = request.headers.get('content-length');
+  const length = lengthHeader === null ? null : Number(lengthHeader);
+  uploadLog('info', 'upload.start', { ...context, contentLength: Number.isFinite(length) ? length : null });
+  if (Number.isFinite(length) && length > maximum + 1_000_000) {
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: 'request_size', status: 413 });
+    return uploadJson({ error: 'El archivo supera el tamaño máximo permitido.' }, 413, requestId);
+  }
   let form;
-  try { form = await request.formData(); } catch { return json({ error: 'No se pudo leer el archivo.' }, 400); }
+  try { form = await request.formData(); }
+  catch {
+    uploadLog('warn', 'upload.form_error', { ...context, status: 400 });
+    return uploadJson({ error: 'No se pudo leer el archivo. Selecciónalo de nuevo e intenta otra vez.' }, 400, requestId);
+  }
   const file = form.get('file');
-  if (!file || typeof file.name !== 'string' || typeof file.stream !== 'function') return json({ error: 'Selecciona una imagen o video.' }, 400);
-  const storage = await storageSummary(env);
+  if (!file || typeof file.name !== 'string' || typeof file.stream !== 'function') {
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: 'missing_file', status: 400 });
+    return uploadJson({ error: 'Selecciona una imagen o video.' }, 400, requestId);
+  }
+  let storage;
+  try { storage = await storageSummary(env); }
+  catch {
+    uploadLog('error', 'upload.database_error', { ...context, stage: 'storage_summary', status: 503 });
+    return uploadJson({ error: 'No se pudo consultar el espacio disponible. Intenta nuevamente.' }, 503, requestId);
+  }
   const checked = validateUploadMetadata(file, storage, maximum);
-  if (!checked.valid) return json({ error: checked.message }, checked.status);
-  if (!await verifyFileSignature(file, checked)) return json({ error: 'El contenido real del archivo no coincide con su formato.' }, 415);
+  if (!checked.valid) {
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: checked.code || 'metadata', status: checked.status, size: Number(file.size) || null });
+    return uploadJson({ error: checked.message }, checked.status, requestId);
+  }
+  let signatureValid = false;
+  try { signatureValid = await verifyFileSignature(file, checked); } catch {}
+  if (!signatureValid) {
+    uploadLog('warn', 'upload.validation_error', { ...context, stage: 'signature', status: 415, size: checked.size, canonicalMime: checked.mime });
+    return uploadJson({ error: 'Este formato no es compatible.' }, 415, requestId);
+  }
+  uploadLog('info', 'upload.validation_ok', { ...context, size: checked.size, canonicalMime: checked.mime });
   const id = crypto.randomUUID();
   const storageKey = safeStorageKey(id, checked.extension);
-  const displayName = (typeof form.get('name') === 'string' && form.get('name').trim() || file.name.replace(/\.[^.]+$/, '')).slice(0, 120);
-  await env.MEDIA_BUCKET.put(storageKey, file.stream(), { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
+  const displayName = (file.name.replace(/\.[^.]+$/, '').trim() || 'Contenido').slice(0, 120);
+  try {
+    await env.MEDIA_BUCKET.put(storageKey, file.stream(), { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
+    uploadLog('info', 'upload.r2_ok', { ...context, mediaId: id, size: checked.size, canonicalMime: checked.mime });
+  } catch {
+    uploadLog('error', 'upload.r2_error', { ...context, mediaId: id, status: 503, size: checked.size, canonicalMime: checked.mime });
+    return uploadJson({ error: 'No se pudo guardar el archivo. Intenta nuevamente.' }, 503, requestId);
+  }
   try {
     const statements = [
       env.TV_DB.prepare(`INSERT INTO media(id,original_filename,display_name,storage_key,media_type,mime_type,size_bytes,active,sort_order,created_by)
@@ -114,14 +162,19 @@ async function upload(request, env, auth) {
     const results = await env.TV_DB.batch(statements);
     if (!Number(results[0]?.meta?.changes)) {
       await env.MEDIA_BUCKET.delete(storageKey);
-      return json({ error: 'No hay espacio suficiente para este archivo.' }, 413);
+      uploadLog('warn', 'upload.validation_error', { ...context, mediaId: id, stage: 'storage_quota', status: 413, size: checked.size });
+      return uploadJson({ error: 'No hay espacio suficiente para este archivo.' }, 413, requestId);
     }
-  } catch (error) {
+    uploadLog('info', 'upload.database_ok', { ...context, mediaId: id, size: checked.size });
+  } catch {
     await env.MEDIA_BUCKET.delete(storageKey).catch(() => {});
-    throw error;
+    uploadLog('error', 'upload.database_error', { ...context, mediaId: id, stage: 'media_insert', status: 503, size: checked.size });
+    return uploadJson({ error: 'No se pudo registrar el contenido. Intenta nuevamente.' }, 503, requestId);
   }
-  await audit(env, auth.user_id, 'upload', id, { sizeBytes: checked.size, mime: checked.mime });
-  return json({ ok: true, id }, 201);
+  try { await audit(env, auth.user_id, 'upload', id, { sizeBytes: checked.size, mime: checked.mime }); }
+  catch { uploadLog('warn', 'upload.audit_error', { ...context, mediaId: id }); }
+  uploadLog('info', 'upload.complete', { ...context, mediaId: id, status: 201, size: checked.size, canonicalMime: checked.mime });
+  return uploadJson({ ok: true, id }, 201, requestId);
 }
 
 async function deleteMedia(env, auth, id) {

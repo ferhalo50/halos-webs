@@ -24,9 +24,9 @@ h2{font-size:30px;line-height:1.15;letter-spacing:-.02em;margin-bottom:13px}
 form{display:grid;gap:10px}
 form label{font-size:14px;font-weight:700;margin-top:4px}
 input:not([type=file]){width:100%;padding:13px 15px;border:1px solid #c8cbbd;border-radius:10px;background:#fff;color:#263027;outline:none}
-input:focus-visible,button:focus-visible,.file-button:focus-visible{outline:3px solid #83a97b;outline-offset:2px}
-.button,.file-button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 20px;border:1px solid #445a3e;font-weight:700;transition:transform .15s,background .15s;text-align:center}
-.button:not(:disabled):hover,.file-button:hover{transform:translateY(-2px)}
+input:focus-visible,button:focus-visible{outline:3px solid #83a97b;outline-offset:2px}
+.button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 20px;border:1px solid #445a3e;font-weight:700;transition:transform .15s,background .15s;text-align:center}
+.button:not(:disabled):hover{transform:translateY(-2px)}
 .primary{background:#445a3e;color:#fff}
 .button:disabled{background:#e5e9df;color:#697567;border-color:#d5ddcf;opacity:1}
 .form-message{min-height:22px;margin:2px 0;color:#9b3b34;font-size:13px}
@@ -44,8 +44,9 @@ input:focus-visible,button:focus-visible,.file-button:focus-visible{outline:3px 
 .storage.warning .storage-track span{background:#c29343}.storage.critical .storage-track span,.storage.full .storage-track span{background:#b25242}
 .upload-panel{display:flex;justify-content:space-between;gap:30px;align-items:center;padding:28px 31px;margin-bottom:42px}
 .upload-panel>div:first-child{max-width:590px}.upload-panel h2{font-size:27px}.upload-panel p{margin-bottom:0}
-.upload-control{display:grid;gap:10px;min-width:240px}.upload-control input{position:absolute;width:1px;height:1px;opacity:0}
-.file-button{background:#fff;border-color:#a8b6a1;color:#3f5840;cursor:pointer}
+.upload-control{display:grid;gap:10px;min-width:260px}
+.upload-control input[type=file]{display:block;width:100%;min-height:48px;padding:6px;border:1px solid #a8b6a1;border-radius:10px;background:#fff;color:#3f5840;cursor:pointer}
+.upload-control input[type=file]::file-selector-button{min-height:34px;margin-right:10px;padding:7px 12px;border:0;border-radius:7px;background:#445a3e;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .upload-control p{font-size:12px;min-height:34px;margin:0;color:#5c675a}
 .section-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:19px}.section-heading h2{margin:0}.section-heading p:last-child{color:#6a7467}
 .library-list{display:grid;gap:11px;margin-bottom:62px}
@@ -60,8 +61,7 @@ footer{border-top:1px solid #dcdacb;color:#7a8478;font-size:12px;padding:22px 0 
 [hidden]{display:none!important}
 @media(max-width:900px){.overview{grid-template-columns:1fr 1fr}.storage{grid-column:1/-1}.upload-panel{align-items:start}.media-row{grid-template-columns:76px minmax(0,1fr) 100px 92px}.preview{width:76px}.row-actions{grid-column:2/-1;justify-content:flex-start}}
 @media(max-width:650px){.shell{padding:0 18px}.topbar{padding:14px 0}.brand img{width:135px}.brand span{font-size:18px}.phase-label{display:none}.intro{padding:35px 0 23px}h1{font-size:39px}.login-panel,.upload-panel{display:block;padding:25px}.login-panel form{margin-top:20px}.overview{grid-template-columns:1fr 1fr;gap:10px}.metric,.storage{padding:18px;min-height:115px}.storage{grid-column:1/-1}.metric strong{font-size:31px}.notice{display:block}.notice strong{display:block;margin-bottom:5px}.upload-control{min-width:0;margin-top:21px}.section-heading{align-items:start}.media-row{grid-template-columns:68px 1fr;gap:10px;padding:12px}.preview{width:68px;height:58px}.media-meta,.row-actions{grid-column:2}.media-meta{display:inline-block}.row-actions{flex-wrap:wrap}.library-list{margin-bottom:40px}}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.upload-control input[type=text],.password-panel input{width:100%;border:1px solid #c9c4b6;border-radius:12px;background:#fff;padding:12px 14px;color:inherit}
+.password-panel input{width:100%;border:1px solid #c9c4b6;border-radius:12px;background:#fff;padding:12px 14px;color:inherit}
 .password-panel{margin-top:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,1fr);gap:28px;align-items:start}
 .password-panel form{display:grid;gap:12px}
 .pill.inactive{background:#e7e2d7;color:#6c665c}

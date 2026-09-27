@@ -8,7 +8,7 @@ const FORMATS = Object.freeze({
 
 export function configuredUploadMax(env) {
   const value = Number(env.TV_MAX_UPLOAD_BYTES);
-  return Number.isSafeInteger(value) && value > 0 ? value : 95 * 1024 * 1024;
+  return Number.isSafeInteger(value) && value > 0 ? value : 95_000_000;
 }
 
 export function storageState(usedBytes, limitBytes) {
@@ -28,14 +28,14 @@ export function validateUploadMetadata(file, storage, maxUploadBytes) {
   const mime = typeof file?.type === 'string' ? file.type.toLowerCase() : typeof file?.mime === 'string' ? file.mime.toLowerCase() : '';
   const extension = /\.[a-z0-9]+$/i.exec(name)?.[0]?.toLowerCase();
   const format = extension ? FORMATS[extension] : null;
-  if (!name || name.length > 180 || name.includes('/') || name.includes('\\') || !format || format.mime !== mime) {
-    return { valid: false, status: 415, message: 'Formato no admitido. Usa JPG, PNG, WebP o MP4.' };
+  if (!name || name.length > 180 || name.includes('/') || name.includes('\\') || !format) {
+    return { valid: false, status: 415, code: 'unsupported_format', message: 'Este formato no es compatible. Usa JPG, PNG, WebP o MP4.' };
   }
   if (!Number.isSafeInteger(size) || size <= 0) return { valid: false, status: 400, message: 'El archivo debe tener un tamaño válido.' };
   if (size > maxUploadBytes) return { valid: false, status: 413, message: 'El archivo supera el tamaño máximo permitido.' };
   if (!storage.limitBytes) return { valid: false, status: 503, message: 'El límite de almacenamiento aún no está configurado.' };
   if (storage.usedBytes + size > storage.limitBytes) return { valid: false, status: 413, message: 'No hay espacio suficiente para este archivo.' };
-  return { valid: true, type: format.type, mime: format.mime, extension, size, message: 'Formato y tamaño aceptados.' };
+  return { valid: true, type: format.type, mime: format.mime, declaredMime: mime, extension, size, message: 'Formato y tamaño aceptados.' };
 }
 
 export async function verifyFileSignature(file, format) {
