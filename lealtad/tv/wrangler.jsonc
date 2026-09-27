@@ -11,7 +11,7 @@
   "vars": {
     "TV_ADMIN_ENABLED": "true",
     "R2_MEDIA_ENABLED": "false",
-    "TV_BOOTSTRAP_ENABLED": "true",
+    "TV_BOOTSTRAP_ENABLED": "false",
     "TV_MAX_UPLOAD_BYTES": "99614720"
   },
   "r2_buckets": [
