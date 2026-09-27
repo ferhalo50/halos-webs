@@ -14,6 +14,7 @@ const elements = {
   offlineDetail: document.querySelector('#offline-detail'),
   offlineProgress: document.querySelector('#offline-progress'),
   connection: document.querySelector('#connection-status'),
+  refresh: document.querySelector('#refresh-content'),
   presentation: document.querySelector('#presentation'),
   stage: document.querySelector('#media-stage'),
   audio: document.querySelector('#ambient-audio'),
@@ -31,7 +32,8 @@ const state = {
   musicPlaying: false,
   fullscreenWasActive: false,
   returnFocus: null,
-  generation: 0, failed: new Set(), transitioning: false, transitionTimer: null, watchdog: null, mediaListeners: null
+  generation: 0, failed: new Set(), transitioning: false, transitionTimer: null, watchdog: null, mediaListeners: null,
+  refreshing: false, refreshLabelTimer: null
 };
 
 function showToast(message, duration = 4200) {
@@ -64,12 +66,14 @@ function normalizeItem(item, index) {
   };
 }
 
-async function loadConfig() {
-  let response = await fetch('/playlist.json', { cache: 'no-store' });
+async function loadConfig(forceNetwork = false) {
+  const playlistUrl = forceNetwork ? `/playlist.json?refresh=${Date.now()}` : '/playlist.json';
+  let response = await fetch(playlistUrl, { cache: forceNetwork ? 'reload' : 'no-store' });
   if (!response.ok) response = await fetch('/media.json', { cache: 'no-store' });
   if (!response.ok) throw new Error('No se pudo abrir la biblioteca de contenido.');
   const value = await response.json();
-  const items = Array.isArray(value.items) ? value.items.map(normalizeItem).filter(Boolean) : [];
+  const seen = new Set();
+  const items = Array.isArray(value.items) ? value.items.map(normalizeItem).filter(item => item && !seen.has(item.id) && seen.add(item.id)) : [];
   return {
     version: String(value.version || 'current'),
     slideDurationSeconds: Math.max(.25, Number(value.slideDurationSeconds) || 10),
@@ -338,6 +342,49 @@ function updateConnection() {
   elements.connection.querySelector('b').textContent = online ? 'Conectado' : 'Sin conexión';
 }
 
+async function refreshContent() {
+  if (state.refreshing || state.playing) return;
+  state.refreshing = true;
+  clearTimeout(state.refreshLabelTimer);
+  elements.refresh.disabled = true;
+  elements.refresh.textContent = 'Actualizando…';
+  try {
+    const next = await loadConfig(true);
+    const previousMusic = state.config.music?.source || '';
+    state.config = next;
+    const available = new Set(next.items.map(item => item.id));
+    state.selected = new Set([...state.selected].filter(id => available.has(id)));
+    const nextMusic = next.music?.source || '';
+    if (nextMusic !== previousMusic) {
+      const resume = state.musicPlaying;
+      elements.audio.pause();
+      state.musicPlaying = false;
+      if (next.music) {
+        elements.audio.src = next.music.source;
+        elements.audio.setAttribute('aria-label', next.music.name);
+        if (resume) {
+          try { await elements.audio.play(); state.musicPlaying = true; } catch {}
+        }
+      } else {
+        elements.audio.removeAttribute('src');
+        elements.audio.removeAttribute('aria-label');
+        elements.audio.load();
+      }
+    }
+    updateMusicButtons();
+    renderLibrary();
+    elements.refresh.textContent = 'Contenido actualizado';
+    showToast('Contenido actualizado');
+  } catch {
+    elements.refresh.textContent = 'No se pudo actualizar';
+    showToast('No se pudo actualizar el contenido. Intenta nuevamente.', 6500);
+  } finally {
+    state.refreshing = false;
+    elements.refresh.disabled = false;
+    state.refreshLabelTimer = setTimeout(() => { elements.refresh.textContent = 'Actualizar contenido'; }, 2800);
+  }
+}
+
 function handlePresentationKeys(event) {
   if(!state.playing)return moveLibraryFocus(event);
   if(event.key==='Escape'){event.preventDefault();exitPresentation();}
@@ -354,7 +401,7 @@ async function registerServiceWorker() {
 function moveLibraryFocus(event) {
   const direction = {ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]}[event.key];
   if (!direction) return;
-  const buttons = [...document.querySelectorAll('main button:not(:disabled), main a.button')].filter(button => button.getClientRects().length);
+  const buttons = [...document.querySelectorAll('.header-actions button:not(:disabled), .header-actions a[href], main button:not(:disabled), main a.button')].filter(button => button.getClientRects().length);
   const active = document.activeElement;
   if (!buttons.includes(active)) { event.preventDefault(); buttons[0]?.focus(); return; }
   const from = active.getBoundingClientRect(), x = from.x + from.width/2, y = from.y + from.height/2;
@@ -375,6 +422,7 @@ elements.selectAll.addEventListener('click', () => { state.config.items.forEach(
 elements.clearSelection.addEventListener('click', () => { state.selected.clear(); updateSelection(); });
 elements.music.addEventListener('click', toggleMusic);
 elements.offline.addEventListener('click', prepareOffline);
+elements.refresh.addEventListener('click', refreshContent);
 elements.presentation.addEventListener('dblclick', exitPresentation);
 document.querySelector('#open-spotify').addEventListener('click',()=>{elements.audio.pause();state.musicPlaying=false;updateMusicButtons();});
 window.addEventListener('online', updateConnection);

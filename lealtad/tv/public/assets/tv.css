@@ -131,6 +131,7 @@ footer {
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
   transition: border-color .18s ease, background .18s ease, transform .18s ease;
 }
 
@@ -138,6 +139,12 @@ footer {
   border-color: var(--olive);
   background: var(--paper);
   transform: translateY(-1px);
+}
+
+.admin-link:disabled {
+  opacity: .62;
+  cursor: wait;
+  transform: none;
 }
 
 main { padding-block: clamp(45px, 5.2vw, 94px) 72px; }
@@ -415,7 +422,7 @@ kbd { padding: .15em .42em; border: 1px solid currentColor; border-radius: 5px; 
 
 @media (max-width: 500px) {
   .site-header { flex-wrap: wrap; padding-block: 14px; }
-  .header-actions { width: 100%; }
+  .header-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
   .utility-actions, .media-grid { grid-template-columns: 1fr; }
   .media-meta strong { font-size: 21px; }
   .presentation-actions #presentation-music { display: none; }

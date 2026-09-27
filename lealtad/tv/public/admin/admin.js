@@ -151,11 +151,14 @@ byId('upload-button').addEventListener('click', async () => {
 });
 
 byId('password-form').addEventListener('submit', async event => {
-  event.preventDefault(); const message = byId('password-message'); message.textContent = 'Actualizando…';
+  event.preventDefault(); const form = event.currentTarget; const message = byId('password-message'); message.textContent = 'Actualizando…';
   try {
     await api('password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: byId('current-password').value, newPassword: byId('new-password').value }) });
-    event.currentTarget.reset(); message.textContent = 'Contraseña actualizada. Las otras sesiones se cerraron.';
-  } catch (error) { message.textContent = error.message; }
+    form.reset(); message.textContent = 'Contraseña actualizada correctamente.';
+  } catch (error) {
+    const detail = typeof error?.message === 'string' ? error.message.trim() : '';
+    message.textContent = error?.status && detail && !/^(null|undefined|\[object Object\])$/i.test(detail) ? detail : 'No se pudo cambiar la contraseña. Intenta nuevamente.';
+  }
 });
 
 api('session').then(loadDashboard).catch(() => showLogin());

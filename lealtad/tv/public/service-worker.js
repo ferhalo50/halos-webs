@@ -1,4 +1,4 @@
-const SHELL_CACHE = 'renace-tv-shell-1.2.2';
+const SHELL_CACHE = 'renace-tv-shell-1.2.3';
 const MEDIA_PREFIX = 'renace-tv-media-';
 const META_CACHE = 'renace-tv-state';
 const POINTER = '/__tv_offline_state__';
@@ -35,7 +35,9 @@ async function media(request) {
   return cached ? (request.headers.has('range') ? partial(cached,request.headers.get('range')) : cached) : Response.error();
 }
 async function configuration(request) {
+  const fresh = new URL(request.url).searchParams.has('refresh');
   try { const response = await fetch(request); if(response.ok) return response; } catch {}
+  if(fresh) return Response.error();
   const state = await savedState();
   return state ? Response.json(state.config) : Response.error();
 }
