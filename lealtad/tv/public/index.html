@@ -10,6 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/tv-icon.svg">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/assets/tv.css">
+  <link rel="stylesheet" href="/assets/tv-guide.css">
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div>
@@ -25,6 +26,7 @@
         <span aria-hidden="true"></span><b>Conectado</b>
       </div>
       <button class="admin-link" id="refresh-content" type="button">Actualizar contenido</button>
+      <button class="admin-link guide-trigger" id="tv-guide" type="button" data-tv-guide="viewer">Guía</button>
       <a class="admin-link" href="/admin" aria-label="Iniciar sesión en el panel administrativo">Iniciar sesión</a>
     </div>
   </header>
@@ -95,6 +97,7 @@
 
   <audio id="ambient-audio" loop preload="none"></audio>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/assets/tv-guide.js" defer></script>
   <script src="/assets/tv.js" type="module"></script>
 </body>
 </html>

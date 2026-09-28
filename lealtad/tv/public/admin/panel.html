@@ -8,6 +8,8 @@
   <title>Administración | Renace Café TV</title>
   <link rel="icon" type="image/svg+xml" href="/assets/tv-icon.svg">
   <link rel="stylesheet" href="/admin/admin.css">
+  <link rel="stylesheet" href="/assets/tv-guide.css">
+  <script src="/assets/tv-guide.js" defer></script>
   <script src="/admin/admin.js" type="module"></script>
 </head>
 <body>
@@ -19,6 +21,7 @@
       </a>
       <div class="top-actions">
         <span class="phase-label">Administración de contenido</span>
+        <button class="text-button guide-trigger" id="admin-guide" type="button" data-tv-guide="admin">Guía</button>
         <button class="text-button" id="logout" type="button" hidden>Cerrar sesión</button>
       </div>
     </header>

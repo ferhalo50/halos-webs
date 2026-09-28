@@ -1,0 +1,14 @@
+dialog.tv-guide{width:min(760px,calc(100vw - 28px));max-height:85vh;max-height:85dvh;padding:0;border:1px solid #a5aa96;border-radius:24px;background:#fffdf7;color:#293120;box-shadow:0 30px 100px #17201055;overflow:hidden}
+dialog.tv-guide[open]{display:flex;flex-direction:column}
+.tv-guide::backdrop{background:#1e271bb3;backdrop-filter:blur(4px)}
+.tv-guide-header{position:static;display:flex;flex-shrink:0;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:24px 28px;border-bottom:1px solid #d3d5c5;background:#f3f1e7}
+.tv-guide-header h2{margin:0;color:#293120;font:normal clamp(23px,4vw,32px)/1.15 Georgia,serif;letter-spacing:0}
+.tv-guide-close{flex-shrink:0;min-height:44px;margin:0;padding:10px 14px;border:1px solid #aab19c;border-radius:10px;background:#fffdf7;color:#33432f;font:600 14px "Segoe UI",Arial,sans-serif;cursor:pointer}
+.tv-guide-content{overflow-y:auto;overscroll-behavior:contain;padding:8px 28px 24px;outline:none}
+.tv-guide-content section{position:relative;padding:22px 0 22px 45px;border-bottom:1px solid #e0e1d5}
+.tv-guide-content section:last-child{border:0}
+.tv-guide-content section::before{content:attr(data-step);position:absolute;top:25px;left:0;color:#687455;font-size:12px;letter-spacing:.08em}
+.tv-guide-content h3{margin:0 0 9px;color:#293120;font:600 18px/1.4 "Segoe UI",Arial,sans-serif;letter-spacing:0}
+.tv-guide-content p{margin:0;color:#51594a;font:400 16px/1.7 "Segoe UI",Arial,sans-serif;text-wrap:pretty}
+.tv-guide :focus-visible{outline:3px solid #9b742e;outline-offset:3px;box-shadow:none}
+@media(max-width:500px){.tv-guide-header{padding:20px 16px;gap:10px}.tv-guide-content{padding:0 18px 18px}.tv-guide-content section{padding-left:30px}.tv-guide-close{padding:10px;font-size:13px}}

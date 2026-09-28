@@ -12,6 +12,7 @@ button:disabled{cursor:not-allowed}
 .top-actions{display:flex;align-items:center;gap:24px}
 .phase-label,.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.2em;font-weight:700;color:#51684b}
 .text-button{background:none;border:0;color:#3d5937;text-decoration:underline;text-underline-offset:4px;padding:8px 0}
+.top-actions .guide-trigger{min-height:44px;padding:8px 12px}
 .intro{padding:48px 0 32px}
 h1,h2,p{margin-top:0}
 h1,h2{font-family:Georgia,'Times New Roman',serif;color:#27352a;font-weight:normal}

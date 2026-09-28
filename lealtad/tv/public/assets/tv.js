@@ -386,6 +386,7 @@ async function refreshContent() {
 }
 
 function handlePresentationKeys(event) {
+  if(document.querySelector('.tv-guide[open]'))return;
   if(!state.playing)return moveLibraryFocus(event);
   if(event.key==='Escape'){event.preventDefault();exitPresentation();}
   else if(event.key==='ArrowRight'){event.preventDefault();advance(1);}
