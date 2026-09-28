@@ -18,39 +18,7 @@ export async function tenantAssets(request, env) {
 
   // Manifest PWA dinámico según la cafetería.
   if (url.pathname === '/manifest.webmanifest') {
-    const icons =
-      t.slug === 'mooncoffee'
-        ? [
-            {
-              src: t.icon,
-              sizes: 'any',
-              type: 'image/png'
-            },
-            {
-              src: '/assets/moon/icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/assets/moon/icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            }
-          ]
-        : [
-            {
-              src: t.icon,
-              sizes: 'any',
-              type: 'image/svg+xml'
-            },
-            {
-              src: '/assets/logo-renace.png',
-              sizes: '1073x464',
-              type: 'image/png'
-            }
-          ];
+    const icons = t.pwaIcons;
 
     return Response.json({
       id: '/',

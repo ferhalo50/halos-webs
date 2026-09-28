@@ -39,6 +39,37 @@
     ]]
   };
 
+  if(tenant.stampPolicy==='per_item'){
+    guides.customer=['Tu tarjeta, paso a paso',[
+      ['Tu tarjeta Santofé','Cada café comprado suma un sello. Al completar 10/10 tienes un café gratis, que corresponde al número 11. El contador y los diez círculos muestran tu progreso actual.'],
+      ['Un sello con identidad','Los sellos digitales usan el símbolo oficial de Santofé dentro de los círculos, inspirado en el sello de la tarjeta física. El diseño no cambia tu saldo ni tu recompensa.'],
+      ['Muestra tu QR en caja','El QR identifica tu tarjeta Santofé. El equipo lo escanea, confirma cuántos cafés compraste y registra esa misma cantidad de sellos. No existe un límite artificial de un sello por día.'],
+      ['Lleva tu QR sin internet','“Descargar QR” guarda una imagen con tu nombre, celular y código. “Compartir QR” abre las opciones del dispositivo. La imagen puede quedar desactualizada; consulta tu saldo actual con internet o en mostrador.'],
+      ['Disfruta tu café gratis','Después de 10 cafés pagados, el siguiente café es gratis y no genera sello. Si sucede dentro de un pedido con más cafés, los cafés pagados restantes comienzan automáticamente la siguiente tarjeta. Escanear el QR no canjea la recompensa.'],
+      ['Instala tu tarjeta','Pulsa “Instalar app” junto a esta guía. En iPhone o iPad, abre la página en Safari y usa Compartir → Agregar a pantalla de inicio → Agregar.'],
+      ['Tu cuenta y Santofé','En “Mi cuenta” puedes cambiar tu PIN. Si lo olvidaste, pide un PIN temporal al equipo con tu identidad confirmada en mostrador. Debajo del QR están los enlaces oficiales de Facebook, Instagram y TikTok.']
+    ]];
+    guides.employee=['Una atención sencilla en mostrador',[
+      ['1. Encuentra la tarjeta','Abre la cámara y acerca el QR completo al marco. También puedes buscar por celular de 10 dígitos o código SANTOFE-…. Escanear o buscar todavía no añade sellos.'],
+      ['2. Confirma la cantidad','Pregunta cuántos cafés incluye el pedido. Usa − y + en “Cantidad de cafés del pedido”; la pantalla separa cuántos cafés son pagados, si corresponde uno gratis y cuántos sellos quedarán en la siguiente tarjeta.'],
+      ['3. Procesa el pedido','Pulsa “Procesar cafés” y revisa la confirmación. Cada café pagado genera un sello. El café que sigue a los 10 pagados se aplica gratis, no genera sello y los cafés pagados restantes comienzan automáticamente el recorrido siguiente.'],
+      ['4. Entrega la recompensa','Si el cliente ya llega con 10/10, procesa un café para aplicarlo gratis y volver a 0/10. “Canjear café gratis” continúa disponible cuando deseas registrar únicamente la entrega de esa recompensa.'],
+      ['Mensajes y correcciones','Si hay un error de conexión, vuelve a buscar la tarjeta antes de repetir. Si registraste una cantidad incorrecta, pide al administrador corregir los sellos con un motivo.'],
+      ['PIN temporal','Con el cliente presente, pulsa “PIN temporal”. Sus sesiones se cerrarán y deberá usar ese PIN una vez para crear uno nuevo. La acción queda registrada.'],
+      ['Cuida tu acceso','Cambia tu contraseña desde “Mi cuenta” y cierra sesión al terminar en dispositivos compartidos. El mostrador necesita internet para consultar y registrar operaciones.']
+    ]];
+    guides.admin=['Tu guía de administración',[
+      ['Las métricas','“Sellos hoy” suma todos los cafés registrados hoy, incluso cuando una sola compra añade varios sellos. “Recompensas pendientes” muestra cafés gratis listos para canjear y “Cafés canjeados” los ya entregados.'],
+      ['Clientes y búsquedas','Busca por nombre, celular o código de tarjeta. Editar nombre o celular cierra las sesiones del cliente para proteger su cuenta.'],
+      ['Ajustar sellos','Puedes añadir o quitar un sello por corrección, entre 0 y 10, con un motivo obligatorio. El ajuste queda registrado con tu usuario, fecha y saldo anterior y nuevo.'],
+      ['Recompensas y canjes','Con 10 sellos, el siguiente café se registra como gratuito y no genera sello. Una compra que cruce la meta aplica el café gratis y conserva en la nueva tarjeta los sellos de los cafés pagados restantes.'],
+      ['Recuperar un PIN en persona','Genera un PIN temporal únicamente con el cliente presente. Se muestra una vez, cierra sus sesiones y obliga a elegir un PIN nuevo. No hay recuperación por SMS.'],
+      ['Equipo','Puedes agregar empleados, editar su acceso, desactivarlos o eliminarlos. Usa cuentas individuales para conservar una auditoría clara.'],
+      ['Actividad y exportación','La actividad separa los sellos antes del premio, el café gratis y los sellos que empiezan la siguiente tarjeta. Los Excel incluyen únicamente clientes y movimientos de Santofé, con fechas de Tijuana y teléfonos conservados como texto.'],
+      ['Eliminar cuentas','Eliminar invalida el acceso y el QR, retira los datos personales y conserva la actividad sin identidad para los reportes.']
+    ]];
+  }
+
   if(!tenant.demo)guides.admin[1]=guides.admin[1].filter(([label])=>label!=='Demostración');
 
   function openGuide(title, sections, trigger) {

@@ -80,6 +80,14 @@ Después de publicar, `node test/production-smoke.mjs` inicia sesión únicament
 
 Las credenciales dentro de los archivos de prueba son exclusivamente locales. No deben reutilizarse en producción.
 
+## Tenant Santofé (pendiente de aprobación y despliegue)
+
+Santofé se integra como tercer tenant con `business_id=business_santofe`, slug `santofe` y hostname confirmado `santofe.haloswebs.com`. Comparte la aplicación y D1, pero todas las consultas, sesiones, QR, usuarios, actividad y exportaciones continúan aisladas por negocio.
+
+Su política `per_item` registra un sello por cada café pagado, permite varias compras el mismo día y completa la recompensa en 10/10. El café siguiente se aplica gratis sin generar sello. Si un pedido cruza la meta, la misma operación registra los cafés pagados que completan la tarjeta, el café gratuito y los cafés pagados restantes en el nuevo recorrido, sin perder cantidades.
+
+Las migraciones aditivas `0011_santofe_business.sql` y `0012_santofe_purchase_crossing.sql` conservan `daily` para Renace y MOON, agregan cantidades, crean el procesamiento atómico de pedidos e insertan Santofé. En producción se aplican antes de crear el administrador mediante el bootstrap temporal existente; después se retira ese secreto y se despliega únicamente `lealtad/live/`.
+
 ## Renace Café TV
 
 La pantalla del establecimiento vive en el proyecto separado `../tv/` y se publica en `https://renacecafetv.haloswebs.com/`. No comparte rutas, D1, sesiones, datos ni service worker con Renace Card. Sus cachés usan el prefijo exclusivo `renace-tv-*` y el contenido pesado solo se guarda cuando una persona pulsa **Preparar sin conexión**.

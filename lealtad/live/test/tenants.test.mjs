@@ -8,6 +8,7 @@ async function req(i,path,{cookie,body,method=body?'POST':'GET',headers={}}={}){
 async function all(i,kind,cookie){const rows=[];let offset=0;do{const r=await req(i,'/api/admin/export/'+kind+'?offset='+offset,{cookie});assert.equal(r.status,200);rows.push(...r.data.rows);offset=r.data.nextOffset;}while(offset!==null);return rows;}
 test('hostname allowlist cannot be switched by client business id or a foreign cookie',()=>{
  assert.equal(resolveTenant(new URL('https://mooncoffee.haloswebs.com/?business=renace'),{}).slug,'mooncoffee');assert.equal(resolveTenant(new URL('https://renacecafe.haloswebs.com/'),{DEV_TENANT:'mooncoffee',ALLOW_DEMO:'true'}).slug,'renace');assert.equal(resolveTenant(new URL('https://renacecafe.haloswebs.com/'),{ALLOW_DEMO:'true'}).demo,false);assert.equal(resolveTenant(new URL('https://unknown.example/'),{}),null);
+ assert.equal(resolveTenant(new URL('https://santofe.haloswebs.com/?business=mooncoffee'),{}).slug,'santofe');
 });
 test('two tenants: independent identities, QR, PIN, exports, updates, daily visits and rewards',async()=>{
  const set=await req(1,'/api/setup',{body:{adminUsername:'admin_moon_local',adminPassword:'Moon-admin-local928!',employeeUsername:'moon_staff_local',employeePassword:'Moon-staff-local928!'},headers:{'x-bootstrap-secret':'local-test-bootstrap'}});assert.ok([201,409].includes(set.status));

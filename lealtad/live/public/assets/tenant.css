@@ -28,3 +28,32 @@ html[data-tenant="mooncoffee"]{--cream:#fbf3e4;--olive:#563b29;--ink:#39291e;--m
 [data-tenant="mooncoffee"] .activity-customer,[data-tenant="mooncoffee"] .activity-employee,[data-tenant="mooncoffee"] .activity-motive{color:var(--ink)}
 [data-tenant="mooncoffee"] .activity-type:not(.activity-type--stamp_removed):not(.activity-type--stamp_voided):not(.activity-type--customer_deleted):not(.activity-type--employee_deleted){background:#f8edda;border-color:#d6bd94;color:#70502b}
 [data-tenant="mooncoffee"] .customers-panel .eyebrow,[data-tenant="mooncoffee"] .activity-table th{color:#70502b}
+
+/* Santofé: official pale sage and plum identity, with its physical-card rhythm. */
+html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--muted:#746b6d;--line:#c9cdbf}
+[data-tenant="santofe"] body{background:radial-gradient(circle at 82% 8%,#f7f8f1 0,#e8ecde 38%,#e3e7d9 100%)}
+[data-tenant="santofe"] .card{background:#edf0e5;border-color:#b9b2b0;box-shadow:0 24px 60px #50424618}
+[data-tenant="santofe"] .stamps{grid-template-columns:repeat(5,1fr);gap:13px}
+[data-tenant="santofe"] .stamp{border:2px solid #857478;color:#6f5e62;background:#f5f6ef}
+[data-tenant="santofe"] .stamp.filled{background:#e8ecde;padding:2px;box-shadow:inset 0 0 0 2px #f8f9f3}
+[data-tenant="santofe"] .stamp-sticker{border-radius:50%}
+[data-tenant="santofe"] .card-line{background:#bcb4b4}
+[data-tenant="santofe"] .card-bottom{background:#6f5e62;color:#f5f6ef}
+[data-tenant="santofe"] .reward,[data-tenant="santofe"] .visit-detail,[data-tenant="santofe"] .customer-summary{background:#eef0e7}
+[data-tenant="santofe"] .steps b{color:#806c70}
+[data-tenant="santofe"] .brand{width:84px}
+[data-tenant="santofe"] .card-brand .renace-logo{width:150px}
+[data-tenant="santofe"] .app-loader__brand{width:min(48vw,250px)}
+[data-tenant="santofe"] .camera-placeholder{background:radial-gradient(ellipse at 50% 35%,#8a777b,#4d4144)}
+[data-tenant="santofe"] .camera-placeholder span{color:#eef0e7}
+[data-tenant="santofe"] .scanner-guide{box-shadow:0 0 0 100vmax #3c303466}
+[data-tenant="santofe"] .scanner-guide i{background:#e8ecde;box-shadow:0 0 12px #e8ecde}
+[data-tenant="santofe"] .scan-symbol,[data-tenant="santofe"] .empty-emblem{color:#6f5e62;background:#edf0e5;border-color:#c7bebf}
+[data-tenant="santofe"] input:focus,[data-tenant="santofe"] select:focus,[data-tenant="santofe"] button:focus-visible,[data-tenant="santofe"] a:focus-visible{outline-color:#887176}
+[data-tenant="santofe"] .guide-content section::before,[data-tenant="santofe"] .customers-panel .eyebrow,[data-tenant="santofe"] .activity-table th{color:#745f64}
+.pet-friendly{display:inline-flex;align-items:center;justify-content:center;margin:18px auto 0;padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.04em}
+.stamp-quantity{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:16px;background:#fffdf9}
+.stamp-quantity>div:first-child{display:grid;gap:2px}.stamp-quantity span{font-weight:700}.stamp-quantity small{color:var(--muted)}
+.quantity-stepper{display:grid;grid-template-columns:48px 54px 48px;align-items:center;gap:7px}.quantity-stepper button{min-width:48px;min-height:48px;padding:0;font-size:24px}.quantity-stepper output{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:20px;font-weight:700}
+.stamp-quantity p{grid-column:1/-1;margin:0;color:var(--muted);font-size:13px}
+@media(max-width:760px){[data-tenant="santofe"] .brand{width:68px}[data-tenant="santofe"] .card-brand .renace-logo{width:130px}.stamp-quantity{grid-template-columns:1fr}.quantity-stepper{justify-content:start}}

@@ -13,6 +13,7 @@ test('additive preferences preserve old styles, QR tokens and balances; enforce 
  assert.deepEqual(db.prepare('SELECT * FROM loyalty_cards ORDER BY id').all(),before);assert.deepEqual(db.prepare('SELECT stamp_style FROM loyalty_card_preferences ORDER BY card_id').all().map(r=>r.stamp_style),['classic','cowboy','bow']);
  assert.throws(()=>db.prepare("UPDATE loyalty_card_preferences SET business_id='business_mooncoffee' WHERE card_id='c0'").run(),/tenant_mismatch/);
  assert.equal(db.prepare("SELECT reward_goal FROM businesses WHERE slug='renace'").get().reward_goal,9);assert.equal(db.prepare("SELECT reward_goal FROM businesses WHERE slug='mooncoffee'").get().reward_goal,8);
- db.exec(readFileSync(new URL('0010_moon_business.sql',dir),'utf8'));assert.equal(db.prepare('SELECT COUNT(*) AS n FROM businesses').get().n,2);
+ assert.equal(db.prepare("SELECT reward_goal FROM businesses WHERE slug='santofe'").get().reward_goal,10);
+ db.exec(readFileSync(new URL('0010_moon_business.sql',dir),'utf8'));assert.equal(db.prepare('SELECT COUNT(*) AS n FROM businesses').get().n,3);
  }finally{db.close();}
 });
