@@ -120,7 +120,11 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   assert.equal(registration.status(),201);
   await page.goto(santofe+'/#tarjeta');await page.waitForSelector('#app-loader',{state:'detached'});await page.waitForSelector('#qr svg');
   assert.equal(await page.locator('.santofe-flip-card').count(),1);
-  assert.equal(await page.locator('.santofe-card-pattern span').count(),12);
+  assert.equal(await page.locator('.santofe-card-pattern').count(),1);
+  assert.equal(await page.locator('.santofe-card-pattern span').count(),0);
+  assert.ok(await page.locator('.santofe-card-pattern').evaluate(node=>getComputedStyle(node).backgroundImage.includes('logo-santofe.png')));
+  assert.ok((await page.locator('.santofe-card-head .renace-logo').getAttribute('src')).endsWith('/assets/santofe/logo-santofe.png'));
+  assert.ok((await page.locator('.santofe-back-brand img').getAttribute('src')).endsWith('/assets/santofe/logo-santofe.png'));
   assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'false');
   await page.click('#flip-card');assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'true');assert.match(await page.locator('#flip-card').innerText(),/Ver frente/);
   await page.locator('#santofe-flip-card').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'false');

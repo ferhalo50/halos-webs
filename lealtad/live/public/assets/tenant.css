@@ -41,8 +41,9 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 [data-tenant="santofe"] .card-bottom{background:#6f5e62;color:#f5f6ef}
 [data-tenant="santofe"] .reward,[data-tenant="santofe"] .visit-detail,[data-tenant="santofe"] .customer-summary{background:#eef0e7}
 [data-tenant="santofe"] .steps b{color:#806c70}
-[data-tenant="santofe"] .brand{width:84px}
-[data-tenant="santofe"] .card-brand .renace-logo{width:150px}
+[data-tenant="santofe"] .brand{width:104px}
+[data-tenant="santofe"] .brand img,[data-tenant="santofe"] .renace-logo{object-fit:contain}
+[data-tenant="santofe"] .card-brand .renace-logo{width:170px}
 [data-tenant="santofe"] .app-loader__brand{width:min(48vw,250px)}
 [data-tenant="santofe"] .camera-placeholder{background:radial-gradient(ellipse at 50% 35%,#8a777b,#4d4144)}
 [data-tenant="santofe"] .camera-placeholder span{color:#eef0e7}
@@ -56,7 +57,7 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 .stamp-quantity>div:first-child{display:grid;gap:2px}.stamp-quantity span{font-weight:700}.stamp-quantity small{color:var(--muted)}
 .quantity-stepper{display:grid;grid-template-columns:48px 54px 48px;align-items:center;gap:7px}.quantity-stepper button{min-width:48px;min-height:48px;padding:0;font-size:24px}.quantity-stepper output{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:20px;font-weight:700}
 .stamp-quantity p{grid-column:1/-1;margin:0;color:var(--muted);font-size:13px}
-@media(max-width:760px){[data-tenant="santofe"] .brand{width:68px}[data-tenant="santofe"] .card-brand .renace-logo{width:130px}.stamp-quantity{grid-template-columns:1fr}.quantity-stepper{justify-content:start}}
+@media(max-width:760px){[data-tenant="santofe"] .brand{width:82px}[data-tenant="santofe"] .card-brand .renace-logo{width:145px}.stamp-quantity{grid-template-columns:1fr}.quantity-stepper{justify-content:start}}
 
 /* Santofé premium UX: compact, tactile and isolated from the other tenants. */
 [data-tenant="santofe"] body{font-family:"Segoe UI Variable","Segoe UI",sans-serif;background:linear-gradient(150deg,#f5f6ef 0,#e8ecde 46%,#e2e6d8 100%);background-attachment:fixed}
@@ -83,7 +84,7 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 [data-tenant="santofe"] .santofe-card-front{display:grid;grid-template-rows:auto auto 1fr auto;gap:11px;padding:20px 24px;background:linear-gradient(145deg,#fafbf6,#e9ede2 72%,#dfe4d7)}
 [data-tenant="santofe"] .santofe-card-front::after{content:"";position:absolute;right:-38px;top:-48px;width:180px;height:180px;border:1px solid #77666a20;border-radius:50%;box-shadow:0 0 0 24px #77666a08,0 0 0 48px #77666a05;pointer-events:none}
 [data-tenant="santofe"] .santofe-card-head{display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;z-index:1}
-[data-tenant="santofe"] .santofe-card-head .renace-logo{width:116px;max-height:45px;object-fit:contain;object-position:left center}
+[data-tenant="santofe"] .santofe-card-head .renace-logo{width:92px;height:58px;object-fit:contain;object-position:left center}
 [data-tenant="santofe"] .santofe-card-head>span{font-size:9px;font-weight:750;letter-spacing:.17em;color:#77666a}
 [data-tenant="santofe"] .santofe-card-owner{display:flex;align-items:end;justify-content:space-between;gap:18px;text-align:left;position:relative;z-index:1}
 [data-tenant="santofe"] .santofe-card-owner>div{display:grid;min-width:0}
@@ -97,11 +98,9 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 [data-tenant="santofe"] .santofe-card-status{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:10px;border-top:1px solid #c9cdc0;color:#67585c;font-size:11px;font-weight:650;text-align:left;position:relative;z-index:1}
 [data-tenant="santofe"] .santofe-card-status i{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;border:1px solid #77666a55;border-radius:50%;font:600 13px Georgia,serif}
 [data-tenant="santofe"] .santofe-card-back{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:15px 22px;transform:rotateY(180deg);background:#eef1e7;color:#594a4f}
-[data-tenant="santofe"] .santofe-card-pattern{position:absolute;inset:-25%;display:grid;grid-template-columns:repeat(4,1fr);gap:22px 34px;align-content:center;transform:rotate(-13deg);opacity:.105;pointer-events:none}
-[data-tenant="santofe"] .santofe-card-pattern span{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:15px;font-weight:800;color:#6f5e62}
-[data-tenant="santofe"] .santofe-card-pattern img{width:24px;height:24px;border-radius:50%}
-[data-tenant="santofe"] .santofe-back-brand{position:absolute;left:18px;top:16px;display:flex;align-items:center;gap:7px;font-weight:750;font-size:13px;z-index:1}
-[data-tenant="santofe"] .santofe-back-brand img{width:24px;height:24px;border-radius:50%}
+[data-tenant="santofe"] .santofe-card-pattern{position:absolute;inset:-35%;background-image:url('/assets/santofe/logo-santofe.png');background-repeat:repeat;background-position:center;background-size:92px 92px;transform:rotate(-35deg);opacity:.1;pointer-events:none}
+[data-tenant="santofe"] .santofe-back-brand{position:absolute;left:17px;top:13px;z-index:1}
+[data-tenant="santofe"] .santofe-back-brand img{display:block;width:58px;height:58px;object-fit:contain}
 [data-tenant="santofe"] .santofe-qr-plate{position:relative;z-index:1;display:grid;place-items:center;padding:5px;background:#fff;border:1px solid #d2d3ca;border-radius:16px;box-shadow:0 8px 24px #4e41451a}
 [data-tenant="santofe"] .santofe-card-back .qr{margin:0;padding:5px;border-radius:11px}
 [data-tenant="santofe"] .santofe-card-back .qr svg{width:clamp(118px,27vw,158px);height:clamp(118px,27vw,158px)}
@@ -173,8 +172,8 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 @media(max-width:760px){
  [data-tenant="santofe"] header{padding:12px 14px}[data-tenant="santofe"] header nav{gap:9px;font-size:10px}[data-tenant="santofe"] header nav a,[data-tenant="santofe"] header nav button{padding:7px 4px;min-height:36px}
  [data-tenant="santofe"] main{padding:20px 14px 38px}[data-tenant="santofe"] .santofe-customer-intro{margin-bottom:10px}[data-tenant="santofe"] .santofe-customer-intro .eyebrow{letter-spacing:.18em;font-size:9px}[data-tenant="santofe"] .santofe-customer-intro .sync-status{font-size:10px}
- [data-tenant="santofe"] .santofe-digital-card{border-radius:21px}[data-tenant="santofe"] .santofe-card-front{padding:14px 16px;gap:7px}[data-tenant="santofe"] .santofe-card-head .renace-logo{width:88px;max-height:32px}[data-tenant="santofe"] .santofe-card-head>span{font-size:7px;letter-spacing:.12em}[data-tenant="santofe"] .santofe-card-owner strong{font-size:18px}[data-tenant="santofe"] .santofe-card-owner b{font-size:28px}[data-tenant="santofe"] .santofe-card-stamps{gap:4px}[data-tenant="santofe"] .santofe-card-stamps .stamp{font-size:8px}[data-tenant="santofe"] .santofe-card-status{padding-top:6px;font-size:9px}[data-tenant="santofe"] .santofe-card-status i{width:22px;height:22px;flex-basis:22px;font-size:10px}
- [data-tenant="santofe"] .santofe-card-back{padding:10px 14px}[data-tenant="santofe"] .santofe-back-brand{left:12px;top:10px;font-size:10px}[data-tenant="santofe"] .santofe-back-brand img{width:20px;height:20px}[data-tenant="santofe"] .santofe-card-back .qr svg{width:122px;height:122px}[data-tenant="santofe"] .santofe-card-back code{font-size:7px}[data-tenant="santofe"] .santofe-qr-note{right:12px;bottom:10px;font-size:7px}
+ [data-tenant="santofe"] .santofe-digital-card{border-radius:21px}[data-tenant="santofe"] .santofe-card-front{padding:14px 16px;gap:7px}[data-tenant="santofe"] .santofe-card-head .renace-logo{width:70px;height:42px}[data-tenant="santofe"] .santofe-card-head>span{font-size:7px;letter-spacing:.12em}[data-tenant="santofe"] .santofe-card-owner strong{font-size:18px}[data-tenant="santofe"] .santofe-card-owner b{font-size:28px}[data-tenant="santofe"] .santofe-card-stamps{gap:4px}[data-tenant="santofe"] .santofe-card-stamps .stamp{font-size:8px}[data-tenant="santofe"] .santofe-card-status{padding-top:6px;font-size:9px}[data-tenant="santofe"] .santofe-card-status i{width:22px;height:22px;flex-basis:22px;font-size:10px}
+ [data-tenant="santofe"] .santofe-card-back{padding:10px 14px}[data-tenant="santofe"] .santofe-back-brand{left:9px;top:7px}[data-tenant="santofe"] .santofe-back-brand img{width:46px;height:46px}[data-tenant="santofe"] .santofe-card-pattern{background-size:76px 76px}[data-tenant="santofe"] .santofe-card-back .qr svg{width:122px;height:122px}[data-tenant="santofe"] .santofe-card-back code{font-size:7px}[data-tenant="santofe"] .santofe-qr-note{right:12px;bottom:10px;font-size:7px}
  [data-tenant="santofe"] .santofe-quick-actions{margin-top:14px;gap:6px}[data-tenant="santofe"] .santofe-quick-actions button{padding:8px 7px;min-height:41px;font-size:12px}[data-tenant="santofe"] .santofe-detail-grid{grid-template-columns:1fr}
  [data-tenant="santofe"] .santofe-detail-grid>div:last-child{grid-column:auto}[data-tenant="santofe"] .santofe-card-details .social{flex-wrap:wrap}
  [data-tenant="santofe"] .staff-heading{display:flex;align-items:end;margin-bottom:16px}[data-tenant="santofe"] .staff-heading .page-title{font-size:34px}[data-tenant="santofe"] .staff-badge{margin-top:0;font-size:9px}

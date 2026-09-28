@@ -43,7 +43,7 @@ export const TENANTS={
    ['Renace Café Shop','Santofé'],['RENACE CAFÉ SHOP','SANTOFÉ'],['Renace Card','Santofé'],['Renace','Santofé'],['RENACE','SANTOFÉ'],
    ['Tu momento favorito empieza con café.','Coffee · Deli · Pet friendly.'],['Tu momento<br>favorito empieza<br><em>con café.</em>','Coffee.<br>Deli.<br><em>Santofé.</em>'],
    ['9 sellos. Tu décimo café gratis. Un sello por día.','10 sellos. Tu café número 11 es gratis. Un sello por cada café comprado.'],['Con 9 sellos','Con 10 sellos'],['Acumula 9 sellos','Acumula 10 sellos'],['9/9','10/10'],['0/9','0/10'],['entre 0 y 9','entre 0 y 10'],['9 visitas · Un café de regalo','10 cafés · Un café de regalo'],['el 10.º café es gratis','el café número 11 es gratis'],
-   ['Clásico, Vaquero o Moño','Santofé'],['REN-','SANTOFE-'],['>R</div>','>S</div>'],['/assets/app-icon.svg','/assets/santofe/mark-santofe.png'],
+   ['Clásico, Vaquero o Moño','Santofé'],['REN-','SANTOFE-'],['>R</div>','>S</div>'],['/assets/app-icon.svg','/assets/santofe/logo-santofe.png'],
    ['Instagram, TikTok, menú y ubicación','Facebook, Instagram y TikTok'],['Cada visita cuenta.','Cada café cuenta.'],['Cada visita te acerca','Cada café te acerca'],['Confirma la compra antes de registrar el sello.','Confirma cuántos cafés compró antes de registrar los sellos.'],['Muestra tu QR en caja para sumar el sello del día.','Muestra tu QR en caja para sumar un sello por cada café comprado.'],
    ['el siguiente café es gratis','el café número 11 es gratis']
   ]
