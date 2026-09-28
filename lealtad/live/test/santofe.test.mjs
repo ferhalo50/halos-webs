@@ -119,6 +119,11 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   const registration=await context.request.post(santofe+'/api/register',{data:{name:'Prueba visual Santofé',phone,pin:'4826'}});
   assert.equal(registration.status(),201);
   await page.goto(santofe+'/#tarjeta');await page.waitForSelector('#app-loader',{state:'detached'});await page.waitForSelector('#qr svg');
+  assert.equal(await page.locator('.santofe-flip-card').count(),1);
+  assert.equal(await page.locator('.santofe-card-pattern span').count(),12);
+  assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'false');
+  await page.click('#flip-card');assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'true');assert.match(await page.locator('#flip-card').innerText(),/Ver frente/);
+  await page.locator('#santofe-flip-card').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'false');
   assert.equal(await page.locator('.stamps .stamp').count(),10);
   assert.equal(await page.locator('.stamp-picker').count(),0);
   assert.equal(await page.locator('.social a').count(),3);
@@ -130,6 +135,7 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   assert.match(await page.locator('body').innerText(),/Pet friendly/i);
   assert.doesNotMatch(await page.locator('body').innerText(),/Renace|MOON Coffee/i);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight*1.3));
   await page.click('#role-guide');assert.match(await page.locator('dialog').innerText(),/10\/10/);assert.match(await page.locator('dialog').innerText(),/cada café/i);await page.keyboard.press('Escape');
 
   const manifest=await(await fetch(santofe+'/manifest.webmanifest')).json();
