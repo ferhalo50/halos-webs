@@ -407,6 +407,23 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 }
 @media(max-width:370px){body[data-route="tarjeta"] .brand{width:66px;flex-basis:66px}body[data-route="tarjeta"] nav{gap:4px;font-size:8px}.loyalty-quick-actions button{font-size:9px}.compact-customer-head h1{font-size:23px}}
 
+/* MOON mobile: keep customer details and the single language control legible. */
+@media(max-width:760px){
+ [data-tenant="mooncoffee"] .loyalty-card-details{border-color:#d5aa6252;background:linear-gradient(145deg,#151d29f7,#0d131df7);color:#f7f0e2;box-shadow:0 16px 38px #0004}
+ [data-tenant="mooncoffee"] .loyalty-card-details summary{color:#f7f0e2}
+ [data-tenant="mooncoffee"] .loyalty-card-details summary span{color:#e3b968}
+ [data-tenant="mooncoffee"] .loyalty-detail-grid>div{border:1px solid #d5aa622b;background:#0a1019;color:#f7f0e2}
+ [data-tenant="mooncoffee"] .loyalty-detail-grid small{color:#c7bba8}
+ [data-tenant="mooncoffee"] .loyalty-detail-grid strong{color:#fff7e9}
+ [data-tenant="mooncoffee"] .loyalty-card-details .stamp-picker{border-color:#d5aa6242;background:#0b111b}
+ [data-tenant="mooncoffee"] .loyalty-card-details .stamp-picker h3{color:#f7f0e2}
+ [data-tenant="mooncoffee"] .loyalty-card-details .stamp-picker p,[data-tenant="mooncoffee"] .loyalty-card-details .save-help{color:#c7bba8}
+ [data-tenant="mooncoffee"] .language-switcher{border-color:#d5aa626b;background:#0d1520;box-shadow:inset 0 0 0 1px #f3d5980a}
+ [data-tenant="mooncoffee"] .language-switcher b{color:#f0c66f}
+ [data-tenant="mooncoffee"] .language-switcher i{color:#d9b66f;opacity:1}
+ [data-tenant="mooncoffee"] .language-switcher span{color:#e8dfd1}
+}
+
 /* Card geometry comes from tenant.cardLayout and remains stable at every width. */
 .stamps[data-stamp-columns="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}.stamps[data-stamp-columns="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
 [data-tenant="mooncoffee"] .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,54px));justify-content:space-between;gap:10px 14px}
