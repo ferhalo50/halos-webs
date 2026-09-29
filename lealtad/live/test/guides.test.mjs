@@ -8,7 +8,7 @@ test('role guides, focus, QR share and PWA installation states',async t=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const phone='663'+String(Date.now()).slice(-7);
   const r=await ctx.request.post(base+'/api/register',{data:{name:'Guías de prueba',phone,pin:'4826'}});assert.equal(r.status(),201);
-  await page.goto(base+'/#tarjeta');await page.waitForSelector('#qr svg');await page.waitForSelector('#app-loader',{state:'detached'});
+  await page.goto(base+'/#tarjeta');await page.waitForSelector('#qr svg',{state:'attached'});await page.waitForSelector('#app-loader',{state:'detached'});
   await page.click('#role-guide');await page.waitForSelector('dialog[open]');
   assert.match(await page.locator('dialog').innerText(),/9 sellos[\s\S]*10.º café/);
   assert.equal(await page.evaluate(()=>document.activeElement.classList.contains('guide-close')),true);

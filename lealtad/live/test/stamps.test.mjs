@@ -22,7 +22,8 @@ test('stamp styles: owned account, strict API, instant update, D1 persistence an
  await other.request.post(base+'/api/register',{data:{name:'Otro diseño',phone:'665'+String(Date.now()).slice(-7),pin:'4826'}});
  await localCookies(other);
  for(const value of ['evil','/assets/custom.png','__proto__',null,{},1])assert.equal((await c.request.patch(base+'/api/card/style',{data:{stampStyle:value}})).status(),400);
- const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(base+'/#tarjeta');await p.waitForSelector('#qr svg');await p.waitForSelector('#app-loader',{state:'detached'});
+ const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(base+'/#tarjeta');await p.waitForSelector('#qr svg',{state:'attached'});await p.waitForSelector('#app-loader',{state:'detached'});
+ await p.locator('.loyalty-card-details summary').click();
  await p.evaluate(()=>window.samePage='yes');
  const snapshots=[];
  for(const style of ['cowboy','bow','classic']){
@@ -47,11 +48,12 @@ test('stamp styles: owned account, strict API, instant update, D1 persistence an
  const second=await b.newContext();await second.request.post(base+'/api/login/customer',{data:{phone,pin:'4826'}});await localCookies(second);assert.equal((await card(second)).stampStyle,'bow');
  await p.reload();await p.waitForSelector('.stamp.filled img');assert.equal(await p.locator('[data-stamp-style="bow"]').getAttribute('aria-pressed'),'true');
  await p.waitForSelector('#app-loader',{state:'detached'});
+ await p.locator('.loyalty-card-details summary').click();
  if(process.env.RENACE_SCREENSHOTS)await p.screenshot({path:process.env.RENACE_SCREENSHOTS+'/stamp-picker-mobile.png',fullPage:true});
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await p.route('**/api/card/style',route=>route.fulfill({status:503,json:{error:{message:'Prueba: sin conexión'}}}));await p.click('[data-stamp-style="cowboy"]');await p.waitForSelector('[data-stamp-style="bow"][aria-pressed="true"]');assert.equal((await card(c)).stampStyle,'bow');await p.unroute('**/api/card/style');
  // Simulate an old invalid stored value at the API boundary: rendering always falls back to classic.
- await p.route('**/api/card',async route=>route.fulfill({json:{ok:true,card:{...before,stampStyle:'old-unknown'}}}));await p.reload();await p.waitForSelector('#qr svg');assert.equal(await p.locator('[data-stamp-style="classic"]').getAttribute('aria-pressed'),'true');assert.equal(await p.locator('.stamp.filled img').count(),0);
+ await p.route('**/api/card',async route=>route.fulfill({json:{ok:true,card:{...before,stampStyle:'old-unknown'}}}));await p.reload();await p.waitForSelector('#qr svg',{state:'attached'});assert.equal(await p.locator('[data-stamp-style="classic"]').getAttribute('aria-pressed'),'true');assert.equal(await p.locator('.stamp.filled img').count(),0);
  assert.deepEqual(errors,[]);
 });
 test('public printed QR decodes to the exact entry URL',async t=>{

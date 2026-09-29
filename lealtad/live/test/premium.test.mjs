@@ -18,8 +18,8 @@ test('customer updates without reload; scanner and admin corrections work',async
   const registration=await customerContext.request.post(base+'/api/register',{data:{name:'Cliente sincronizado',phone,pin:'4826'}});
   assert.equal(registration.status(),201);
   const user=(await registration.json()).user;
-  await customer.goto(base+'/renace/#tarjeta');
-  await customer.waitForSelector('#qr svg');
+  await customer.goto(base+'/#tarjeta');
+  await customer.waitForSelector('#qr svg',{state:'attached'});
   await customer.evaluate(()=>window.testDocumentMarker='same-document');
   assert.match(await customer.locator('[rel="icon"]').getAttribute('href'),/app-icon.svg/);
   await staffContext.request.post(base+'/api/login/staff',{data:{username:'mostrador_local',password:'Staff-test-928!'}});
@@ -32,7 +32,7 @@ test('customer updates without reload; scanner and admin corrections work',async
       return window.testCameraStream;
     };
   });
-  await staff.goto(base+'/renace/#empleado');
+  await staff.goto(base+'/#empleado');
   await staff.waitForSelector('#scan');await staff.click('#scan');
   await staff.waitForSelector('.scanner-shell.is-scanning');
   assert.equal(await staff.locator('#video').isVisible(),true);
@@ -58,7 +58,7 @@ test('customer updates without reload; scanner and admin corrections work',async
   await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('1 / 9'),{},{timeout:12000});
   assert.equal(await customer.evaluate(()=>window.testDocumentMarker),'same-document');
   await adminContext.request.post(base+'/api/login/staff',{data:{username:'admin_local',password:'Admin-test-928!'}});
-  await admin.goto(base+'/renace/#admin');await admin.waitForSelector('#customer-search');
+  await admin.goto(base+'/#admin');await admin.waitForSelector('#customer-search');
   await admin.fill('#customer-search input',phone);
   await Promise.all([admin.waitForResponse(res=>res.url().includes('/api/admin/dashboard?')&&res.url().includes(phone)),admin.click('#customer-search button')]);
   await admin.locator('.adjust-stamps[data-id="'+user.id+'"]').click();
@@ -70,14 +70,15 @@ test('customer updates without reload; scanner and admin corrections work',async
   await customer.bringToFront();
   await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('0 / 9'),{},{timeout:12000});
   assert.equal(await customer.evaluate(()=>window.testDocumentMarker),'same-document');
-  assert.match(await customer.locator('.reward').last().innerText(),/Hoy puedes/);
+  await customer.locator('.loyalty-card-details summary').click();
+  assert.match(await customer.locator('.daily-status').innerText(),/Disponible para recibir el sello de hoy/);
   // Reach the reward, then redeem from a separate session; both updates arrive automatically.
   for(let before=0;before<9;before++){
     const result=await browserRequest(admin,'/api/admin/customers/'+user.id+'/stamps',{delta:1,expectedStamps:before,reason:'Preparar recompensa de prueba'});
     assert.equal(result.status,200);
   }
   await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('9 / 9'),{},{timeout:12000});
-  assert.ok(await customer.getByText('¡Café gratis disponible!').count());
+  assert.ok(await customer.getByText('Tu café gratis está listo.').count());
   if(process.env.RENACE_SCREENSHOTS)await customer.screenshot({path:process.env.RENACE_SCREENSHOTS+'/renace-customer.png',fullPage:true});
   const card=(await browserRequest(customer,'/api/card')).data.card;
   assert.equal((await browserRequest(staff,'/api/staff/redeem',{cardId:card.id})).status,200);

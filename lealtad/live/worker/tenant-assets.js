@@ -43,11 +43,11 @@ export async function tenantAssets(request, env) {
     code = code
       .replace(
         'renace-shell-v8',
-        t.slug + '-shell-v9'
+        t.slug + '-shell-v11'
       )
       .replace(
         "'/assets/style.css'",
-        "'/assets/tenant.js','/assets/tenant.css','/assets/style.css'"
+        "'/assets/tenant.js','/assets/i18n.js','/assets/tenant.css','/assets/style.css'"
       );
 
     code = code.replace(
@@ -94,10 +94,10 @@ export async function tenantAssets(request, env) {
       `<html lang="es" data-tenant="${t.slug}">`
     );
 
-    // Carga configuración del tenant antes de help.js.
+    // Carga configuración del tenant antes del sistema compartido de idioma.
     html = html.replace(
-      '<script defer src="/assets/help.js">',
-      '<script defer src="/assets/tenant.js"></script><script defer src="/assets/help.js">'
+      '<script defer src="/assets/i18n.js">',
+      '<script defer src="/assets/tenant.js"></script><script defer src="/assets/i18n.js">'
     );
 
     // CSS específico del tenant.

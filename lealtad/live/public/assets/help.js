@@ -72,6 +72,30 @@
 
   if(!tenant.demo)guides.admin[1]=guides.admin[1].filter(([label])=>label!=='Demostración');
 
+  const englishGuides = {
+    customer: ['Your card, step by step', [
+      ['Your digital loyalty card', tenant.stampPolicy==='per_item' ? `Each paid coffee adds one stamp. After ${tenant.rewardGoal} paid coffees, the next coffee is free and does not add a stamp.` : `Show your card on each eligible visit. Your progress and available reward are always shown on the front.`],
+      ['Show your QR at the counter', 'Tap the card to reveal its QR. The team scans it, confirms the purchase and records the operation. Scanning alone never adds stamps or redeems a reward.'],
+      ['Keep it available offline', 'Use Download QR to save an image or Share QR to use the options on your device. The saved image identifies your card, while the live app shows your current balance.'],
+      ['Install the app', 'Use Install app beside this guide. On iPhone or iPad, open this page in Safari, tap Share, choose Add to Home Screen and confirm.'],
+      ['Your account', 'Use My account to change your PIN. If you forget it, ask the team for a temporary PIN in person; you will create a new PIN when you sign in.']
+    ]],
+    employee: ['A simple counter workflow', [
+      ['Find the card', 'Open the camera and place the full QR inside the frame. You can also search by the 10-digit mobile number or card code. Finding a card does not change its balance.'],
+      ['Confirm the purchase', tenant.stampPolicy==='per_item' ? 'Select the total number of coffees in the order. The summary separates paid coffees, any free coffee and the stamps that will start the next card.' : 'Confirm the customer and purchase before adding today\'s stamp. The daily limit follows the business rule shown on screen.'],
+      ['Apply the reward', tenant.stampPolicy==='per_item' ? `After ${tenant.rewardGoal} paid coffees, the next coffee is free and creates no stamp. Any paid coffees left in the same order automatically start the next card.` : 'When the reward is ready, deliver it and use Redeem free coffee. The next loyalty cycle then starts at zero.'],
+      ['Temporary PIN and access', 'Create a temporary PIN only with the customer present. Use My account to change your own password and log out when you finish on a shared device.'],
+      ['Install on this device', 'Use Install app to keep the counter shortcut on the tablet or computer. On iPhone or iPad, use Safari → Share → Add to Home Screen.']
+    ]],
+    admin: ['Administration guide', [
+      ['Dashboard', 'Review active customers, today\'s stamps, pending rewards and redeemed rewards. Pending rewards are free coffees waiting to be delivered.'],
+      ['Customers', 'Search by name, mobile number or card. You can edit an account, correct stamps with a required reason, issue a temporary PIN or remove an account.'],
+      ['Team', 'Create individual employee accounts, edit them, disable access temporarily or remove an account. Individual access keeps the activity log clear.'],
+      ['Activity and exports', 'Filter activity by date, customer, movement or team member. Export customers or the complete activity history to Excel when needed.'],
+      ['Install and security', 'Use Install app for quick access on the administration device. Change your password in My account and log out on shared devices.']
+    ]]
+  };
+
   function openGuide(title, sections, trigger) {
     document.querySelector('#renace-guide')?.close();
     const dialog = document.createElement('dialog');
@@ -113,6 +137,7 @@
       (trigger?.isConnected ? trigger : fallback)?.focus();
     }, { once: true });
     document.body.append(dialog);
+    window.LoyaltyI18n?.apply(dialog);
     dialog.addEventListener('keydown', event => {
       if (event.key === 'Tab') {
         event.preventDefault();
@@ -149,21 +174,31 @@
   }
 
   function showInstallHelp(trigger) {
-    openGuide('Renace en tu pantalla de inicio', ios() ? [
-      ['1 · Abre Renace en Safari', 'Si estás dentro de Instagram, WhatsApp, Chrome, Google u otro navegador, abre esta misma dirección en Safari.'],
+    const english=window.LoyaltyI18n?.locale==='en';
+    openGuide(english ? `${tenant.shortName} on your Home Screen` : `${tenant.shortName} en tu pantalla de inicio`, english ? (ios() ? [
+      [`1 · Open ${tenant.shortName} in Safari`, 'If you are inside Instagram, WhatsApp, Chrome, Google or another browser, open this same address in Safari.'],
+      ['2 · Share ↑', 'Tap Share, the square icon with an upward arrow.'],
+      ['3 · Add to Home Screen ＋', 'Choose Add to Home Screen and confirm Add.'],
+      ['4 · Open the app', `Find the ${tenant.shortName} icon on your Home Screen.`]
+    ] : [
+      ['1 · Open the browser menu ⋮', `Choose Install app, Install ${tenant.shortName}, or Add to Home Screen.`],
+      ['2 · Confirm installation', 'Follow the browser instructions. On a computer, the install icon may appear beside the address.'],
+      ['Keep your card close', 'No app store or APK is required. Internet is needed to update stamps and sign in.']
+    ]) : (ios() ? [
+      [`1 · Abre ${tenant.shortName} en Safari`, 'Si estás dentro de Instagram, WhatsApp, Chrome, Google u otro navegador, abre esta misma dirección en Safari.'],
       ['2 · Compartir ↑', 'Pulsa Compartir: el icono de un cuadrado con una flecha hacia arriba. Según tu versión de Safari puede estar en la barra o dentro del menú.'],
       ['3 · Agregar a pantalla de inicio ＋', 'Busca “Agregar a pantalla de inicio” entre las acciones. Si aparece “Abrir como app web”, déjalo activado. Confirma con “Agregar”.'],
-      ['4 · Abre tu tarjeta', 'Busca el icono de Renace en la pantalla de inicio. Esta página no puede abrir automáticamente el menú de instalación de Safari.']
+       ['4 · Abre la app', `Busca el icono de ${tenant.shortName} en la pantalla de inicio. Esta página no puede abrir automáticamente el menú de instalación de Safari.`]
     ] : [
-      ['1 · Abre el menú del navegador ⋮', 'Busca “Instalar aplicación”, “Instalar Renace” o “Agregar a pantalla de inicio”. En una computadora también puede aparecer un icono de instalación junto a la dirección.'],
-      ['2 · Confirma la instalación', 'Sigue los pasos que muestre tu navegador. Si la opción no aparece, puedes guardar Renace como favorito o probar desde Chrome, Edge o Safari.'],
+       ['1 · Abre el menú del navegador ⋮', `Busca “Instalar aplicación”, “Instalar ${tenant.shortName}” o “Agregar a pantalla de inicio”. En una computadora también puede aparecer un icono de instalación junto a la dirección.`],
+       ['2 · Confirma la instalación', `Sigue los pasos que muestre tu navegador. Si la opción no aparece, puedes guardar ${tenant.shortName} como favorito o probar desde Chrome, Edge o Safari.`],
       ['Tu tarjeta siempre a mano', 'No necesitas descargar un APK ni visitar una tienda. Para actualizar sellos e iniciar sesión necesitas internet; guarda también la imagen de tu QR para mostrarla sin conexión.']
-    ], trigger);
+     ]), trigger);
   }
 
   window.RenaceHelp = {
     controls(role) {
-      return `<div class="help-actions"><button type="button" id="role-guide" class="secondary" data-renace-guide="${role}">${role === 'customer' ? 'Guía' : 'Guía de uso'}</button>${role === 'customer' ? `<button type="button" id="install-app" class="secondary" data-renace-install ${isInstalled() ? 'disabled' : ''}>${isInstalled() ? 'App instalada' : 'Instalar app'}</button>` : ''}</div>`;
+       return `<div class="help-actions"><button type="button" id="role-guide" class="secondary" data-renace-guide="${role}">${role === 'customer' ? 'Guía' : 'Guía de uso'}</button><button type="button" id="install-app" class="secondary" data-renace-install ${isInstalled() ? 'disabled' : ''}>${isInstalled() ? 'App instalada' : 'Instalar app'}</button></div>`;
     }
   };
   window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; refreshInstall(); });
@@ -172,7 +207,10 @@
   window.addEventListener('hashchange', () => document.querySelector('#renace-guide')?.close());
   document.addEventListener('click', event => {
     const guide = event.target.closest('[data-renace-guide]');
-    if (guide && guides[guide.dataset.renaceGuide]) openGuide(...guides[guide.dataset.renaceGuide], guide);
+     if (guide && guides[guide.dataset.renaceGuide]) {
+       const source=window.LoyaltyI18n?.locale==='en' ? englishGuides : guides;
+       openGuide(...source[guide.dataset.renaceGuide], guide);
+     }
     const button = event.target.closest('[data-renace-install]');
     if (button) install(button);
   });

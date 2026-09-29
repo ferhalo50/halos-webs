@@ -4,6 +4,7 @@ export const TENANTS={
  renace:{
   slug:'renace',hostname:'renacecafe.haloswebs.com',displayName:'Renace Café Shop',shortName:'Renace',cardPrefix:'REN',
   rewardGoal:9,rewardName:'Café gratis',timezone:'America/Tijuana',stampPolicy:'daily',maxStampsPerTransaction:1,petFriendly:false,
+  cardLayout:{stampColumns:5,stampRows:2,rewardSlot:true,variant:'renace'},
   logo:'/assets/logo-renace.png',icon:'/assets/app-icon.svg',touchIcon:'/assets/logo-renace.png',
   pwaIcons:[{src:'/assets/app-icon.svg',sizes:'any',type:'image/svg+xml',purpose:'any maskable'},{src:'/assets/logo-renace.png',sizes:'1073x464',type:'image/png'}],
   colors:{cream:'#f5f1e7',ink:'#424b32',accent:'#697449'},
@@ -16,6 +17,7 @@ export const TENANTS={
  mooncoffee:{
   slug:'mooncoffee',hostname:'mooncoffee.haloswebs.com',displayName:'MOON Coffee',shortName:'MOON',cardPrefix:'MOON',
   rewardGoal:8,rewardName:'Bebida gratis',timezone:'America/Tijuana',stampPolicy:'daily',maxStampsPerTransaction:1,petFriendly:false,
+  cardLayout:{stampColumns:4,stampRows:2,rewardSlot:false,variant:'moon'},
   logo:'/assets/moon/logo-moon.png',icon:'/assets/moon/icon-moon.png',touchIcon:'/assets/moon/icon-192.png',
   pwaIcons:[{src:'/assets/moon/icon-moon.png',sizes:'any',type:'image/png'},{src:'/assets/moon/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},{src:'/assets/moon/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any'}],
   colors:{cream:'#fbf3e4',ink:'#39291e',accent:'#bd823d'},
@@ -33,6 +35,7 @@ export const TENANTS={
  santofe:{
   slug:'santofe',hostname:'santofe.haloswebs.com',displayName:'Santofé',shortName:'Santofé',cardPrefix:'SANTOFE',
   rewardGoal:10,rewardName:'Café gratis',timezone:'America/Tijuana',stampPolicy:'per_item',maxStampsPerTransaction:10,petFriendly:true,
+  cardLayout:{stampColumns:5,stampRows:2,rewardSlot:false,variant:'santofe'},
   logo:'/assets/santofe/logo-santofe.png',icon:'/assets/santofe/mark-santofe.png',touchIcon:'/assets/santofe/icon-192.png',
   pwaIcons:[{src:'/assets/santofe/mark-santofe.png',sizes:'720x720',type:'image/png',purpose:'any'},{src:'/assets/santofe/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/assets/santofe/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}],
   colors:{cream:'#e8ecde',ink:'#6f5e62',accent:'#77666a'},

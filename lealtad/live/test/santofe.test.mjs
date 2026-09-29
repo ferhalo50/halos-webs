@@ -118,7 +118,7 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   const phone='661'+String(Date.now()).slice(-7);
   const registration=await context.request.post(santofe+'/api/register',{data:{name:'Prueba visual Santofé',phone,pin:'4826'}});
   assert.equal(registration.status(),201);
-  await page.goto(santofe+'/#tarjeta');await page.waitForSelector('#app-loader',{state:'detached'});await page.waitForSelector('#qr svg');
+  await page.goto(santofe+'/#tarjeta');await page.waitForSelector('#app-loader',{state:'detached'});await page.waitForSelector('#qr svg',{state:'attached'});
   assert.equal(await page.locator('.santofe-flip-card').count(),1);
   assert.equal(await page.locator('.santofe-card-pattern').count(),1);
   assert.equal(await page.locator('.santofe-card-pattern span').count(),0);

@@ -29,6 +29,187 @@ html[data-tenant="mooncoffee"]{--cream:#fbf3e4;--olive:#563b29;--ink:#39291e;--m
 [data-tenant="mooncoffee"] .activity-type:not(.activity-type--stamp_removed):not(.activity-type--stamp_voided):not(.activity-type--customer_deleted):not(.activity-type--employee_deleted){background:#f8edda;border-color:#d6bd94;color:#70502b}
 [data-tenant="mooncoffee"] .customers-panel .eyebrow,[data-tenant="mooncoffee"] .activity-table th{color:#70502b}
 
+/* MOON Coffee: a dedicated nocturnal system built around its golden crescent. */
+html[data-tenant="mooncoffee"]{--cream:#090d15;--olive:#d2a253;--ink:#f7f0e2;--muted:#b8b1a5;--line:#d5aa622e;--moon-bg:#090d15;--moon-surface:#111722;--moon-surface-raised:#171e2b;--moon-gold:#d2a253;--moon-gold-soft:#efd49f;--moon-text:#f7f0e2;--moon-muted:#b8b1a5;color-scheme:dark;background:#090d15}
+[data-tenant="mooncoffee"] body{position:relative;isolation:isolate;min-height:100dvh;background:radial-gradient(circle at 82% 12%,#252033 0,transparent 27%),radial-gradient(circle at 10% 45%,#151d2c 0,transparent 36%),linear-gradient(145deg,#080b12,#0c111b 52%,#090c13);color:var(--moon-text);font-family:"Segoe UI Variable","Segoe UI",sans-serif}
+[data-tenant="mooncoffee"] body::before,[data-tenant="mooncoffee"] body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none}
+[data-tenant="mooncoffee"] body::before{background-image:radial-gradient(circle at 18px 22px,#f4dfb7b8 0 1px,transparent 1.4px),radial-gradient(circle at 76px 64px,#fff8e876 0 .7px,transparent 1.2px),radial-gradient(circle at 31px 91px,#d8ad666b 0 .8px,transparent 1.3px);background-size:137px 127px,193px 181px,227px 211px;opacity:.46}
+[data-tenant="mooncoffee"] body::after{background-image:radial-gradient(circle at 14% 19%,#fff3d5 0 1.2px,transparent 1.9px),radial-gradient(circle at 72% 34%,#e4bd76 0 1px,transparent 1.7px),radial-gradient(circle at 84% 78%,#fff3d5 0 .9px,transparent 1.6px);opacity:.38;animation:moon-twinkle 8s ease-in-out infinite alternate}
+[data-tenant="mooncoffee"] header,[data-tenant="mooncoffee"] main,[data-tenant="mooncoffee"] footer{position:relative;z-index:1}
+[data-tenant="mooncoffee"] header{max-width:1320px;padding:16px 36px;border-color:#d5aa6226;background:#0b1019d9;backdrop-filter:blur(16px)}
+[data-tenant="mooncoffee"] .brand{display:grid;place-items:center;width:154px;min-height:54px;padding:7px 12px;border:1px solid #d8b16c45;border-radius:14px;background:#f5ead7f2;box-shadow:0 10px 35px #0005}
+[data-tenant="mooncoffee"] .brand img{width:100%;height:auto;object-fit:contain}
+[data-tenant="mooncoffee"] header nav{gap:8px;padding:5px;border:1px solid #d5aa6221;border-radius:999px;background:#111722bd}
+[data-tenant="mooncoffee"] header nav a,[data-tenant="mooncoffee"] header nav button{min-height:38px;padding:8px 14px;border:0;border-radius:999px;color:#ded6c8;text-decoration:none;font-size:12px}
+[data-tenant="mooncoffee"] header nav a:hover,[data-tenant="mooncoffee"] header nav a:focus-visible{background:#d2a25317;color:#f5d89f}
+[data-tenant="mooncoffee"] header nav button{background:#d2a253;color:#17110a}
+[data-tenant="mooncoffee"] main{max-width:1260px;padding-top:44px}
+[data-tenant="mooncoffee"] footer{border-color:#d5aa6226;color:#9f988d;background:#090d15c4}
+[data-tenant="mooncoffee"] h1,[data-tenant="mooncoffee"] h2,[data-tenant="mooncoffee"] h3{color:var(--moon-text)}
+[data-tenant="mooncoffee"] h1,[data-tenant="mooncoffee"] h2{font-family:Georgia,"Times New Roman",serif}
+[data-tenant="mooncoffee"] .eyebrow{color:var(--moon-gold);letter-spacing:.24em}
+[data-tenant="mooncoffee"] .muted,[data-tenant="mooncoffee"] .note,[data-tenant="mooncoffee"] .admin-lead,[data-tenant="mooncoffee"] .field-help{color:var(--moon-muted)}
+[data-tenant="mooncoffee"] a{color:#f0d39b}
+[data-tenant="mooncoffee"] .panel{border:1px solid #d5aa6228;background:linear-gradient(145deg,#151c28ee,#0f151fee);box-shadow:0 22px 55px #0003}
+[data-tenant="mooncoffee"] button,[data-tenant="mooncoffee"] .button{min-height:44px;border-color:#d2a253;background:#d2a253;color:#17110a;border-radius:999px;box-shadow:none;transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease}
+[data-tenant="mooncoffee"] button:not(:disabled):hover,[data-tenant="mooncoffee"] .button:hover{filter:none;transform:translateY(-1px);background:#e1b86f;box-shadow:0 8px 24px #d2a25320}
+[data-tenant="mooncoffee"] .secondary{border-color:#d6b47455;background:#121925;color:#ead9b8}
+[data-tenant="mooncoffee"] .secondary:not(:disabled):hover{background:#1b2432;border-color:#d6b47488}
+[data-tenant="mooncoffee"] .danger{border-color:#9c5149;background:#7f3f3a;color:#fff4ef}
+[data-tenant="mooncoffee"] input,[data-tenant="mooncoffee"] select,[data-tenant="mooncoffee"] textarea{border-color:#d5aa6238;background:#0a0f18;color:#f7f0e2;border-radius:12px}
+[data-tenant="mooncoffee"] input::placeholder{color:#7f7a73}
+[data-tenant="mooncoffee"] input:focus,[data-tenant="mooncoffee"] select:focus,[data-tenant="mooncoffee"] textarea:focus,[data-tenant="mooncoffee"] button:focus-visible,[data-tenant="mooncoffee"] a:focus-visible,[data-tenant="mooncoffee"] summary:focus-visible{outline:3px solid #efd49f;outline-offset:3px}
+[data-tenant="mooncoffee"] .app-loader{background:radial-gradient(circle at 50% 42%,#222033,#0b1019 48%,#070a10)}
+[data-tenant="mooncoffee"] .app-loader::before{border-color:#d2a25338}
+[data-tenant="mooncoffee"] .app-loader__brand{width:min(70vw,430px);padding:26px;border:1px solid #d2a25340;border-radius:28px;background:#f5ead7f2;box-shadow:0 26px 80px #0007}
+[data-tenant="mooncoffee"] .app-loader__brand span{color:#2d2117}
+
+/* MOON public experience */
+[data-tenant="mooncoffee"] .hero{grid-template-columns:minmax(0,.82fr) minmax(430px,1.18fr);gap:clamp(46px,7vw,100px);min-height:620px}
+[data-tenant="mooncoffee"] .hero .intro{position:relative;max-width:510px}
+[data-tenant="mooncoffee"] .hero .intro::before{content:"";position:absolute;left:-54px;top:-65px;width:132px;height:132px;border:1px solid #d2a2532e;border-radius:50%;box-shadow:0 0 0 24px #d2a2530b,0 0 0 48px #d2a25308;pointer-events:none}
+[data-tenant="mooncoffee"] .hero h1{font-size:clamp(54px,6vw,82px);letter-spacing:-.045em}
+[data-tenant="mooncoffee"] .hero h1 em{color:#e2b869;font-weight:400}
+[data-tenant="mooncoffee"] .intro>p:not(.eyebrow){color:#bfb7aa}
+[data-tenant="mooncoffee"] .hero .actions{margin-top:30px}
+[data-tenant="mooncoffee"] .hero>.moon-loyalty-card{transform:rotate(1.4deg)}
+[data-tenant="mooncoffee"] .steps{position:relative;margin-top:46px;padding:26px;border:1px solid #d5aa6224;border-radius:24px;background:#0d131de8;gap:1px;overflow:hidden}
+[data-tenant="mooncoffee"] .steps>div{padding:9px 24px;border-left:1px solid #d5aa6229}
+[data-tenant="mooncoffee"] .steps>div:first-child{border-left:0}
+[data-tenant="mooncoffee"] .steps b{color:#d2a253;font-size:15px;letter-spacing:.12em}
+[data-tenant="mooncoffee"] .steps h3{margin:10px 0 7px;font-size:21px}
+[data-tenant="mooncoffee"] .steps p{color:#aaa397}
+[data-tenant="mooncoffee"] .visit-us{margin-top:50px;border-color:#d5aa6228}
+[data-tenant="mooncoffee"] .visit-us .social a,[data-tenant="mooncoffee"] .moon-pass-details .social a{padding:8px 13px;border:1px solid #d5aa6238;border-radius:999px;text-decoration:none}
+
+/* MOON loyalty card */
+[data-tenant="mooncoffee"] .moon-loyalty-card{position:relative;isolation:isolate;overflow:hidden;min-width:0;padding:25px 28px 23px;border:1px solid #e0b96d5e;border-radius:28px;background:radial-gradient(circle at 86% 5%,#72572c48 0,transparent 28%),linear-gradient(145deg,#171e2a,#0d121c 64%,#121824);box-shadow:0 30px 70px #0005;color:#f7f0e2;animation:none}
+[data-tenant="mooncoffee"] .moon-loyalty-card::before{content:"";position:absolute;inset:8px;border:1px solid #d2a25320;border-radius:21px;pointer-events:none}
+[data-tenant="mooncoffee"] .moon-card-orbit{position:absolute;right:-58px;top:-74px;width:240px;height:240px;border:1px solid #d6ad6535;border-radius:50%;box-shadow:0 0 0 26px #d6ad6509,0 0 0 52px #d6ad6507;z-index:-1}
+[data-tenant="mooncoffee"] .moon-card-orbit::after{content:"";position:absolute;left:42px;bottom:37px;width:54px;height:54px;border-radius:50%;background:#d5a452;box-shadow:-15px 0 0 4px #151b27,0 0 28px #d5a45231}
+[data-tenant="mooncoffee"] .moon-card-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
+[data-tenant="mooncoffee"] .moon-card-logo{display:grid;place-items:center;width:154px;min-height:64px;padding:8px 11px;border:1px solid #e4bd7642;border-radius:15px;background:#f3e7d3f2}
+[data-tenant="mooncoffee"] .moon-card-logo .renace-logo{width:100%;height:auto;margin:0}
+[data-tenant="mooncoffee"] .moon-card-head>span{max-width:100px;color:#d8b875;font-size:9px;font-weight:750;letter-spacing:.19em;text-align:right}
+[data-tenant="mooncoffee"] .moon-card-owner{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:25px 0 18px}
+[data-tenant="mooncoffee"] .moon-card-owner>div:first-child{display:grid;min-width:0;text-align:left}
+[data-tenant="mooncoffee"] .moon-card-owner small{color:#a9a195;font-size:8px;letter-spacing:.2em}
+[data-tenant="mooncoffee"] .moon-card-owner strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 clamp(20px,3.5vw,30px)/1.2 Georgia,serif}
+[data-tenant="mooncoffee"] .moon-card-count{display:flex;align-items:baseline;gap:4px;color:#efd49f;white-space:nowrap}
+[data-tenant="mooncoffee"] .moon-card-count b{font:400 clamp(34px,5vw,46px)/1 Georgia,serif}
+[data-tenant="mooncoffee"] .moon-card-count span{font-size:13px;color:#b8a98e}
+[data-tenant="mooncoffee"] .moon-card-stamps{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:0}
+[data-tenant="mooncoffee"] .moon-card-stamps .stamp{width:100%;border:1px solid #d6af6755;background:#0a0f18;color:#a99065;font:600 clamp(9px,1.7vw,13px)/1 "Segoe UI",sans-serif}
+[data-tenant="mooncoffee"] .moon-card-stamps .stamp.filled{padding:1px;border-color:#e1bb72;background:#1b2029;box-shadow:inset 0 0 0 1px #f1d49b24}
+[data-tenant="mooncoffee"] .moon-card-stamps .stamp-sticker{filter:drop-shadow(0 3px 6px #0005)}
+[data-tenant="mooncoffee"] .moon-card-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;padding-top:14px;border-top:1px solid #d5aa6230;color:#c3baac;font-size:11px;text-align:left}
+[data-tenant="mooncoffee"] .moon-card-footer b{color:#e0b665;font:30px Georgia,serif;line-height:1}
+
+/* MOON customer pass */
+[data-tenant="mooncoffee"] .moon-customer-view{max-width:1080px;margin:0 auto}
+[data-tenant="mooncoffee"] .moon-welcome{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:20px}
+[data-tenant="mooncoffee"] .moon-welcome h1{margin:0;font-size:clamp(34px,4.4vw,55px)}
+[data-tenant="mooncoffee"] .moon-welcome .eyebrow{margin-bottom:8px}
+[data-tenant="mooncoffee"] .moon-welcome .muted{margin:7px 0 0}
+[data-tenant="mooncoffee"] .sync-status{color:#d8c39d}
+[data-tenant="mooncoffee"] .sync-status i{background:#d2a253;box-shadow:0 0 0 4px #d2a25318}
+[data-tenant="mooncoffee"] .moon-customer-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:20px;align-items:start}
+[data-tenant="mooncoffee"] .moon-card-column{min-width:0}
+[data-tenant="mooncoffee"] .moon-card-column .stamp-picker{margin-top:14px;padding:14px 16px;border-color:#d5aa622d;border-radius:18px;background:#101722e8}
+[data-tenant="mooncoffee"] .moon-card-column .stamp-picker h3{margin-bottom:10px;color:#efe6d8;font-size:14px}
+[data-tenant="mooncoffee"] .moon-card-column .stamp-options{grid-template-columns:repeat(2,1fr)}
+[data-tenant="mooncoffee"] .stamp-option{border-color:#d5aa6224;background:#0b111b;color:#e9decb}
+[data-tenant="mooncoffee"] .stamp-option[aria-pressed="true"]{border-color:#d2a253;background:#1d2027;box-shadow:inset 0 0 0 1px #f5d99d26}
+[data-tenant="mooncoffee"] .moon-qr-panel{padding:21px;text-align:center}
+[data-tenant="mooncoffee"] .moon-qr-heading{display:flex;align-items:center;gap:13px;text-align:left}
+[data-tenant="mooncoffee"] .moon-qr-heading>span{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d5aa6247;border-radius:50%;color:#e1b767;font:28px Georgia,serif}
+[data-tenant="mooncoffee"] .moon-qr-heading small{color:#a99e8a;font-size:8px;letter-spacing:.15em}
+[data-tenant="mooncoffee"] .moon-qr-heading h2{margin:2px 0 0;font-size:23px}
+[data-tenant="mooncoffee"] .moon-qr-frame{display:inline-grid;place-items:center;margin:15px auto 8px;padding:7px;border:1px solid #ddb66e;border-radius:20px;background:#fdfbf6;box-shadow:0 0 0 5px #d2a2530e,0 14px 35px #0004}
+[data-tenant="mooncoffee"] .moon-qr-panel .qr{margin:0;padding:7px;border-radius:14px;background:#fff}
+[data-tenant="mooncoffee"] .moon-qr-panel .qr svg{width:clamp(148px,18vw,188px);height:clamp(148px,18vw,188px)}
+[data-tenant="mooncoffee"] .moon-qr-panel code{display:block;color:#c8bdac;font-size:10px}
+[data-tenant="mooncoffee"] .moon-qr-status{margin:12px 0;color:#c9c0b2;font-size:12px}
+[data-tenant="mooncoffee"] .moon-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0 10px}
+[data-tenant="mooncoffee"] .moon-card-actions button{width:100%;padding:10px 8px;font-size:12px}
+[data-tenant="mooncoffee"] .moon-card-actions #refresh-card{grid-column:1/-1}
+[data-tenant="mooncoffee"] .moon-qr-panel>.help-actions{justify-content:center;margin:8px 0}
+[data-tenant="mooncoffee"] .moon-qr-panel>.help-actions button{min-height:37px;padding:7px 13px;font-size:11px}
+[data-tenant="mooncoffee"] .moon-pass-details{margin-top:10px;border-top:1px solid #d5aa6229;text-align:left}
+[data-tenant="mooncoffee"] .moon-pass-details summary{display:flex;justify-content:space-between;align-items:center;padding:14px 2px 5px;cursor:pointer;color:#e8dfd1;font-size:12px;font-weight:700;list-style:none}
+[data-tenant="mooncoffee"] .moon-pass-details summary::-webkit-details-marker{display:none}
+[data-tenant="mooncoffee"] .moon-pass-details>div{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin-top:12px;font-size:11px}
+[data-tenant="mooncoffee"] .moon-pass-details>div span{color:#999287}
+[data-tenant="mooncoffee"] .moon-pass-details>div strong{text-align:right}
+[data-tenant="mooncoffee"] .moon-pass-details p{margin:12px 0;color:#a9a195;font-size:11px}
+
+/* MOON staff and account surfaces */
+[data-tenant="mooncoffee"] .form-wrap{max-width:530px}
+[data-tenant="mooncoffee"] .form-wrap>.page-title{font-size:clamp(42px,5vw,62px)}
+[data-tenant="mooncoffee"] .form-wrap>.panel{padding:32px;border-radius:24px}
+[data-tenant="mooncoffee"] .staff-heading{align-items:end}
+[data-tenant="mooncoffee"] .staff-heading .page-title{color:#f5e9d6;font-size:clamp(42px,5vw,62px)}
+[data-tenant="mooncoffee"] .staff-badge{border-color:#d5aa6240;background:#111722;color:#d6c5a7}
+[data-tenant="mooncoffee"] .staff-dashboard{grid-template-columns:minmax(340px,.86fr) minmax(420px,1.14fr);gap:22px}
+[data-tenant="mooncoffee"] .scan-panel{border-radius:26px}
+[data-tenant="mooncoffee"] .scan-symbol,[data-tenant="mooncoffee"] .empty-emblem{border-color:#d2a25355;background:#0b111a;color:#e2ba6e}
+[data-tenant="mooncoffee"] .scanner-shell{border-color:#d2a25338;background:#080c13;box-shadow:inset 0 0 0 1px #f6dfb81a,0 18px 40px #0004}
+[data-tenant="mooncoffee"] .camera-placeholder{background:radial-gradient(circle at 50% 32%,#3b2e20,#111722 48%,#080c13)}
+[data-tenant="mooncoffee"] .camera-placeholder img{width:78px;height:78px;border:1px solid #e1b86c55;border-radius:18px;background:#f4e9d8;padding:7px;object-fit:contain}
+[data-tenant="mooncoffee"] .camera-placeholder strong{color:#f3e4cc}
+[data-tenant="mooncoffee"] .camera-placeholder span{color:#b8ad9c}
+[data-tenant="mooncoffee"] .scanner-guide{box-shadow:0 0 0 100vmax #05070bb8}
+[data-tenant="mooncoffee"] .scanner-guide span{border-color:#efd49f}
+[data-tenant="mooncoffee"] .scanner-caption{color:#f0d49d}
+[data-tenant="mooncoffee"] .lookup-divider{color:#958d80}
+[data-tenant="mooncoffee"] .lookup-divider::before,[data-tenant="mooncoffee"] .lookup-divider::after{background:#d5aa6227}
+[data-tenant="mooncoffee"] .staff-empty{border-color:#d5aa6235;background:radial-gradient(circle at 50% 30%,#1a2230,#0f151f);color:#aba397}
+[data-tenant="mooncoffee"] .customer-summary,[data-tenant="mooncoffee"] .visit-detail,[data-tenant="mooncoffee"] .reward{border-color:#d5aa622a;background:#0b111a;color:#e6dccb}
+
+/* MOON administration */
+[data-tenant="mooncoffee"] .stats{grid-template-columns:repeat(4,1fr);gap:12px}
+[data-tenant="mooncoffee"] .stats .panel{position:relative;overflow:hidden;padding:20px;border-radius:18px}
+[data-tenant="mooncoffee"] .stats .panel::after{content:"";position:absolute;right:-22px;top:-22px;width:70px;height:70px;border:1px solid #d2a25330;border-radius:50%}
+[data-tenant="mooncoffee"] .stats strong{color:#f0d39a;font-size:38px}
+[data-tenant="mooncoffee"] .stats span{color:#b8b0a3}
+[data-tenant="mooncoffee"] .customers-panel,[data-tenant="mooncoffee"] .activity-panel,[data-tenant="mooncoffee"] .team-panel{border-color:#d5aa6228;background:#0f151fe8;box-shadow:0 20px 50px #0003}
+[data-tenant="mooncoffee"] .customers-panel>.section-row,[data-tenant="mooncoffee"] .activity-panel>.section-row,[data-tenant="mooncoffee"] .team-panel>h2{border-color:#d5aa6224;background:#171e2a}
+[data-tenant="mooncoffee"] .customers-panel .eyebrow,[data-tenant="mooncoffee"] .activity-table th{color:#d5aa62}
+[data-tenant="mooncoffee"] .event-filters{border-color:#d5aa6224;background:#0b111a}
+[data-tenant="mooncoffee"] table{color:#ded6c9}
+[data-tenant="mooncoffee"] th,[data-tenant="mooncoffee"] td{border-color:#d5aa621d}
+[data-tenant="mooncoffee"] .activity-table th{border-color:#d5aa6224;background:#171e2a}
+[data-tenant="mooncoffee"] .activity-table tbody tr:hover{background:#d2a2530a}
+[data-tenant="mooncoffee"] .activity-date strong,[data-tenant="mooncoffee"] .activity-customer,[data-tenant="mooncoffee"] .activity-employee,[data-tenant="mooncoffee"] .activity-motive{color:#ddd4c6}
+[data-tenant="mooncoffee"] .activity-date span,[data-tenant="mooncoffee"] .activity-empty{color:#999186}
+[data-tenant="mooncoffee"] .activity-type:not(.activity-type--stamp_removed):not(.activity-type--stamp_voided):not(.activity-type--customer_deleted):not(.activity-type--employee_deleted){border-color:#d5aa6240;background:#d2a25316;color:#edd39e}
+[data-tenant="mooncoffee"] .activity-type--stamp_removed,[data-tenant="mooncoffee"] .activity-type--stamp_voided,[data-tenant="mooncoffee"] .activity-type--customer_deleted,[data-tenant="mooncoffee"] .activity-type--employee_deleted{border-color:#a85a5366;background:#7e3e3940;color:#efb5ae}
+[data-tenant="mooncoffee"] .team-row{border-color:#d5aa6222}
+[data-tenant="mooncoffee"] .adjust-dialog{border-color:#d5aa6245;background:#111722;color:#f7f0e2}
+[data-tenant="mooncoffee"] .adjust-dialog::backdrop{background:#02040acf}
+
+@keyframes moon-twinkle{0%{opacity:.24}55%{opacity:.46}100%{opacity:.32}}
+@media(prefers-reduced-motion:reduce){[data-tenant="mooncoffee"] body::after{animation:none}}
+@media(max-width:900px){
+ [data-tenant="mooncoffee"] .hero{grid-template-columns:1fr;min-height:0}.moon-loyalty-card{max-width:650px;margin-inline:auto}
+ [data-tenant="mooncoffee"] .moon-customer-grid,[data-tenant="mooncoffee"] .staff-dashboard{grid-template-columns:1fr}
+ [data-tenant="mooncoffee"] .moon-qr-panel{display:grid;grid-template-columns:1fr auto;column-gap:18px;align-items:center;text-align:left}
+ [data-tenant="mooncoffee"] .moon-qr-heading,[data-tenant="mooncoffee"] .moon-qr-status,[data-tenant="mooncoffee"] .moon-card-actions,[data-tenant="mooncoffee"] .moon-qr-panel>.help-actions,[data-tenant="mooncoffee"] .moon-pass-details,[data-tenant="mooncoffee"] .moon-qr-panel>code{grid-column:1}
+ [data-tenant="mooncoffee"] .moon-qr-frame{grid-column:2;grid-row:1/7}
+}
+@media(max-width:760px){
+ [data-tenant="mooncoffee"] header{padding:11px 14px;gap:10px;flex-wrap:nowrap}[data-tenant="mooncoffee"] .brand{width:112px;min-height:43px;padding:6px 9px}[data-tenant="mooncoffee"] header nav{margin-left:auto;gap:2px;padding:3px;overflow-x:auto}[data-tenant="mooncoffee"] header nav a,[data-tenant="mooncoffee"] header nav button{padding:7px 9px;font-size:10px;white-space:nowrap}
+ [data-tenant="mooncoffee"] main{padding:25px 14px 42px}[data-tenant="mooncoffee"] .hero{gap:35px}[data-tenant="mooncoffee"] .hero h1{font-size:49px}[data-tenant="mooncoffee"] .hero .intro::before{left:-42px;top:-40px;width:90px;height:90px}
+ [data-tenant="mooncoffee"] .steps{grid-template-columns:1fr;margin-top:34px;padding:10px 18px}[data-tenant="mooncoffee"] .steps>div{padding:16px 5px;border-left:0;border-top:1px solid #d5aa6229}[data-tenant="mooncoffee"] .steps>div:first-child{border-top:0}
+ [data-tenant="mooncoffee"] .moon-loyalty-card{padding:18px 19px 17px;border-radius:23px}[data-tenant="mooncoffee"] .moon-card-logo{width:126px;min-height:54px}[data-tenant="mooncoffee"] .moon-card-head>span{font-size:7px}[data-tenant="mooncoffee"] .moon-card-owner{margin:18px 0 14px}[data-tenant="mooncoffee"] .moon-card-owner strong{font-size:20px}[data-tenant="mooncoffee"] .moon-card-count b{font-size:34px}[data-tenant="mooncoffee"] .moon-card-stamps{gap:5px}[data-tenant="mooncoffee"] .moon-card-footer{margin-top:15px;padding-top:11px;font-size:9px}[data-tenant="mooncoffee"] .moon-card-footer b{font-size:24px}
+ [data-tenant="mooncoffee"] .moon-welcome{display:block;margin-bottom:14px}[data-tenant="mooncoffee"] .moon-welcome h1{font-size:34px}[data-tenant="mooncoffee"] .moon-welcome .sync-status{margin-top:10px;font-size:10px}
+ [data-tenant="mooncoffee"] .moon-customer-grid{gap:14px}[data-tenant="mooncoffee"] .moon-card-column .stamp-picker{padding:12px}[data-tenant="mooncoffee"] .moon-card-column .stamp-option>span{width:38px;height:38px}
+ [data-tenant="mooncoffee"] .moon-qr-panel{display:block;padding:18px;text-align:center}[data-tenant="mooncoffee"] .moon-qr-heading{justify-content:center;text-align:left}[data-tenant="mooncoffee"] .moon-qr-panel .qr svg{width:146px;height:146px}[data-tenant="mooncoffee"] .moon-card-actions{grid-template-columns:1fr 1fr}
+ [data-tenant="mooncoffee"] .staff-heading{display:block}[data-tenant="mooncoffee"] .staff-badge{display:inline-block;margin-top:14px}[data-tenant="mooncoffee"] .scan-panel{padding:18px}[data-tenant="mooncoffee"] .camera-placeholder img{width:64px;height:64px}
+ [data-tenant="mooncoffee"] .stats{grid-template-columns:1fr 1fr}[data-tenant="mooncoffee"] .stats strong{font-size:31px}
+ [data-tenant="mooncoffee"] .activity-table tr{border-color:#d5aa6228;background:#0a0f18}[data-tenant="mooncoffee"] .activity-table td::before{color:#aa9f8c}
+}
+
 /* Santofé: official pale sage and plum identity, with its physical-card rhythm. */
 html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--muted:#746b6d;--line:#c9cdbf}
 [data-tenant="santofe"] body{background:radial-gradient(circle at 82% 8%,#f7f8f1 0,#e8ecde 38%,#e3e7d9 100%)}
@@ -92,8 +273,8 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 [data-tenant="santofe"] .santofe-card-owner strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 clamp(19px,4vw,29px)/1.15 Georgia,serif;color:#4e4145}
 [data-tenant="santofe"] .santofe-card-owner b{font:500 clamp(27px,5vw,40px)/1 Georgia,serif;color:#66565a;white-space:nowrap}
 [data-tenant="santofe"] .santofe-card-owner b i{font-size:.55em;font-style:normal;color:#93888a}
-[data-tenant="santofe"] .santofe-card-stamps{display:grid;grid-template-columns:repeat(10,1fr);align-items:center;gap:7px;margin:0;position:relative;z-index:1}
-[data-tenant="santofe"] .santofe-card-stamps .stamp{width:100%;border-width:1px;font:600 clamp(9px,1.7vw,13px)/1 "Segoe UI",sans-serif;background:#f8f9f4}
+[data-tenant="santofe"] .santofe-card-stamps{display:grid;grid-template-columns:repeat(var(--stamp-columns,5),minmax(0,44px));align-items:center;justify-content:space-between;gap:8px 10px;margin:0;position:relative;z-index:1}
+[data-tenant="santofe"] .santofe-card-stamps .stamp{width:100%;max-width:44px;border-width:1px;font:600 clamp(9px,1.7vw,13px)/1 "Segoe UI",sans-serif;background:#f8f9f4}
 [data-tenant="santofe"] .santofe-card-stamps .stamp.filled{padding:1px;background:#e8ecde;box-shadow:inset 0 0 0 1px #fff}
 [data-tenant="santofe"] .santofe-card-status{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:10px;border-top:1px solid #c9cdc0;color:#67585c;font-size:11px;font-weight:650;text-align:left;position:relative;z-index:1}
 [data-tenant="santofe"] .santofe-card-status i{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;border:1px solid #77666a55;border-radius:50%;font:600 13px Georgia,serif}
@@ -181,4 +362,146 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
  [data-tenant="santofe"] .stamp-quantity{grid-template-columns:1fr auto;gap:10px}[data-tenant="santofe"] .quantity-stepper{justify-content:end}[data-tenant="santofe"] #staff-card>.actions{grid-template-columns:1fr 1fr}[data-tenant="santofe"] #staff-card>.actions button:first-child{grid-column:1/-1}
  [data-tenant="santofe"] .stats{grid-template-columns:1fr 1fr}[data-tenant="santofe"] .stats .panel{padding:15px 16px}[data-tenant="santofe"] .stats strong{font-size:29px}
  [data-tenant="santofe"] .customers-panel,[data-tenant="santofe"] .activity-panel,[data-tenant="santofe"] .team-panel{border-radius:18px}
+}
+
+/* Shared premium card interaction. Each tenant keeps its own artwork. */
+.premium-customer{width:min(100%,680px);margin:0 auto}
+.compact-customer-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:12px}
+.compact-customer-head h1{margin:0;font-size:clamp(27px,4vw,40px)}.compact-customer-head .eyebrow{margin-bottom:7px}.compact-customer-head .sync-status{margin:0 0 4px;white-space:nowrap}
+.loyalty-flip-wrap{width:min(100%,590px);margin:0 auto;text-align:center}.loyalty-flip-card{position:relative;perspective:1600px;cursor:pointer}.loyalty-flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .62s cubic-bezier(.2,.72,.2,1)}.loyalty-flip-card.is-flipped .loyalty-flip-inner{transform:rotateY(180deg)}
+.loyalty-card-face{position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}.loyalty-card-front>.card{width:100%;height:100%;margin:0;animation:none!important}.loyalty-card-back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transform:rotateY(180deg);border-radius:26px}.loyalty-back-decoration{position:absolute;inset:0;pointer-events:none}.loyalty-back-logo{position:absolute;left:18px;top:14px;z-index:1;width:94px;height:48px;object-fit:contain;object-position:left center}.loyalty-qr-plate{position:relative;z-index:2;display:grid;place-items:center;padding:6px;border-radius:17px;background:#fff;box-shadow:0 12px 34px #0002}.loyalty-qr-plate .qr{margin:0;padding:5px;border-radius:12px}.loyalty-qr-plate .qr svg{width:clamp(122px,28vw,168px);height:clamp(122px,28vw,168px)}.loyalty-card-back code{position:relative;z-index:2;padding:3px 8px;border-radius:999px;background:#fffbd;font-size:8px}.loyalty-qr-note{position:absolute;right:18px;bottom:14px;z-index:2;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.loyalty-flip-button{margin:11px auto 0;min-height:38px;padding:7px 16px}
+.qr-brightness-help{position:absolute;left:18px;bottom:14px;z-index:2;max-width:47%;font-size:8px;line-height:1.25;text-align:left}.santofe-card-back .qr-brightness-help{left:18px;bottom:15px;color:#67585c}
+.loyalty-quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(100%,590px);margin:13px auto 8px}.loyalty-quick-actions button{width:100%;min-height:40px;padding:8px;font-size:11px}.premium-customer>.help-actions{justify-content:center;margin:8px auto}.premium-customer>.help-actions button{min-height:38px;padding:7px 13px;font-size:11px}.loyalty-card-details{width:min(100%,590px);margin:8px auto 0;border:1px solid var(--line);border-radius:16px;background:#fff9;overflow:hidden}.loyalty-card-details summary{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;font-size:12px;font-weight:750;list-style:none}.loyalty-card-details summary::-webkit-details-marker{display:none}.loyalty-card-details[open] summary span{transform:rotate(45deg)}.loyalty-card-details summary span{transition:transform .2s}.loyalty-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 12px}.loyalty-detail-grid>div{display:grid;gap:2px;padding:9px 10px;border-radius:10px;background:#fff}.loyalty-detail-grid>div:last-child{grid-column:1/-1}.loyalty-detail-grid small{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.loyalty-detail-grid strong{font-size:11px}.loyalty-card-details .save-help{margin:0 auto 10px;padding:0 14px;font-size:10px}.loyalty-card-details .social{padding:11px 14px;border-top:1px solid var(--line)}
+.renace-flip-card{aspect-ratio:1.33/1}.renace-card-back{background:linear-gradient(145deg,#fdf9ee,#e7ead8);color:#35402c;border:1px solid #b9c0a7}.renace-card-back .loyalty-back-decoration{background:radial-gradient(circle at 85% 20%,#82906a26 0 2px,transparent 3px) 0 0/28px 28px,linear-gradient(135deg,transparent 0 64%,#82906a0b 65% 67%,transparent 68%)}.renace-card-back .loyalty-qr-plate{border:1px solid #cbd1bc}
+.renace-flip-card .card-top{padding:10px 18px 7px}.renace-flip-card .card-brand .renace-logo{width:158px;max-height:48px;margin-bottom:4px}.renace-flip-card .card-sub{font-size:7px}.renace-flip-card .card-line{margin:6px 0}.renace-flip-card .row{font-size:10px}.renace-flip-card .pill{padding:2px 7px;font-size:8px}.renace-flip-card .stamps{grid-template-columns:repeat(5,minmax(0,40px));justify-content:center;gap:5px;margin:6px 0}.renace-flip-card .stamp{font-size:13px}.renace-flip-card .note{margin:0;font-size:8px;line-height:1.3}.renace-flip-card .card-bottom{padding:6px 16px}.renace-flip-card .card-bottom p{font-size:8px;line-height:1.25}.renace-flip-card .card-bottom strong{font-size:10px}.renace-flip-card .card-bottom>span{font-size:12px}
+.moon-flip-card{aspect-ratio:1.58/1}.moon-card-back{background:radial-gradient(circle at 70% 25%,#d4af5b17 0 1px,transparent 2px) 0 0/24px 24px,linear-gradient(145deg,#17202d,#090d14);color:#eadcc5;border:1px solid #d5aa6255;box-shadow:0 20px 55px #0008}.moon-card-back .loyalty-back-decoration{background:radial-gradient(circle at 110% -20%,transparent 0 38%,#d9b86c16 39% 39.5%,transparent 40%),radial-gradient(circle at 20% 85%,#d9b86c18 0 1px,transparent 2px)}.moon-card-back .loyalty-qr-plate{border:1px solid #ddb66e}.moon-card-back .loyalty-back-logo{filter:drop-shadow(0 5px 12px #0008)}
+[data-tenant="mooncoffee"] .language-switcher{border-color:#d5aa6245;background:#0d1520cc}[data-tenant="mooncoffee"] .language-switcher button{color:#bcb09d}[data-tenant="mooncoffee"] .language-switcher button[aria-pressed="true"]{background:#d1a75f;color:#111722}[data-tenant="santofe"] .language-switcher{border-color:#a9afa0;background:#f5f7efcc}[data-tenant="santofe"] .language-switcher button[aria-pressed="true"]{background:#6d5c61;color:#f6f7f1}
+.tenant-landing{position:relative}.renace-landing::before{content:"";position:absolute;left:-8vw;top:-50px;width:210px;height:210px;border:1px solid #85916e22;border-radius:50%;box-shadow:0 0 0 28px #85916e09;pointer-events:none}[data-tenant="renace"] .editorial-steps>div{padding:20px;border-top:2px solid #73805f;background:#fffaf0}[data-tenant="santofe"] .santofe-landing{align-items:center}[data-tenant="santofe"] .santofe-landing .intro{padding-left:24px;border-left:1px solid #807176}[data-tenant="santofe"] .santofe-landing h1{font-weight:400;letter-spacing:-.035em}[data-tenant="santofe"] .editorial-steps{gap:12px;border:0}[data-tenant="santofe"] .editorial-steps>div{padding:22px;border:1px solid #c7ccc0;border-radius:18px;background:#f8f9f3}[data-tenant="mooncoffee"] .moon-steps{border-color:#d5aa6230}[data-tenant="mooncoffee"] .moon-steps>div{padding:20px;border:1px solid #d5aa6225;border-radius:18px;background:#101722aa}
+@supports not (transform-style:preserve-3d){.loyalty-flip-inner{transform:none!important}.loyalty-card-back{display:none;transform:none}.loyalty-flip-card.is-flipped .loyalty-card-front{display:none}.loyalty-flip-card.is-flipped .loyalty-card-back{display:flex}}
+@media(prefers-reduced-motion:reduce){.loyalty-flip-inner{transition:none}}
+@media(max-width:760px){.compact-customer-head{align-items:start;margin-bottom:9px}.compact-customer-head h1{font-size:27px}.compact-customer-head .sync-status{font-size:9px}.renace-flip-card{aspect-ratio:1.24/1}.moon-flip-card{aspect-ratio:1.42/1}.loyalty-back-logo{left:10px;top:8px;width:72px;height:36px}.loyalty-qr-note{right:11px;bottom:9px;font-size:7px}.loyalty-qr-plate .qr svg{width:122px;height:122px}.loyalty-quick-actions{margin-top:10px;gap:5px}.loyalty-quick-actions button{padding-inline:5px;font-size:10px}.loyalty-card-details{margin-top:6px}.loyalty-detail-grid{grid-template-columns:1fr}.loyalty-detail-grid>div:last-child{grid-column:auto}.premium-customer .stamp-picker{padding:11px;margin-top:10px}.premium-customer .stamp-picker h3{font-size:14px;margin-bottom:8px}.premium-customer .stamp-option>span{width:34px;height:34px}.renace-landing::before{display:none}[data-tenant="santofe"] .santofe-landing .intro{padding-left:16px}[data-tenant="santofe"] .editorial-steps{grid-template-columns:1fr}}
+
+/* Mobile interaction polish: no text-selection flash while keeping keyboard focus. */
+.loyalty-flip-card,.loyalty-flip-card *{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.loyalty-flip-card *::selection{background:transparent;color:inherit}
+.stamp.gift{overflow:visible;padding:0;background:transparent;border-color:transparent}.stamp.gift .reward-badge{display:block;width:100%;height:100%;max-width:100%;object-fit:contain;border-radius:50%;clip-path:circle(49% at 50% 50%);transform:none}
+@media(max-width:760px){
+ body[data-route="tarjeta"] header{padding:6px 10px;gap:5px;flex-wrap:nowrap}
+ body[data-route="tarjeta"] .brand{width:64px;flex:0 0 64px}
+ body[data-route="tarjeta"] nav{min-width:0;justify-content:flex-end;gap:2px;font-size:8.5px;line-height:1.1;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+ body[data-route="tarjeta"] nav::-webkit-scrollbar{display:none}
+ body[data-route="tarjeta"] nav>a,body[data-route="tarjeta"] nav>button{min-height:36px;padding:4px 2px;white-space:nowrap}
+ body[data-route="tarjeta"] .language-switcher{padding:2px;order:0;margin:0}
+ body[data-route="tarjeta"] .language-switcher button{min-width:26px;min-height:30px;padding:3px 4px}
+ body[data-route="tarjeta"] main{padding:9px 12px 10px}
+ body[data-route="tarjeta"] footer{flex-direction:row;align-items:center;padding:7px 14px;gap:9px;font-size:7px}
+ body[data-route="tarjeta"] footer span:last-child{white-space:nowrap}
+ body[data-route="tarjeta"] .premium-customer{display:flex;min-height:0;flex-direction:column}
+ body[data-route="tarjeta"] .compact-customer-head,body[data-route="tarjeta"] .santofe-customer-intro{margin-bottom:7px}
+ body[data-route="tarjeta"] .loyalty-flip-button,body[data-route="tarjeta"] .santofe-flip-button{margin-top:7px;min-height:35px;padding:6px 14px}
+ body[data-route="tarjeta"] .loyalty-quick-actions{margin:8px auto 5px}
+ body[data-route="tarjeta"] .premium-customer>.help-actions{margin:5px auto}
+ body[data-route="tarjeta"] .loyalty-card-details{margin-top:4px}
+ body[data-route="tarjeta"] .loyalty-card-details summary{padding:10px 14px}
+ body[data-route="tarjeta"] .santofe-flip-wrap{margin-top:0}
+}
+@media(max-width:370px){body[data-route="tarjeta"] .brand{width:66px;flex-basis:66px}body[data-route="tarjeta"] nav{gap:4px;font-size:8px}.loyalty-quick-actions button{font-size:9px}.compact-customer-head h1{font-size:23px}}
+
+/* Card geometry comes from tenant.cardLayout and remains stable at every width. */
+.stamps[data-stamp-columns="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}.stamps[data-stamp-columns="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
+[data-tenant="mooncoffee"] .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,54px));justify-content:space-between;gap:10px 14px}
+[data-tenant="santofe"] .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,44px))}
+@media(max-width:760px){
+ html[data-tenant] body header{z-index:100}
+ [data-tenant="mooncoffee"] header nav{border-radius:16px;background:#111722f7}
+ [data-tenant="mooncoffee"] .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,43px));gap:7px 10px}
+ [data-tenant="santofe"] .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,36px));gap:5px 7px}
+ .moon-flip-card{aspect-ratio:1.32/1}
+ body[data-route="tarjeta"] header nav{display:none!important;position:absolute;overflow:visible!important;font-size:13px;line-height:1.35}
+ body[data-route="tarjeta"] header nav.is-open{display:grid!important}
+ body[data-route="tarjeta"] .language-switcher{order:0}
+}
+
+/* Final physical-card proportions and safe areas for the customer pass. */
+.renace-flip-card,.moon-flip-card{aspect-ratio:1.52/1}
+.loyalty-card-front>.card,.loyalty-card-back{
+ border-radius:24px;
+ box-shadow:0 18px 42px #27301f24,0 3px 10px #27301f12;
+}
+.loyalty-card-back{padding:14px 18px}
+.loyalty-back-logo{left:18px;top:15px;width:92px;height:42px}
+.loyalty-qr-plate{padding:7px;border-radius:18px}
+.loyalty-qr-plate .qr{padding:6px}
+.loyalty-qr-note{right:18px;bottom:15px}
+.qr-brightness-help{left:18px;bottom:15px}
+
+.renace-flip-card .loyalty-card-front>.card{display:flex;flex-direction:column}
+.renace-flip-card .card-top{display:grid;grid-template-rows:auto auto auto auto 1fr auto;align-content:center;flex:1;min-height:0;padding:12px 20px 9px}
+.renace-flip-card .card-brand .renace-logo{width:164px;max-height:46px;margin-bottom:2px}
+.renace-flip-card .card-line{margin:5px 0}
+.renace-flip-card .stamps{align-self:center;grid-template-columns:repeat(5,minmax(0,42px));gap:6px 9px;margin:6px 0}
+.renace-flip-card .card-bottom{flex:0 0 auto;padding:7px 18px}
+.renace-flip-card .stamp.gift .reward-badge{clip-path:none}
+
+[data-tenant="mooncoffee"] .moon-loyalty-card{padding:22px 26px 19px;border-radius:24px}
+[data-tenant="mooncoffee"] .moon-loyalty-card::before{inset:9px;border-radius:17px}
+[data-tenant="mooncoffee"] .moon-card-orbit{right:18px;top:18px;width:180px;height:180px}
+[data-tenant="mooncoffee"] .moon-card-orbit::after{left:38px;bottom:34px;width:50px;height:50px}
+[data-tenant="mooncoffee"] .moon-card-owner{margin:18px 0 13px}
+[data-tenant="mooncoffee"] .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,52px));gap:9px 14px}
+[data-tenant="mooncoffee"] .moon-card-footer{margin-top:13px;padding:11px 4px 0}
+
+[data-tenant="santofe"] .santofe-flip-card{aspect-ratio:1.58/1}
+[data-tenant="santofe"] .santofe-digital-card{border-radius:24px;box-shadow:0 18px 42px #50424624,0 3px 10px #50424612}
+[data-tenant="santofe"] .santofe-card-front{padding:19px 22px;gap:9px}
+[data-tenant="santofe"] .santofe-card-front::after{right:12px;top:12px;width:148px;height:148px}
+[data-tenant="santofe"] .santofe-card-stamps{gap:8px 12px}
+[data-tenant="santofe"] .santofe-card-back{padding:14px 20px}
+[data-tenant="santofe"] .santofe-back-brand{left:18px;top:15px}
+[data-tenant="santofe"] .santofe-qr-note{right:18px;bottom:15px}
+[data-tenant="santofe"] .santofe-card-back .qr-brightness-help{left:18px;bottom:15px}
+
+@media(max-width:760px){
+ .renace-flip-card,.moon-flip-card{aspect-ratio:1.5/1}
+ .loyalty-card-front>.card,.loyalty-card-back{border-radius:21px}
+ .loyalty-card-back{padding:10px 14px}
+ .loyalty-back-logo{left:14px;top:11px;width:76px;height:34px}
+ .loyalty-qr-note{right:14px;bottom:11px}
+ .qr-brightness-help{left:14px;bottom:11px}
+ .renace-flip-card .card-top{padding:8px 14px 6px}
+ .renace-flip-card .card-brand .renace-logo{width:132px;max-height:37px;margin-bottom:1px}
+ .renace-flip-card .card-sub{font-size:6px}
+ .renace-flip-card .card-line{margin:3px 0}
+ .renace-flip-card .row{font-size:9px}
+ .renace-flip-card .stamps{grid-template-columns:repeat(5,minmax(0,37px));gap:4px 7px;margin:4px 0}
+ .renace-flip-card .stamp{font-size:11px}
+ .renace-flip-card .note{font-size:7px;line-height:1.2}
+ .renace-flip-card .card-bottom{padding:5px 14px}
+ .renace-flip-card .card-bottom p{font-size:7px}
+ .renace-flip-card .card-bottom strong{font-size:9px}
+ [data-tenant="mooncoffee"] .moon-loyalty-card{padding:12px 15px 11px;border-radius:21px}
+ [data-tenant="mooncoffee"] .moon-loyalty-card::before{inset:7px;border-radius:15px}
+ [data-tenant="mooncoffee"] .moon-card-orbit{right:10px;top:10px;width:142px;height:142px}
+ [data-tenant="mooncoffee"] .moon-card-orbit::after{left:29px;bottom:27px;width:38px;height:38px}
+ [data-tenant="mooncoffee"] .moon-card-logo{width:108px;min-height:40px;padding:5px 8px;border-radius:12px}
+ [data-tenant="mooncoffee"] .moon-card-head>span{max-width:82px;font-size:6px}
+ [data-tenant="mooncoffee"] .moon-card-owner{margin:7px 0 6px}
+ [data-tenant="mooncoffee"] .moon-card-owner small{font-size:6px}
+ [data-tenant="mooncoffee"] .moon-card-owner strong{font-size:17px}
+ [data-tenant="mooncoffee"] .moon-card-count b{font-size:27px}
+ [data-tenant="mooncoffee"] .moon-card-count span{font-size:9px}
+ [data-tenant="mooncoffee"] .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,36px));gap:6px 13px}
+ [data-tenant="mooncoffee"] .moon-card-stamps .stamp{font-size:9px}
+ [data-tenant="mooncoffee"] .moon-card-footer{margin-top:6px;padding:6px 3px 0;font-size:8px}
+ [data-tenant="mooncoffee"] .moon-card-footer b{font-size:18px}
+ [data-tenant="santofe"] .santofe-flip-card{aspect-ratio:1.56/1}
+ [data-tenant="santofe"] .santofe-digital-card{border-radius:21px}
+ [data-tenant="santofe"] .santofe-card-front{padding:13px 15px;gap:6px}
+ [data-tenant="santofe"] .santofe-card-front::after{right:9px;top:9px;width:112px;height:112px}
+ [data-tenant="santofe"] .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,35px));gap:4px 7px}
+ [data-tenant="santofe"] .santofe-card-back{padding:10px 14px}
+ [data-tenant="santofe"] .santofe-back-brand{left:14px;top:11px}
+ [data-tenant="santofe"] .santofe-back-brand img{width:48px;height:48px}
+ [data-tenant="santofe"] .santofe-qr-note{right:14px;bottom:11px}
+ [data-tenant="santofe"] .santofe-card-back .qr-brightness-help{left:14px;bottom:11px}
 }

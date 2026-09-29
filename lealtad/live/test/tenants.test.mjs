@@ -50,14 +50,18 @@ test('two tenants: independent identities, QR, PIN, exports, updates, daily visi
  }
 });
 test('MOON browser: eight stamps, identity, social links, PNG QR, styles, guides, XLSX and installation',async t=>{
- const browser=await chromium.launch({headless:true,channel:'msedge'});t.after(()=>browser.close());const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const browser=await chromium.launch({headless:true,channel:'msedge'});t.after(()=>browser.close());const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];page.setDefaultTimeout(8000);page.on('pageerror',e=>errors.push(e.message));
  const phone='668'+String(Date.now()).slice(-7),registration=await ctx.request.post(bases[1]+'/api/register',{data:{name:'Renace es mi nombre',phone,pin:'4826'}});assert.equal(registration.status(),201);const user=(await registration.json()).user;
  await ctx.addCookies((await ctx.cookies()).map(c=>({...c,secure:false})));
  const admin=await req(1,'/api/login/staff',{body:{username:'admin_moon_local',password:'Moon-admin-local928!'}});
  for(let n=0;n<7;n++)await req(1,`/api/admin/customers/${user.id}/stamps`,{cookie:admin.cookie,body:{delta:1,expectedStamps:n,reason:'Moon PNG local'}});
- await page.goto(bases[1]+'/#tarjeta');await page.waitForSelector('#qr svg');await page.waitForSelector('#app-loader',{state:'detached'});
- assert.equal(await page.locator('.stamps .stamp').count(),8);assert.equal(await page.locator('.stamp.filled').count(),7);assert.match(await page.locator('.welcome h1').innerText(),/Renace es mi nombre/);assert.doesNotMatch(await page.locator('footer').innerText(),/renace/i);
+ await page.goto(bases[1]+'/#tarjeta');await page.waitForSelector('#qr svg',{state:'attached'});await page.waitForSelector('#app-loader',{state:'detached'});
+ assert.equal(await page.locator('.stamps .stamp').count(),8);assert.equal(await page.locator('.stamp.filled').count(),7);assert.match(await page.locator('.compact-customer-head h1').innerText(),/Renace es mi nombre/);assert.doesNotMatch(await page.locator('footer').innerText(),/renace/i);
+  assert.equal(await page.locator('.moon-loyalty-card').count(),1);assert.equal(await page.locator('.moon-flip-card').count(),1);assert.equal(await page.locator('.loyalty-qr-plate #qr svg').count(),1);
+  assert.match(await page.locator('.compact-customer-head h1').innerText(),/^Hola,/);await page.click('#flip-card');assert.equal(await page.locator('.moon-flip-card').getAttribute('aria-pressed'),'true');
+  const visual=await page.evaluate(()=>({body:getComputedStyle(document.body).backgroundColor,stars:getComputedStyle(document.body,'::before').backgroundImage,qr:getComputedStyle(document.querySelector('.loyalty-qr-plate')).backgroundColor}));assert.match(visual.stars,/radial-gradient/);assert.match(visual.qr,/rgb\(255, 255, 255\)/);assert.notEqual(visual.body,'rgb(255, 255, 255)');
  assert.equal(await page.locator('.social a').count(),3);assert.equal(await page.locator('.social a').first().getAttribute('href'),'https://www.facebook.com/profile.php?id=61592504380202');
+ await page.locator('.loyalty-card-details summary').click();
  await page.click('[data-stamp-style="moon"]');await page.waitForSelector('[data-stamp-style="moon"]:not(:disabled)');await page.reload();await page.waitForSelector('.stamp.filled img');
  const card=(await(await ctx.request.get(bases[1]+'/api/card')).json()).card;assert.equal(card.stampStyle,'moon');
  const download=page.waitForEvent('download');await page.click('#download-card');const d=await download;const chunks=[];for await(const ch of await d.createReadStream())chunks.push(ch);const encoded=Buffer.concat(chunks).toString('base64');
@@ -65,9 +69,10 @@ test('MOON browser: eight stamps, identity, social links, PNG QR, styles, guides
  await page.click('#role-guide');assert.match(await page.locator('dialog').innerText(),/8 sellos/);assert.match(await page.locator('dialog').innerText(),/Clásico o Luna/);assert.doesNotMatch(await page.locator('dialog').innerText(),/9\/9|Renace|Vaquero/);await page.keyboard.press('Escape');
  await page.click('#install-app');assert.match(await page.locator('dialog').innerText(),/MOON/);await page.keyboard.press('Escape');
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  const reduced=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'}),reducedPage=await reduced.newPage();await reducedPage.goto(bases[1]+'/');await reducedPage.waitForSelector('#app-loader',{state:'detached'});assert.equal(await reducedPage.evaluate(()=>getComputedStyle(document.body,'::after').animationName),'none');await reduced.close();
  if(process.env.MOON_SCREENSHOTS){await page.screenshot({path:process.env.MOON_SCREENSHOTS+'/moon-card.png',fullPage:true});await d.saveAs(process.env.MOON_SCREENSHOTS+'/moon-qr.png');}
  const manifest=await(await fetch(bases[1]+'/manifest.webmanifest')).json();assert.match(manifest.name,/MOON/);assert.equal(manifest.start_url,'/');assert.equal(manifest.icons[1].sizes,'192x192');
- const a=await browser.newContext();await a.request.post(bases[1]+'/api/login/staff',{data:{username:'admin_moon_local',password:'Moon-admin-local928!'}});const ap=await a.newPage();await ap.goto(bases[1]+'/#admin');await ap.waitForSelector('#export-customers');await ap.fill('#customer-search input',phone);await ap.click('#customer-search button');await ap.waitForFunction(()=>document.querySelector('tbody')?.innerText.includes('Renace es mi nombre'));
+ const a=await browser.newContext();await a.request.post(bases[1]+'/api/login/staff',{data:{username:'admin_moon_local',password:'Moon-admin-local928!'}});const ap=await a.newPage();await ap.goto(bases[1]+'/#admin');await ap.waitForSelector('#export-customers');await ap.fill('#customer-search input',phone);await ap.click('#customer-search button');await ap.waitForFunction(()=>{const section=document.querySelector('#customer-search')?.closest('section'),rows=section?.querySelectorAll('tbody tr');return rows?.length===1&&rows[0].innerText.includes('Renace es mi nombre');});
  const promise=ap.waitForEvent('download');await ap.click('#export-customers');const dl=await promise,bytes=[];for await(const chunk of await dl.createReadStream())bytes.push(chunk);const wb=new ExcelJS.Workbook();await wb.xlsx.load(Buffer.concat(bytes));assert.equal(wb.worksheets[0].getCell('E5').value,8);assert.equal(wb.worksheets[0].getCell('A5').value,'Renace es mi nombre');assert.match(wb.worksheets[0].getCell('A1').value,/MOON/);
  assert.deepEqual(errors,[]);
 });

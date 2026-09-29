@@ -19,7 +19,7 @@ test('customer, tablet and admin UI', async t => {
   page.on('dialog', dialog => dialog.accept());
   const phone = `664${String(Date.now()).slice(-7)}`;
 
-  await page.goto('http://127.0.0.1:8787/renace/');
+  await page.goto('http://127.0.0.1:8787/');
   assert.equal(await page.locator('#app-loader').count(), 1);
   await page.waitForSelector('#app-loader', { state: 'detached' });
   await page.click('a[href="#registro"]');
@@ -27,11 +27,12 @@ test('customer, tablet and admin UI', async t => {
   await page.fill('[name="login"]', phone);
   await page.fill('[name="secret"]', '7634');
   await page.click('#auth-form button');
-  await page.waitForSelector('#qr svg');
+  await page.waitForSelector('#qr svg', { state: 'attached' });
   assert.match(await page.locator('.pill').innerText(), /0 \/ 9/);
-  assert.match(await page.locator('.welcome').innerText(), new RegExp(phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')));
+  await page.locator('.loyalty-card-details summary').click();
+  assert.match(await page.locator('.loyalty-card-details').innerText(), new RegExp(phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')));
   assert.equal(await page.locator('#share-card').innerText(), 'Compartir QR');
-  assert.match(await page.locator('#download-card').innerText(), /Descargar QR/);
+  assert.equal(await page.locator('#download-card').innerText(), 'Descargar');
   assert.equal(await page.evaluate(() => typeof window.jsQR), 'function');
   const decodedQr = await page.evaluate(async () => {
     const source = new XMLSerializer().serializeToString(document.querySelector('#qr svg'));
@@ -76,6 +77,7 @@ test('customer, tablet and admin UI', async t => {
   assert.equal(manifest.short_name, 'Renace');
   assert.equal(manifest.display, 'standalone');
 
+  await page.click('#nav-menu-toggle');
   await page.click('#account-link');
   await page.fill('[name="currentSecret"]', '7634');
   await page.fill('[name="newSecret"]', '7635');
@@ -84,6 +86,8 @@ test('customer, tablet and admin UI', async t => {
   await page.waitForFunction(() => document.querySelector('#toast')?.textContent.includes('actualizado'));
 
   await page.click('#logout');
+  await page.waitForFunction(() => !document.querySelector('a[href="#equipo"]')?.hasAttribute('hidden'));
+  await page.click('#nav-menu-toggle');
   await page.click('a[href="#equipo"]');
   await page.fill('[name="login"]', 'mostrador_local');
   await page.fill('[name="secret"]', 'Staff-test-928!');
@@ -97,6 +101,8 @@ test('customer, tablet and admin UI', async t => {
   assert.match(await page.locator('.reward').innerText(), /sello de hoy/);
 
   await page.click('#logout');
+  await page.waitForFunction(() => !document.querySelector('a[href="#equipo"]')?.hasAttribute('hidden'));
+  await page.click('#nav-menu-toggle');
   await page.click('a[href="#equipo"]');
   await page.fill('[name="login"]', 'admin_local');
   await page.fill('[name="secret"]', 'Admin-test-928!');

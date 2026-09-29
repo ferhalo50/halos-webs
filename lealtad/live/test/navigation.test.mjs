@@ -4,17 +4,27 @@ import { chromium } from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-pri
 
 const tenants=[
   {base:'http://127.0.0.1:8787',slug:'renace',admin:['admin_local','Admin-test-928!'],employee:['mostrador_local','Staff-test-928!']},
-  {base:'http://127.0.0.1:8788',slug:'mooncoffee',admin:['admin_moon_local','Moon-admin-local928!'],employee:['moon_staff_local','Moon-staff-local928!']}
+  {base:'http://127.0.0.1:8788',slug:'mooncoffee',admin:['admin_moon_local','Moon-admin-local928!'],employee:['moon_staff_local','Moon-staff-local928!']},
+  {base:'http://127.0.0.1:8789',slug:'santofe',admin:['admin_santofe_local','Santofe-admin-local928!'],employee:['santofe_staff_local','Santofe-staff-local928!']}
 ];
 
 async function localCookies(context){
   await context.addCookies((await context.cookies()).map(cookie=>({...cookie,secure:false})));
 }
 
-async function expectNavigation(page,{authenticated}){
-  const home=page.locator('#home-link'),staff=page.locator('#staff-link');
+async function expectNavigation(page,{role='public'}){
+  const authenticated=role!=='public',home=page.locator('#home-link'),staff=page.locator('#staff-link'),counter=page.locator('#counter-link'),admin=page.locator('#admin-link'),account=page.locator('#account-link');
+  assert.equal(await page.locator('#nav-menu-toggle').isVisible(),true);
+  await page.click('#nav-menu-toggle');
+  assert.equal(await page.locator('#nav-menu-toggle').getAttribute('aria-expanded'),'true');
   assert.equal(await home.isVisible(),authenticated);
   assert.equal(await staff.isVisible(),!authenticated);
+  assert.equal(await counter.isVisible(),['employee','admin'].includes(role));
+  assert.equal(await admin.isVisible(),role==='admin');
+  assert.equal(await account.isVisible(),authenticated);
+  assert.equal(await page.locator('.header-utilities [data-language-toggle]').isVisible(),true);
+  assert.equal(await page.locator('#primary-navigation [data-language-toggle],#primary-navigation #logout').count(),0);
+  assert.equal(await page.locator('.header-utilities #logout').isVisible(),authenticated);
   assert.equal(await home.getAttribute('href'),'/');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
 }
@@ -24,16 +34,16 @@ test('shared authenticated navigation stays inside each tenant for every role',a
   for(const tenant of tenants){
     const publicContext=await browser.newContext({viewport:{width:390,height:844}}),publicPage=await publicContext.newPage();
     await publicPage.goto(tenant.base+'/');await publicPage.waitForSelector('#app-loader',{state:'detached'});
-    await expectNavigation(publicPage,{authenticated:false});
+    await expectNavigation(publicPage,{role:'public'});
     assert.equal(await publicPage.locator('#staff-link').getAttribute('href'),'#equipo');
     await publicContext.close();
 
     const customerContext=await browser.newContext({viewport:{width:390,height:844}});
-    const phone=(tenant.slug==='renace'?'663':'667')+String(Date.now()).slice(-7);
+    const phone=({renace:'663',mooncoffee:'667',santofe:'665'}[tenant.slug])+String(Date.now()).slice(-7);
     const registration=await customerContext.request.post(tenant.base+'/api/register',{data:{name:'Navegación '+tenant.slug,phone,pin:'4826'}});
     assert.equal(registration.status(),201);await localCookies(customerContext);
-    const customerPage=await customerContext.newPage();await customerPage.goto(tenant.base+'/#tarjeta');await customerPage.waitForSelector('#qr svg');
-    await expectNavigation(customerPage,{authenticated:true});
+    const customerPage=await customerContext.newPage();await customerPage.goto(tenant.base+'/#tarjeta');await customerPage.waitForSelector('#qr svg',{state:'attached'});
+    await expectNavigation(customerPage,{role:'customer'});
     await customerPage.click('#home-link');await customerPage.waitForURL(tenant.base+'/');
     assert.equal(new URL(customerPage.url()).origin,tenant.base);
     await customerContext.close();
@@ -46,8 +56,15 @@ test('shared authenticated navigation stays inside each tenant for every role',a
       const login=await context.request.post(tenant.base+'/api/login/staff',{data:{username:credentials[0],password:credentials[1]}});
       assert.equal(login.status(),200,`${tenant.slug} ${role}`);await localCookies(context);
       const page=await context.newPage();await page.goto(tenant.base+'/#'+route);await page.waitForSelector(selector);
-      await expectNavigation(page,{authenticated:true});
+      await expectNavigation(page,{role});
       assert.equal(new URL(await page.locator('#home-link').evaluate(link=>link.href)).origin,tenant.base);
+      if(role==='employee'){
+        await page.click('#account-link');await page.waitForSelector('#secret-form');await page.click('#nav-menu-toggle');assert.equal(await page.locator('#counter-link').isVisible(),true);await page.click('#counter-link');await page.waitForSelector('#lookup');
+        assert.equal((await context.request.get(tenant.base+'/api/admin/dashboard')).status(),403);
+      }else{
+        await page.click('#counter-link');await page.waitForSelector('#lookup');
+        const lookup=await context.request.get(tenant.base+'/api/staff/card?value='+encodeURIComponent(phone));assert.equal(lookup.status(),200);
+      }
       await context.close();
     }
   }
