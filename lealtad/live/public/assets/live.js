@@ -44,11 +44,12 @@ async function createSavedCard(){
     canvas.width=1080;canvas.height=1580;
     context.fillStyle=tenant.colors.cream;context.fillRect(0,0,canvas.width,canvas.height);
     context.strokeStyle='#d8d4c1';context.lineWidth=4;context.strokeRect(34,34,1012,1512);
-    const logoWidth=720,logoHeight=logoWidth*(logoImage.height/logoImage.width);
-    context.drawImage(logoImage,(canvas.width-logoWidth)/2,70,logoWidth,logoHeight);
-    context.fillStyle=tenant.colors.ink;context.textAlign='center';context.font='700 25px sans-serif';context.letterSpacing='7px';context.fillText(tr('TU TARJETA DE LEALTAD'),540,400);
-    context.font='56px Georgia';context.fillText(savedCard.name,540,475,960);
-    context.font='28px sans-serif';context.fillText(tr(`Celular: ${formatPhone(savedCard.phone)}`),540,525);
+    const santofe=tenant.slug==='santofe',logoWidth=santofe?300:720,logoHeight=logoWidth*(logoImage.height/logoImage.width);
+    context.drawImage(logoImage,(canvas.width-logoWidth)/2,santofe?40:70,logoWidth,logoHeight);
+    context.fillStyle=tenant.colors.ink;context.textAlign='center';context.font='700 25px sans-serif';context.letterSpacing=santofe?'4px':'7px';context.fillText(tr('TU TARJETA DE LEALTAD'),540,santofe?375:400);
+    if(santofe)context.letterSpacing='0px';
+    context.font='56px Georgia';context.fillText(savedCard.name,540,santofe?450:475,santofe?900:960);
+    context.font='28px sans-serif';context.fillText(tr(`Celular: ${formatPhone(savedCard.phone)}`),540,santofe?505:525);
     context.fillStyle='#ffffff';context.fillRect(216,565,648,648);context.drawImage(qrImage,236,585,608,608);
     await drawSavedStamps(context,savedCard);
     context.fillStyle=tenant.colors.ink;context.font='24px sans-serif';context.fillText(tr(`Sellos al guardar: ${savedCard.stamps}/${savedCard.goal} · ${new Date().toLocaleDateString(window.LoyaltyI18n?.locale==='en'?'en-US':'es-MX')}`),540,1420);
@@ -96,14 +97,15 @@ document.addEventListener('click',async event=>{
 });
 async function drawSavedStamps(ctx,card){
  const style=stampStyles[validStampStyle(card.stampStyle)],img=style.src?await loadImage(style.src):null;
+ const moon=tenant.slug==='mooncoffee'&&validStampStyle(card.stampStyle)==='moon';
   const total=card.goal+(cardLayout.rewardSlot?1:0),columns=cardLayout.stampColumns,rows=Math.ceil(total/columns),radius=rows>1?34:43;
   const cellWidth=columns===4?170:145,startX=540-((columns-1)*cellWidth/2),startY=rows>1?1270:1318,rowGap=86;
   const reward=cardLayout.rewardSlot?await loadImage('/assets/renace-gratis.png'):null;
   for(let i=0;i<total;i++){
     const column=i%columns,row=Math.floor(i/columns),x=startX+column*cellWidth,y=startY+row*rowGap;
     if(cardLayout.rewardSlot&&i===card.goal){const size=radius*2.05;ctx.save();ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.clip();ctx.drawImage(reward,x-size/2,y-size/2,size,size);ctx.restore();continue;}
-    ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i<card.stamps?tenant.colors.ink:tenant.colors.cream;ctx.fill();ctx.strokeStyle='#b8b89c';ctx.lineWidth=2;ctx.stroke();
-    if(i<card.stamps&&img){const max=radius*1.72,scale=Math.min(max/img.width,max/img.height);ctx.drawImage(img,x-img.width*scale/2,y-img.height*scale/2,img.width*scale,img.height*scale);}
+    ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i<card.stamps?(moon?'#111b2b':tenant.colors.ink):tenant.colors.cream;ctx.fill();ctx.strokeStyle=i<card.stamps&&moon?'#b58d49':'#b8b89c';ctx.lineWidth=2;ctx.stroke();
+    if(i<card.stamps&&img){const max=radius*(moon?2:1.72),scale=Math.min(max/img.width,max/img.height);ctx.drawImage(img,x-img.width*scale/2,y-img.height*scale/2,img.width*scale,img.height*scale);}
     else{ctx.fillStyle=i<card.stamps?'#ffffff':'#72785f';ctx.font=`${Math.round(radius*.74)}px sans-serif`;ctx.fillText(i<card.stamps?'✓':String(i+1),x,y+radius*.27);}
   }
 }

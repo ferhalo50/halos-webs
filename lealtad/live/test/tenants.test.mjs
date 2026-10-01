@@ -63,7 +63,7 @@ test('MOON browser: eight stamps, identity, social links, PNG QR, styles, guides
   assert.equal(await page.locator('.moon-loyalty-card').count(),1);assert.equal(await page.locator('.moon-flip-card').count(),1);assert.equal(await page.locator('.loyalty-qr-plate #qr svg').count(),1);
   assert.match(await page.locator('.compact-customer-head h1').innerText(),/^Hola,/);await page.click('#flip-card');assert.equal(await page.locator('.moon-flip-card').getAttribute('aria-pressed'),'true');
   const visual=await page.evaluate(()=>({body:getComputedStyle(document.body).backgroundColor,stars:getComputedStyle(document.body,'::before').backgroundImage,qr:getComputedStyle(document.querySelector('.loyalty-qr-plate')).backgroundColor}));assert.match(visual.stars,/radial-gradient/);assert.match(visual.qr,/rgb\(255, 255, 255\)/);assert.notEqual(visual.body,'rgb(255, 255, 255)');
- assert.equal(await page.locator('.social a').count(),3);assert.equal(await page.locator('.social a').first().getAttribute('href'),'https://www.facebook.com/profile.php?id=61592504380202');
+ assert.equal(await page.locator('.social a').count(),4);assert.equal(await page.locator('.social a').first().getAttribute('href'),'https://www.facebook.com/profile.php?id=61592504380202');assert.equal(await page.locator('.social a').last().getAttribute('href'),'https://maps.app.goo.gl/CXaEb4hZ4nK5ctQ17');
  await page.locator('.loyalty-card-details summary').click();
  await page.click('[data-stamp-style="moon"]');await page.waitForSelector('[data-stamp-style="moon"]:not(:disabled)');await page.reload();await page.waitForSelector('.stamp.filled img');
  const card=(await(await ctx.request.get(bases[1]+'/api/card')).json()).card;assert.equal(card.stampStyle,'moon');

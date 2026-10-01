@@ -740,7 +740,7 @@ html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-count span{fon
 html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,clamp(38px,12cqw,68px)));justify-content:space-evenly;align-content:center;gap:5px 12px;flex:none;margin:0}
 html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp{position:relative;width:100%;padding:2px;border:1px solid #aa906c;background:transparent;color:#39291e;font-size:clamp(18px,6cqw,30px)}
 html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp.filled{background:#503725;color:#fff6e6;border:2px solid #503725;box-shadow:none}
-html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp.filled:has(.stamp-sticker){background:#ead9b9}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp.filled:has(.stamp-sticker){background:radial-gradient(circle at 36% 26%,#25364e,#111b2b 60%,#070d17);border:1px solid #b58d49}
 html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp-sticker{filter:none}
 .moon-stamp-cup{width:100%;height:100%;object-fit:contain;opacity:.65}
 .stamp-slot-number{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -826,4 +826,11 @@ html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-head{transform
  html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:3px;padding-bottom:2px}
  html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{height:36px}
  html[data-tenant="renace"] .renace-loyalty-card .card-bottom{padding-block:3px}
+}
+/* Let the client content, footer and one safe-area-aware navigation reserve share the viewport. */
+@media(max-width:760px){
+ html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"] main{min-height:0}
+ html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"] .compact-customer-head{margin-bottom:8px}
+ html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"] .premium-customer>.help-actions{margin-block:0 8px}
+ html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"]>footer{padding-block:6px;row-gap:3px}
 }

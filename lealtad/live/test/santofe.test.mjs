@@ -130,11 +130,13 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   await page.locator('#santofe-flip-card').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#santofe-flip-card').getAttribute('aria-pressed'),'false');
   assert.equal(await page.locator('.stamps .stamp').count(),10);
   assert.equal(await page.locator('.stamp-picker').count(),0);
-  assert.equal(await page.locator('.social a').count(),3);
+  assert.equal(await page.locator('.social a').count(),5);
   assert.deepEqual(await page.locator('.social a').evaluateAll(nodes=>nodes.map(node=>node.href)),[
     'https://www.facebook.com/profile.php?id=61578395980108',
     'https://www.instagram.com/santofe_mx/',
-    'https://www.tiktok.com/@santofecafe'
+    'https://www.tiktok.com/@santofecafe',
+    'https://maps.app.goo.gl/rdBsjChh92f7uXsj9',
+    'https://maps.app.goo.gl/1hbD3RYi4vcQUjVB8'
   ]);
   assert.match(await page.locator('body').innerText(),/Pet friendly/i);
   assert.doesNotMatch(await page.locator('body').innerText(),/Renace|MOON Coffee/i);

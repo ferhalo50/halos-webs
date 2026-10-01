@@ -22,7 +22,7 @@ export const TENANTS={
   pwaIcons:[{src:'/assets/moon/icon-moon.png',sizes:'any',type:'image/png'},{src:'/assets/moon/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},{src:'/assets/moon/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any'}],
   colors:{cream:'#fbf3e4',ink:'#39291e',accent:'#bd823d'},
   stampStyles:{classic,moon:{name:'Luna',src:'/assets/stamps/stamp-moon.svg'}},
-  socialLinks:[{label:'Facebook',url:'https://www.facebook.com/profile.php?id=61592504380202'},{label:'Instagram',url:'https://www.instagram.com/moon.coffee.tj/'},{label:'TikTok',url:'https://www.tiktok.com/@moon.coffee.tj0'}],
+  socialLinks:[{label:'Facebook',url:'https://www.facebook.com/profile.php?id=61592504380202'},{label:'Instagram',url:'https://www.instagram.com/moon.coffee.tj/'},{label:'TikTok',url:'https://www.tiktok.com/@moon.coffee.tj0'},{label:'Cómo llegar',url:'https://maps.app.goo.gl/CXaEb4hZ4nK5ctQ17'}],
   address:'',texts:{concept:'La 9ª bebida es gratis.',ready:'Bebida gratis disponible.',tagline:'Tu pausa favorita, bajo la misma luna.'},
   replacements:[
    ['Renace Café Shop','MOON Coffee'],['RENACE CAFÉ SHOP','MOON COFFEE'],['Renace Card','MOON Coffee'],['Renace','MOON'],['RENACE','MOON'],
@@ -40,7 +40,7 @@ export const TENANTS={
   pwaIcons:[{src:'/assets/santofe/icon-192-v2.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/assets/santofe/icon-512-v2.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}],
   colors:{cream:'#e8ecde',ink:'#6f5e62',accent:'#77666a'},
   stampStyles:{santofe:{name:'Santofé',src:'/assets/santofe/mark-santofe.png'}},
-  socialLinks:[{label:'Facebook',url:'https://www.facebook.com/profile.php?id=61578395980108'},{label:'Instagram',url:'https://www.instagram.com/santofe_mx/'},{label:'TikTok',url:'https://www.tiktok.com/@santofecafe'}],
+  socialLinks:[{label:'Facebook',url:'https://www.facebook.com/profile.php?id=61578395980108'},{label:'Instagram',url:'https://www.instagram.com/santofe_mx/'},{label:'TikTok',url:'https://www.tiktok.com/@santofecafe'},{label:'Cómo llegar · Pinos',url:'https://maps.app.goo.gl/rdBsjChh92f7uXsj9'},{label:'Cómo llegar · Otay',url:'https://maps.app.goo.gl/1hbD3RYi4vcQUjVB8'}],
   address:'',texts:{concept:'El café número 11 va por nuestra cuenta.',ready:'Tu café gratis está listo.',tagline:'Coffee · Deli · Pet friendly.'},
   replacements:[
    ['Renace Café Shop','Santofé'],['RENACE CAFÉ SHOP','SANTOFÉ'],['Renace Card','Santofé'],['Renace','Santofé'],['RENACE','SANTOFÉ'],

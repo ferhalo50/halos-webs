@@ -27,6 +27,7 @@
     [/^(\d+) visitas para completar tu órbita\.$/,(_,n)=>`${n} visits to complete your orbit.`],[/^(\d+) sellos · la siguiente bebida va por nuestra cuenta$/,(_,n)=>`${n} stamps · your next drink is on us`],[/^Llevas (\d+) de (\d+) visitas\.$/,(_,a,b)=>`${a} of ${b} visits completed.`],[/^Página (\d+) de (\d+)$/,(_,a,b)=>`Page ${a} of ${b}`],[/^(\d+) resultados? · página (\d+) de (\d+)$/,(_,n,a,b)=>`${n} result${n==='1'?'':'s'} · page ${a} of ${b}`],[/^Movimientos registrados en (.+) · (\d+) en total · página (\d+) de (\d+)\.$/,(_,name,total,page,pages)=>`Activity recorded at ${name} · ${total} total · page ${page} of ${pages}.`],[/^Celular registrado: (.+)$/,(_,phone)=>`Registered mobile: ${phone}`],[/^Sello (.+)$/,(_,name)=>`Stamp ${name}`]
   ];
   Object.assign(exact,{
+    'Cómo llegar':'Directions',
     'Idioma':'Language','Principal':'Main navigation','Cargando Renace Café Shop':'Loading Renace Café Shop','Cargando MOON Coffee':'Loading MOON Coffee','Cargando Santofé':'Loading Santofé',
     'Tu momento':'Your moment','favorito empieza':'starts better','con café.':'with coffee.','ENTRA EN ÓRBITA':'ENTER ORBIT','Tu pausa':'Your break','bajo la luna.':'under the moon.','SANTOFÉ · CAFÉ & SANDWICHES':'SANTOFÉ · COFFEE & SANDWICHES','Tu café.':'Your coffee.','Tu momento.':'Your moment.',
     'Una tarjeta digital para convertir cada visita en una nueva razón para volver.':'A digital card that turns every visit into another reason to return.','Una tarjeta digital limpia y sencilla: cada café pagado suma y el número 11 va por nuestra cuenta.':'A clean and simple digital card: every paid coffee counts and coffee number 11 is on us.',
@@ -147,6 +148,7 @@
     'Confirmar ajuste':'Confirm adjustment'
   });
   patterns.push(
+    [/^Cómo llegar · (Pinos|Otay)( ↗)?$/,(_,branch,arrow)=>`Directions · ${branch}${arrow||''}`],
     [/^Con (\d+) sellos, el siguiente café es gratis\.$/,(_,n)=>`With ${n} stamps, the next coffee is free.`],
     [/^(\d+) sellos · tu siguiente café es gratis$/,(_,n)=>`${n} stamps · your next coffee is free`],
     [/^(\d+) sellos · la siguiente bebida va por nuestra cuenta(\.)?$/,(_,n,dot='')=>`${n} stamps · your next drink is on us${dot}`],
