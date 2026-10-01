@@ -179,9 +179,43 @@
     [/^¿Eliminar la cuenta de (.+)\? Se invalidarán su acceso y su QR\. El historial de actividad se conservará sin sus datos personales\.$/,(_,name)=>`Delete ${name}’s account? Their access and QR will be invalidated. Activity history will be retained without their personal data.`],
     [/^¿Eliminar la cuenta de (.+)\? Ya no podrá iniciar sesión\.$/,(_,name)=>`Delete ${name}’s account? They will no longer be able to log in.`]
   );
+  Object.assign(exact,{
+    'Tu próxima pausa favorita':'Your next favorite break',
+    'Y el 10.º café va por nuestra cuenta.':'And your tenth coffee is on us.',
+    'El café número 11 va por nuestra cuenta.':'Coffee number 11 is on us.',
+    'Tu café gratis está listo.':'Your free coffee is ready.',
+    'Bebida gratis disponible.':'Free drink available.',
+    'Tu lealtad nos inspira. Cada café comprado suma un sello.':'Your loyalty inspires us. Every purchased coffee adds one stamp.',
+    'RENACE CAFÉ SHOP · Tu momento favorito empieza con café.':'RENACE CAFÉ SHOP · Your favorite moment starts with coffee.',
+    'MOON COFFEE · Tu pausa favorita, bajo la misma luna.':'MOON COFFEE · Your favorite break, under the same moon.',
+    'Tu momento favorito empieza con café.':'Your favorite moment starts with coffee.',
+    'Tu pausa favorita, bajo la misma luna.':'Your favorite break, under the same moon.',
+    'RENACE / EQUIPO':'RENACE / TEAM','MOON / EQUIPO':'MOON / TEAM',
+    'Entrar →':'Log in →','La 9ª bebida es gratis.':'The ninth drink is free.',
+    'Código QR de tu tarjeta':'Your card QR code','Tu lealtad nos inspira. Cada café te acerca a tu próxima recompensa.':'Your loyalty inspires us. Every coffee brings your next reward closer.','Muestra tu QR en caja para sumar un sello por cada café comprado.':'Show your QR at the counter to add a stamp for every purchased coffee.','PIN temporal':'Temporary PIN','Café gratis':'Free coffee','Bebida gratis':'Free drink',
+    '¡Tu bebida gratis está listo!':'Your free drink is ready!',
+    'Bebida canjeada.':'Drink redeemed.','Sello registrado':'Stamp added','Café canjeado':'Coffee redeemed',
+    'Bebida canjeada. Empieza un nuevo recorrido.':'Drink redeemed. A new journey begins.',
+    '02 / SU MOMENTO RENACE':'02 / THEIR RENACE MOMENT',
+    '02 / SU MOMENTO MOON':'02 / THEIR MOON MOMENT',
+    '02 / SU MOMENTO SANTOFÉ':'02 / THEIR SANTOFÉ MOMENT',
+    'Consulta tu saldo actual en la app o en mostrador.':'Check your current balance in the app or at the counter.',
+    'No pudimos generar la tarjeta.':'We could not generate the card.',
+    '. Quedará en':'. It will end at'
+  });
+  patterns.push(
+    [/^(.+) · Inicio$/,(_,name)=>`${name} · Home`],
+    [/^Mi tarjeta de lealtad de (.+)$/, (_,name)=>`My loyalty card for ${name}`],
+    [/^Mi tarjeta (.+)$/,(_,name)=>`My card ${name}`],
+    [/^Celular: (.+)$/,(_,phone)=>`Mobile: ${phone}`],
+    [/^Sellos al guardar: (.+)$/,(_,balance)=>`Stamps when saved: ${balance}`],
+    [/^(Café gratis|Bebida gratis) disponible$/,(_,reward)=>`${reward==='Café gratis'?'Free coffee':'Free drink'} available`],
+    [/^Tarjeta de lealtad (.+) de (.+)$/,(_,business,name)=>`Loyalty card for ${name} at ${business}`],
+    [/^Tarjeta de lealtad de (.+)$/,(_,name)=>`Loyalty card for ${name}`]
+  );
   let locale='es';try{if(localStorage.getItem(STORAGE_KEY)==='en')locale='en';}catch{}
   function translate(value){if(locale!=='en'||typeof value!=='string')return value;const trimmed=value.trim();if(!trimmed)return value;let result=exact[trimmed];if(!result){for(const [pattern,replacer] of patterns){if(pattern.test(trimmed)){result=trimmed.replace(pattern,replacer);break;}}}return result?value.replace(trimmed,result):value;}
-  function translateNode(node){if(node.nodeType===Node.TEXT_NODE){if(!originals.has(node))originals.set(node,node.nodeValue);const original=originals.get(node);node.nodeValue=locale==='en'?translate(original):original;return;}if(node.nodeType!==Node.ELEMENT_NODE||node.matches('script,style,[data-i18n-ignore]'))return;if(!attributeOriginals.has(node))attributeOriginals.set(node,new Map());const stored=attributeOriginals.get(node);for(const attr of ['placeholder','aria-label','title','data-label']){if(node.hasAttribute(attr)&&!stored.has(attr))stored.set(attr,node.getAttribute(attr));if(stored.has(attr))node.setAttribute(attr,locale==='en'?translate(stored.get(attr)):stored.get(attr));}for(const child of node.childNodes)translateNode(child);}
+  function translateNode(node){if((node.nodeType===Node.ELEMENT_NODE?node:node.parentElement)?.closest('[data-i18n-ignore]'))return;if(node.nodeType===Node.TEXT_NODE){if(!originals.has(node))originals.set(node,node.nodeValue);const original=originals.get(node);node.nodeValue=locale==='en'?translate(original):original;return;}if(node.nodeType!==Node.ELEMENT_NODE||node.matches('script,style,[data-i18n-ignore]'))return;if(!attributeOriginals.has(node))attributeOriginals.set(node,new Map());const stored=attributeOriginals.get(node);for(const attr of ['placeholder','aria-label','title','data-label','alt']){if(node.hasAttribute(attr)&&!stored.has(attr))stored.set(attr,node.getAttribute(attr));if(stored.has(attr))node.setAttribute(attr,locale==='en'?translate(attr==='aria-label'&&node.hasAttribute('data-i18n-sample-card')?stored.get(attr).replace('Tu próxima pausa favorita','Your next favorite break'):stored.get(attr)):stored.get(attr));}for(const child of node.childNodes)translateNode(child);}
   function refreshSwitcher(){const toggle=document.querySelector('[data-language-toggle]');if(toggle){toggle.dataset.languageCurrent=locale;toggle.setAttribute('aria-label',locale==='es'?'Cambiar a inglés':'Switch to Spanish');const current=toggle.querySelector('[data-language-current]'),other=toggle.querySelector('[data-language-other]'),currentText=locale.toUpperCase(),otherText=locale==='es'?'EN':'ES';if(current&&current.textContent!==currentText)current.textContent=currentText;if(other&&other.textContent!==otherText)other.textContent=otherText;}document.documentElement.lang=locale;}
   function apply(root=document){translateNode(root.nodeType===Node.DOCUMENT_NODE?root.documentElement:root);refreshSwitcher();}
   function set(next){next=next==='en'?'en':'es';if(next===locale){apply();return;}locale=next;try{localStorage.setItem(STORAGE_KEY,locale);}catch{}refreshSwitcher();window.dispatchEvent(new CustomEvent('loyalty-language-change',{detail:{language:locale}}));apply();}

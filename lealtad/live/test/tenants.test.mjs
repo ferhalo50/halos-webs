@@ -13,6 +13,9 @@ test('hostname allowlist cannot be switched by client business id or a foreign c
 test('two tenants: independent identities, QR, PIN, exports, updates, daily visits and rewards',async()=>{
  const set=await req(1,'/api/setup',{body:{adminUsername:'admin_moon_local',adminPassword:'Moon-admin-local928!',employeeUsername:'moon_staff_local',employeePassword:'Moon-staff-local928!'},headers:{'x-bootstrap-secret':'local-test-bootstrap'}});assert.ok([201,409].includes(set.status));
  const admin=[],staff=[],customers=[],cards=[],phone='669'+String(Date.now()).slice(-7);
+ // Each run gets a documentation-only IP so repeated negative logins do not
+ // inherit a prior run's local rate-limit bucket. Authentication still rejects them.
+ const loginTestIp='2001:db8:'+Date.now().toString(16).padStart(12,'0').match(/.{4}/g).join(':')+'::1';
  for(let i=0;i<2;i++){
   admin[i]=await req(i,'/api/login/staff',{body:{username:i?'admin_moon_local':'admin_local',password:i?'Moon-admin-local928!':'Admin-test-928!'}});staff[i]=await req(i,'/api/login/staff',{body:{username:i?'moon_staff_local':'mostrador_local',password:i?'Moon-staff-local928!':'Staff-test-928!'}});assert.equal(admin[i].status,200);assert.equal(staff[i].status,200);
   assert.equal((await req(i,'/api/login/customer',{body:{phone,pin:'4826'}})).status,401);
@@ -25,7 +28,7 @@ test('two tenants: independent identities, QR, PIN, exports, updates, daily visi
   const j=1-i,cookie=staff[i].cookie,foreign=cards[j];
   for(const path of ['/api/card','/api/me'])assert.equal((await req(i,path,{cookie:customers[j].cookie})).status,401);
   assert.equal((await req(i,'/api/admin/dashboard',{cookie:admin[j].cookie})).status,401);
-  assert.equal((await req(i,'/api/login/staff',{body:{username:j?'admin_moon_local':'admin_local',password:j?'Moon-admin-local928!':'Admin-test-928!'}})).status,401);
+  assert.equal((await req(i,'/api/login/staff',{headers:{'cf-connecting-ip':loginTestIp},body:{username:j?'admin_moon_local':'admin_local',password:j?'Moon-admin-local928!':'Admin-test-928!'}})).status,401);
   for(const value of [foreign.id,foreign.qrValue])assert.equal((await req(i,'/api/staff/card?value='+encodeURIComponent(value),{cookie})).status,404);
   for(const action of ['stamp','redeem'])assert.equal((await req(i,'/api/staff/'+action,{cookie,body:{cardId:foreign.id}})).status,404);
   for(const role of ['staff','admin'])assert.equal((await req(i,`/api/${role}/customers/${customers[j].data.user.id}/pin`,{cookie:role==='admin'?admin[i].cookie:cookie,method:'PATCH',body:{}})).status,404);

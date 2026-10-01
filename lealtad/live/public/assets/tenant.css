@@ -407,8 +407,7 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
 }
 @media(max-width:370px){body[data-route="tarjeta"] .brand{width:66px;flex-basis:66px}body[data-route="tarjeta"] nav{gap:4px;font-size:8px}.loyalty-quick-actions button{font-size:9px}.compact-customer-head h1{font-size:23px}}
 
-/* MOON mobile: keep customer details and the single language control legible. */
-@media(max-width:760px){
+/* MOON: use the approved legible palette at every viewport. */
  [data-tenant="mooncoffee"] .loyalty-card-details{border-color:#d5aa6252;background:linear-gradient(145deg,#151d29f7,#0d131df7);color:#f7f0e2;box-shadow:0 16px 38px #0004}
  [data-tenant="mooncoffee"] .loyalty-card-details summary{color:#f7f0e2}
  [data-tenant="mooncoffee"] .loyalty-card-details summary span{color:#e3b968}
@@ -422,7 +421,7 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
  [data-tenant="mooncoffee"] .language-switcher b{color:#f0c66f}
  [data-tenant="mooncoffee"] .language-switcher i{color:#d9b66f;opacity:1}
  [data-tenant="mooncoffee"] .language-switcher span{color:#e8dfd1}
-}
+
 
 /* Card geometry comes from tenant.cardLayout and remains stable at every width. */
 .stamps[data-stamp-columns="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}.stamps[data-stamp-columns="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -521,4 +520,310 @@ html[data-tenant="santofe"]{--cream:#e8ecde;--olive:#6f5e62;--ink:#4e4145;--mute
  [data-tenant="santofe"] .santofe-back-brand img{width:48px;height:48px}
  [data-tenant="santofe"] .santofe-qr-note{right:14px;bottom:11px}
  [data-tenant="santofe"] .santofe-card-back .qr-brightness-help{left:14px;bottom:11px}
+}
+
+/* Functional copy remains readable without changing ornamental labels or stamp geometry. */
+.loyalty-detail-grid small{font-size:11px;line-height:1.4}
+.loyalty-detail-grid strong{font-size:13px;line-height:1.4}
+.loyalty-card-details .save-help{font-size:12px;line-height:1.5}
+.loyalty-qr-note,.santofe-qr-note{font-size:11px;line-height:1.35;max-width:43%;text-align:right}
+.qr-brightness-help{font-size:11px;line-height:1.35;max-width:47%}
+[data-tenant="mooncoffee"] .stamp-option[aria-pressed="true"]{color:#f0c66f;border-color:#d2a253}
+.renace-flip-card .note,.renace-flip-card .card-bottom p{font-size:11px;line-height:1.35}
+.renace-flip-card .card-bottom strong{font-size:12px}
+@media(max-width:760px){
+ body[data-route="tarjeta"] footer{font-size:11px;line-height:1.4;flex-wrap:wrap}
+ .compact-customer-head .sync-status,.santofe-customer-intro .sync-status{font-size:11px}
+ .renace-flip-card .row{font-size:11px}
+ .renace-flip-card .note,.renace-flip-card .card-bottom p{font-size:11px;line-height:1.3}
+ .renace-flip-card .card-bottom strong{font-size:12px}
+ [data-tenant="mooncoffee"] .moon-card-footer,[data-tenant="santofe"] .santofe-card-status{font-size:11px;line-height:1.35}
+ [data-tenant="mooncoffee"] .moon-card-count span{font-size:11px}
+}
+@media(max-width:480px){
+ [data-tenant="renace"] .editorial-steps{grid-template-columns:1fr;gap:12px}
+ [data-tenant="renace"] .editorial-steps>div{padding:16px 18px}
+}
+
+/* Extra safe area for readable QR instructions; both faces retain equal dimensions. */
+.loyalty-flip-card{width:100%;min-width:0}
+@media(max-width:760px){
+ .renace-flip-card{min-height:270px}
+ .moon-flip-card,[data-tenant="santofe"] .santofe-flip-card{min-height:250px}
+ .loyalty-card-back,[data-tenant="santofe"] .santofe-card-back{padding-bottom:52px}
+ .loyalty-card-back code,[data-tenant="santofe"] .santofe-card-back code{font-size:9px}
+ .compact-customer-head>div{min-width:0}
+ .compact-customer-head .sync-status{white-space:normal;max-width:48%;flex-shrink:0}
+ .santofe-customer-intro .sync-status{white-space:normal;max-width:48%}
+ .sync-status i{flex-shrink:0}
+}
+/* Progress and action labels are functional copy, not ornament. */
+.renace-flip-card .pill{font-size:11px}
+.loyalty-card-back code,[data-tenant="santofe"] .santofe-card-back code{font-size:11px}
+@media(max-width:760px){
+ .loyalty-quick-actions button,.premium-customer>.help-actions button{font-size:12px}
+ [data-tenant="mooncoffee"] .moon-card-stamps .stamp,[data-tenant="santofe"] .santofe-card-stamps .stamp{font-size:11px}
+}
+
+/* Second local polish: a deliberate header and one clear current destination. */
+html[data-tenant="renace"]{--muted:#626856}
+html[data-tenant="santofe"]{--muted:#6b6064}
+html[data-tenant="mooncoffee"]{--header-width:1260px}
+html[data-tenant="santofe"]{--header-width:1200px}
+html[data-tenant] body>header{position:relative;z-index:100;isolation:isolate;width:min(calc(100% - 48px),var(--header-width,1160px));max-width:none;margin:0 auto;padding:18px 32px;gap:16px;background:transparent;backdrop-filter:none}
+html[data-tenant] body>header .brand{width:124px;flex:0 0 124px}
+[data-tenant="mooncoffee"] body>header .brand{width:132px;flex-basis:132px;min-height:48px;padding:6px 10px;box-shadow:none}
+[data-tenant="santofe"] body>header .brand{width:76px;flex-basis:76px}
+[data-tenant="santofe"] body>header .brand img{width:76px;height:64px;object-fit:contain}
+html[data-tenant] body>header nav{gap:4px;padding:0;border:0;background:transparent;font-size:13px}
+html[data-tenant] body>header nav a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:8px;position:relative;font-weight:600;white-space:nowrap}
+html[data-tenant] body>header nav a[aria-current="page"]{background:#424b320d;color:#35402c;font-weight:750;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:8px}
+html[data-tenant="mooncoffee"] body>header nav a[aria-current="page"]{background:#d2a25315;color:#f0c66f;border-radius:999px}
+html[data-tenant="santofe"] body>header nav a[aria-current="page"]{background:#6f5e620b;color:#58464d}
+html[data-tenant] body>header .header-utilities{gap:8px;margin-left:auto}
+html[data-tenant] body>header .language-switcher{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;justify-content:center;box-shadow:none}
+/* Keep the existing switch API and its dynamic accessible label; show only the current code. */
+html[data-tenant] body>header .language-switcher i,html[data-tenant] body>header .language-switcher [data-language-other]{display:none}
+html[data-tenant] body>header .language-switcher b{font-size:12px;letter-spacing:.04em}
+html[data-tenant] body>header #logout{min-width:54px;min-height:44px;padding:10px 14px;font-size:12px}
+html[data-tenant] body[data-route="tarjeta"]>header{width:min(calc(100% - 48px),668px);padding-inline:24px}
+html[data-tenant] body[data-route="tarjeta"] .premium-customer{width:min(100%,620px)}
+body[data-route="tarjeta"] .loyalty-flip-wrap,body[data-route="tarjeta"] .santofe-flip-wrap,
+body[data-route="tarjeta"] .loyalty-quick-actions,body[data-route="tarjeta"] .loyalty-card-details{width:100%}
+body[data-route="tarjeta"] .compact-customer-head{align-items:center;margin-bottom:18px}
+body[data-route="tarjeta"] .compact-customer-head h1{overflow-wrap:anywhere}
+body[data-route="tarjeta"] .loyalty-flip-button,body[data-route="tarjeta"] .santofe-flip-button{min-height:44px;min-width:136px;padding:10px 22px;margin-top:14px;background:var(--olive);border-color:var(--olive);color:var(--cream);font-weight:700;box-shadow:0 4px 12px #30372810}
+[data-tenant="mooncoffee"] body[data-route="tarjeta"] #flip-card{color:#17110a;background:#d2a253;border-color:#d2a253;box-shadow:0 4px 18px #d2a25312}
+[data-tenant="santofe"] body[data-route="tarjeta"] #flip-card{background:#6f5e62;color:#fafbf6;border-color:#6f5e62}
+body[data-route="tarjeta"] .loyalty-quick-actions{gap:8px;margin:12px auto 8px}
+body[data-route="tarjeta"] .loyalty-quick-actions button{min-height:44px;padding:9px 8px;background:transparent;border-color:var(--line);color:var(--olive);font-size:12px;box-shadow:none}
+[data-tenant="mooncoffee"] body[data-route="tarjeta"] .loyalty-quick-actions button{color:#ead9b8;border-color:#d6b47455;background:#10172299}
+body[data-route="tarjeta"] .premium-customer>.help-actions{gap:8px;margin:8px auto 12px}
+body[data-route="tarjeta"] .premium-customer>.help-actions button{min-height:44px;padding:10px 15px;font-size:12px}
+body[data-route="tarjeta"] .loyalty-card-details summary{min-height:44px}
+html[data-tenant] .row-actions button,html[data-tenant] .event-filter-actions button{min-height:44px}
+html[data-tenant] .loyalty-flip-card:focus-visible,html[data-tenant] summary:focus-visible{outline:3px solid var(--olive);outline-offset:4px}
+html[data-tenant] .loyalty-card-details summary:focus-visible{outline-offset:-3px}
+
+/* Santofé's public preview shares the actual customer's front artwork, without interaction. */
+[data-tenant="santofe"] .santofe-public-card{position:relative;width:100%;min-width:0;aspect-ratio:1.58;min-height:300px}
+[data-tenant="santofe"] .santofe-public-card .santofe-card-front{position:absolute;inset:0}
+[data-tenant="santofe"] .santofe-public-card .santofe-card-status{font-size:12px}
+[data-tenant="santofe"] .santofe-public-card .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,48px))}
+[data-tenant="santofe"] .santofe-public-card .santofe-card-stamps .stamp{max-width:none;font-size:13px}
+
+@media(min-width:761px){
+ body[data-route="tarjeta"] main{padding-top:32px;padding-bottom:40px}
+ body[data-route="tarjeta"] .compact-customer-head h1{font-size:34px;line-height:1.15}
+ body[data-route="tarjeta"] .compact-customer-head .eyebrow{margin-bottom:7px;letter-spacing:.22em}
+ body[data-route="tarjeta"] .sync-status{font-size:12px}
+ .renace-flip-card .card-top{padding:18px 28px 12px;grid-template-rows:auto auto auto auto 1fr auto}
+ .renace-flip-card .card-brand .renace-logo{width:178px;max-height:48px}
+ .renace-flip-card .row{font-size:13px}
+ .renace-flip-card .stamps{grid-template-columns:repeat(5,minmax(0,64px));justify-content:space-between;gap:10px 16px;margin:10px 0}
+ .renace-flip-card .stamp{font-size:17px}
+ .renace-flip-card .note{font-size:12px}
+ .renace-flip-card .card-bottom{padding:10px 28px}
+ .renace-flip-card .card-bottom p{font-size:12px}
+ .renace-flip-card .card-bottom strong{font-size:13px}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-loyalty-card{display:flex;flex-direction:column;padding:24px 28px 22px}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,64px));gap:12px 18px;align-content:center;flex:1}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-stamps .stamp{font-size:14px}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-footer{font-size:12px;margin-top:12px}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-count b{font-size:40px}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-orbit{width:156px;height:156px;right:16px;top:16px;border-color:#d6ad6529;box-shadow:0 0 0 22px #d6ad6506,0 0 0 44px #d6ad6504}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-orbit::after{width:32px;height:32px;left:30px;bottom:34px;opacity:.8}
+ [data-tenant="santofe"] .santofe-customer-intro{margin-bottom:18px}
+ [data-tenant="santofe"] .santofe-card-front{padding:22px 28px;gap:12px}
+ [data-tenant="santofe"] .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,58px));gap:10px 16px}
+ [data-tenant="santofe"] .santofe-card-stamps .stamp{max-width:none;font-size:14px}
+ [data-tenant="santofe"] .santofe-card-status{font-size:12px}
+ [data-tenant="santofe"] .santofe-digital-card{box-shadow:0 14px 36px #50424616,0 2px 5px #50424609}
+}
+/* A tablet header uses the existing menu before staff/admin links can crowd each other. */
+@media(min-width:761px) and (max-width:1000px){
+ [data-tenant="santofe"] .santofe-landing{grid-template-columns:1fr;max-width:620px;margin-inline:auto;gap:32px}
+ html[data-tenant] body>header .loyalty-menu-toggle{display:grid;place-content:center;gap:4px;margin-left:auto;width:44px;height:44px;flex:0 0 44px}
+ html[data-tenant] body>header .header-utilities{margin-left:0}
+ html[data-tenant] body>header nav{display:none;position:absolute;z-index:50;top:calc(100% + 6px);right:24px;width:280px;padding:10px;border:1px solid var(--line);border-radius:16px;background:var(--cream);box-shadow:0 18px 48px #1820112b}
+ html[data-tenant] body>header nav.is-open{display:grid}
+ html[data-tenant="mooncoffee"] body>header nav{background:#111722}
+}
+@media(max-width:760px){
+ html[data-tenant] body>header,html[data-tenant] body[data-route="tarjeta"]>header{width:calc(100% - 24px);padding:10px 0!important;gap:8px!important;flex-wrap:nowrap}
+ html[data-tenant] body>header .brand{width:90px!important;flex:0 0 90px!important}
+ [data-tenant="mooncoffee"] body>header .brand{min-height:44px;padding:5px 8px}
+ [data-tenant="santofe"] body>header .brand{width:54px!important;flex-basis:54px!important}
+ [data-tenant="santofe"] body>header .brand img{width:54px;height:44px}
+ html[data-tenant] body>header .loyalty-menu-toggle{width:44px;height:44px;flex:0 0 44px;margin-left:auto;padding:10px;order:2}
+ html[data-tenant] body>header .header-utilities{margin-left:0;gap:6px;order:3}
+ html[data-tenant] body>header .language-switcher{min-height:44px;padding:0!important}
+ html[data-tenant] body>header #logout{min-height:44px;padding:10px 12px!important;font-size:12px!important}
+ html[data-tenant] body>header nav{right:0;border:1px solid var(--line);background:var(--cream)}
+ html[data-tenant="mooncoffee"] body>header nav{background:#111722}
+ body[data-route="tarjeta"] .compact-customer-head{align-items:start;margin-bottom:12px}
+ body[data-route="tarjeta"] .compact-customer-head h1{font-size:27px}
+ body[data-route="tarjeta"] .compact-customer-head .sync-status{max-width:44%}
+ body[data-route="tarjeta"] .loyalty-flip-button,body[data-route="tarjeta"] .santofe-flip-button{margin-top:10px}
+ body[data-route="tarjeta"] .loyalty-quick-actions{margin:10px auto 6px}
+ body[data-route="tarjeta"] .premium-customer>.help-actions{margin:6px auto 10px}
+ body[data-route="tarjeta"] .loyalty-card-details{margin-top:0}
+ [data-tenant="mooncoffee"] .moon-flip-card .moon-card-orbit::after{width:22px;height:22px;left:22px;top:32px;bottom:auto;opacity:.8}
+ [data-tenant="santofe"] .santofe-public-card{min-height:250px}
+ [data-tenant="santofe"] .santofe-public-card .santofe-card-stamps{grid-template-columns:repeat(5,minmax(0,35px))}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-tenant] body>header .loyalty-menu-toggle span{transition:none}
+}
+
+/* One navigation, shared role visibility: horizontal on desktop, fixed below on compact screens. */
+#primary-navigation .navigation-icon,#primary-navigation .navigation-label-mobile{display:none}
+html[data-tenant] body>header .loyalty-menu-toggle{display:none!important}
+@media(max-width:1000px){
+ html[data-tenant]{--bottom-navigation-height:64px;--bottom-navigation-space:calc(var(--bottom-navigation-height) + env(safe-area-inset-bottom,0px));scroll-padding-bottom:calc(var(--bottom-navigation-space) + 16px)}
+ html[data-tenant] body{padding-bottom:var(--bottom-navigation-space)}
+ html[data-tenant] body>header .header-utilities{margin-left:auto}
+ html[data-tenant] body>header nav,html[data-tenant] body[data-route="tarjeta"]>header nav,html[data-tenant] body>header nav.is-open{display:grid!important;position:fixed;z-index:100;top:auto;bottom:0;left:0;right:0;width:100%;height:var(--bottom-navigation-space);margin:0!important;padding:4px max(12px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;gap:4px!important;border:0;border-top:1px solid var(--line);border-radius:0;background:var(--cream);box-shadow:0 -3px 14px #30372808;overflow:visible!important}
+ html[data-tenant] body>header nav a{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;min-height:52px;padding:4px 3px!important;font-size:11px!important;line-height:1.2;font-weight:600;white-space:nowrap!important;text-align:center;border-radius:12px;text-decoration:none}
+ html[data-tenant] body>header nav a[hidden]{display:none!important}
+ html[data-tenant] body>header nav a[aria-current="page"]{background:#424b3210;color:#35402c;font-weight:750;text-decoration:none}
+ html[data-tenant] body>header nav a[aria-current="page"] .navigation-icon{stroke-width:2.2}
+ html[data-tenant] body>header nav a[aria-current="page"] .navigation-label{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+ html[data-tenant] body>header nav a:hover{background:#424b320c}
+ html[data-tenant] body>header nav a:focus-visible{outline:3px solid var(--olive);outline-offset:-3px}
+ #primary-navigation .navigation-icon{display:block;flex-shrink:0}
+ #primary-navigation .navigation-label-desktop{display:none}
+ #primary-navigation .navigation-label-mobile{display:inline}
+ html[data-tenant="mooncoffee"] body>header nav{background:#111722;border-color:#d2a25338;box-shadow:0 -4px 16px #0002}
+ html[data-tenant="mooncoffee"] body>header nav a{color:#c7bba8;border-radius:8px}
+ html[data-tenant="mooncoffee"] body>header nav a[aria-current="page"]{color:#f0c66f;background:#d2a25314;border-radius:8px}
+ html[data-tenant="mooncoffee"] body>header nav a:hover{background:#d2a25314}
+ html[data-tenant="santofe"] body>header nav{background:#e8ecde;box-shadow:none;border-color:#bfc5b5}
+ html[data-tenant="santofe"] body>header nav a{color:#6b6064;border-radius:4px}
+ html[data-tenant="santofe"] body>header nav a[aria-current="page"]{color:#58464d;background:#6f5e620b;border-radius:4px}
+ html[data-tenant] #toast{bottom:calc(var(--bottom-navigation-space) + 16px)}
+ html[data-tenant] main input,html[data-tenant] main textarea,html[data-tenant] main select,html[data-tenant] main button{scroll-margin-block:20px calc(var(--bottom-navigation-space) + 20px)}
+ /* Deterministic editing state, without guessing keyboard height. Keep reserved space to prevent jumps. */
+ @supports selector(body:has(input:focus)){
+  html[data-tenant] body:has(main input:not([type="checkbox"]):not([type="radio"]):focus,main textarea:focus,main select:focus) #primary-navigation{visibility:hidden;pointer-events:none}
+ }
+}
+
+/* Physical paper passes: the public preview and the customer's front share the same layout. */
+html[data-tenant="mooncoffee"] body>header .language-switcher,
+html[data-tenant="mooncoffee"] body>header .language-switcher:not(:disabled):hover{
+ background:#111722;color:#f0c66f;border-color:#d2a25370;box-shadow:none;filter:none;transform:none;
+}
+html[data-tenant="mooncoffee"] body>header .language-switcher b{color:inherit}
+html[data-tenant="mooncoffee"] body>header .language-switcher:active{background:#263044;border-color:#efd49f}
+html[data-tenant="mooncoffee"] body>header .language-switcher:focus-visible{outline:3px solid #efd49f;outline-offset:3px}
+@media(hover:hover) and (pointer:fine){html[data-tenant="mooncoffee"] body>header .language-switcher:not(:disabled):hover{background:#1c2636;border-color:#efd49f}}
+
+html[data-tenant="mooncoffee"] .moon-flip-card,
+html[data-tenant="renace"] .renace-flip-card{aspect-ratio:1.7/1;min-height:0}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card{
+ container-type:inline-size;width:100%;max-width:620px;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:5px;
+ aspect-ratio:1.7/1;min-height:0;padding:clamp(10px,3%,18px) clamp(14px,4%,24px);border:1px solid #c9b995;border-radius:18px;
+ background:#eeeae1;color:#39291e;box-shadow:0 14px 36px #0003;
+}
+html[data-tenant="mooncoffee"] .hero>.card.moon-loyalty-card{transform:none}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card::before{display:none}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-head{justify-content:center;gap:0}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-logo{width:clamp(116px,39cqw,200px);height:clamp(36px,12cqw,64px);min-height:0;padding:0;border:0;border-radius:0;background:none}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-logo .renace-logo{width:100%;height:100%;object-fit:contain}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-owner{margin:0;gap:10px;align-items:center}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-owner small{display:none}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-owner strong{font-size:clamp(14px,4.6cqw,24px);color:#39291e}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-count{color:#503725}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-count b{font-size:clamp(22px,7cqw,36px)}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-count span{font-size:11px;color:#675543}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-stamps{grid-template-columns:repeat(4,minmax(0,clamp(38px,12cqw,68px)));justify-content:space-evenly;align-content:center;gap:5px 12px;flex:none;margin:0}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp{position:relative;width:100%;padding:2px;border:1px solid #aa906c;background:transparent;color:#39291e;font-size:clamp(18px,6cqw,30px)}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp.filled{background:#503725;color:#fff6e6;border:2px solid #503725;box-shadow:none}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp.filled:has(.stamp-sticker){background:#ead9b9}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .stamp-sticker{filter:none}
+.moon-stamp-cup{width:100%;height:100%;object-fit:contain;opacity:.65}
+.stamp-slot-number{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-footer{margin:0;padding:5px 0 0;gap:8px;border-color:#c9b995;color:#5d4936;font-size:clamp(10px,2.7cqw,12px);line-height:1.2;align-items:center}
+html[data-tenant="mooncoffee"] .moon-card-rule{max-width:45%;font-weight:700;text-align:right}
+html[data-tenant="mooncoffee"] .moon-card-back{border:1px solid #c9b995;border-radius:18px;background:#eeeae1;color:#39291e;box-shadow:0 14px 36px #0003;padding:10px 14px 34px}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-back-decoration{background:radial-gradient(circle at 90% 12%,#aa906c14 0 1px,transparent 2px) 0 0/24px 24px}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-back-logo{left:10px;top:10px;width:76px;height:33px;filter:none}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-qr-plate{padding:5px;border:1px solid #c9b995;border-radius:12px;box-shadow:0 5px 16px #50372512}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-qr-plate .qr{padding:0}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-qr-plate .qr svg{width:clamp(112px,32vw,164px);height:clamp(112px,32vw,164px)}
+html[data-tenant="mooncoffee"] .moon-card-back code{font-size:9px;line-height:1.25;background:transparent;padding:0}
+html[data-tenant="mooncoffee"] .moon-card-back .qr-brightness-help,
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-qr-note{bottom:9px;color:#5d4936;font-size:9px;line-height:1.25}
+html[data-tenant="mooncoffee"] .moon-card-back .qr-brightness-help{left:12px;max-width:52%}
+html[data-tenant="mooncoffee"] .moon-card-back .loyalty-qr-note{right:12px;max-width:38%}
+
+html[data-tenant="renace"] .renace-flip-card{aspect-ratio:1.6/1}
+html[data-tenant="renace"] .card.renace-loyalty-card{container-type:inline-size;aspect-ratio:1.6/1;min-height:0;display:flex;flex-direction:column;border-radius:18px;animation:none}
+html[data-tenant="renace"] .renace-loyalty-card .card-top{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1px auto minmax(0,1fr);grid-template-areas:"brand title" "line line" "owner owner" "stamps stamps";gap:clamp(3px,1cqw,7px);padding:clamp(8px,2.6cqw,16px) clamp(12px,3.6cqw,22px) clamp(6px,1.9cqw,12px)}
+html[data-tenant="renace"] .renace-loyalty-card .card-brand{grid-area:brand}
+html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{width:clamp(112px,36cqw,190px);height:clamp(32px,10cqw,60px);max-height:none;margin:0;object-fit:contain}
+html[data-tenant="renace"] .renace-loyalty-card .card-sub{grid-area:title;align-self:center;text-align:right;font-size:clamp(7px,2.2cqw,10px);letter-spacing:.16em;line-height:1.4}
+html[data-tenant="renace"] .renace-loyalty-card .card-line{grid-area:line;margin:0}
+html[data-tenant="renace"] .renace-loyalty-card .row{grid-area:owner;min-width:0;gap:8px;font-size:clamp(11px,2.6cqw,14px);line-height:1.3}
+html[data-tenant="renace"] .renace-loyalty-card .row>span:first-child{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html[data-tenant="renace"] .renace-loyalty-card .pill{padding:2px 6px;font-size:clamp(10px,2.4cqw,12px);white-space:nowrap}
+html[data-tenant="renace"] .renace-loyalty-card .stamps{grid-area:stamps;align-self:center;grid-template-columns:repeat(5,minmax(0,clamp(46px,14cqw,80px)));justify-content:space-evenly;gap:5px 6px;margin:0}
+html[data-tenant="renace"] .renace-loyalty-card .stamp{font-size:clamp(14px,3.7cqw,22px)}
+html[data-tenant="renace"] .renace-loyalty-card .stamp-sticker{width:100%;height:100%;object-fit:contain}
+html[data-tenant="renace"] .renace-loyalty-card .stamp.gift .reward-badge{clip-path:none}
+html[data-tenant="renace"] .renace-loyalty-card .card-top>.note{display:none}
+html[data-tenant="renace"] .renace-loyalty-card .card-bottom{flex:0 0 auto;padding:clamp(5px,1.6cqw,10px) clamp(12px,3.6cqw,22px)}
+html[data-tenant="renace"] .renace-loyalty-card .card-bottom p{font-size:clamp(10px,2.6cqw,12px);line-height:1.25}
+html[data-tenant="renace"] .renace-loyalty-card .card-bottom strong{font-size:clamp(11px,2.8cqw,14px)}
+html[data-tenant="renace"] .renace-card-back{border-radius:18px;padding:10px 14px 34px}
+html[data-tenant="renace"] .renace-card-back .loyalty-qr-plate{padding:5px;border-radius:12px}
+html[data-tenant="renace"] .renace-card-back .loyalty-qr-plate .qr{padding:0}
+html[data-tenant="renace"] .renace-card-back .loyalty-qr-plate .qr svg{width:clamp(112px,32vw,164px);height:clamp(112px,32vw,164px)}
+html[data-tenant="renace"] .renace-card-back code{font-size:9px;line-height:1.25;padding:0}
+html[data-tenant="renace"] .renace-card-back .qr-brightness-help,
+html[data-tenant="renace"] .renace-card-back .loyalty-qr-note{bottom:9px;font-size:9px;line-height:1.25}
+html[data-tenant="renace"] .renace-card-back .qr-brightness-help{left:12px;max-width:52%}
+html[data-tenant="renace"] .renace-card-back .loyalty-qr-note{right:12px;max-width:38%}
+@container(max-width:350px){
+ html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:6px;gap:2px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{height:30px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-bottom{padding-block:5px}
+}
+@container(max-width:330px){
+ html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:4px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{height:28px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-bottom{padding-block:4px}
+}
+
+/* Branding pass: grow the web marks without changing card geometry or app icons. */
+html[data-tenant="renace"] body>header .brand{width:148px;flex:0 0 148px}
+html[data-tenant="renace"] body>header .brand img{width:100%;height:64px;object-fit:contain}
+html[data-tenant="mooncoffee"] body>header .brand{width:148px;flex:0 0 148px;padding:6px 10px;min-height:52px}
+html[data-tenant="mooncoffee"] body>header .brand img{width:100%;height:auto;max-height:56px;object-fit:contain}
+/* The official Santofé file has wide transparent margins. Scale uniformly inside a clipped frame. */
+html[data-tenant="santofe"] body>header .brand{position:relative;width:88px;height:70px;flex:0 0 88px;overflow:hidden}
+html[data-tenant="santofe"] body>header .brand img{position:absolute;left:50%;top:50%;width:100px;height:100px;max-width:none;object-fit:contain;transform:translate(-50%,-50%)}
+html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{width:clamp(140px,42cqw,230px);height:clamp(38px,12cqw,74px)}
+html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-head{transform:translateY(-4px)}
+@media(max-width:760px){
+ html[data-tenant="renace"] body>header .brand{width:132px!important;flex:0 0 132px!important}
+ html[data-tenant="renace"] body>header .brand img{height:56px}
+ html[data-tenant="mooncoffee"] body>header .brand{width:120px!important;flex:0 0 120px!important;padding:5px 8px}
+ html[data-tenant="mooncoffee"] body>header .brand img{max-height:46px}
+ html[data-tenant="santofe"] body>header .brand{width:76px!important;height:60px;flex:0 0 76px!important}
+ html[data-tenant="santofe"] body>header .brand img{width:84px;height:84px}
+}
+@container(max-width:400px){
+ html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:6px;gap:2px}
+}
+@container(max-width:350px){
+ html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:4px;padding-bottom:4px;gap:1px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{height:38px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-bottom{padding-block:4px}
+}
+@container(max-width:330px){
+ html[data-tenant="renace"] .renace-loyalty-card .card-top{padding-top:3px;padding-bottom:2px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-brand .renace-logo{height:36px}
+ html[data-tenant="renace"] .renace-loyalty-card .card-bottom{padding-block:3px}
 }

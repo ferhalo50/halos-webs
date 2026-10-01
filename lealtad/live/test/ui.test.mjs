@@ -77,7 +77,7 @@ test('customer, tablet and admin UI', async t => {
   assert.equal(manifest.short_name, 'Renace');
   assert.equal(manifest.display, 'standalone');
 
-  await page.click('#nav-menu-toggle');
+
   await page.click('#account-link');
   await page.fill('[name="currentSecret"]', '7634');
   await page.fill('[name="newSecret"]', '7635');
@@ -87,7 +87,7 @@ test('customer, tablet and admin UI', async t => {
 
   await page.click('#logout');
   await page.waitForFunction(() => !document.querySelector('a[href="#equipo"]')?.hasAttribute('hidden'));
-  await page.click('#nav-menu-toggle');
+
   await page.click('a[href="#equipo"]');
   await page.fill('[name="login"]', 'mostrador_local');
   await page.fill('[name="secret"]', 'Staff-test-928!');
@@ -102,7 +102,7 @@ test('customer, tablet and admin UI', async t => {
 
   await page.click('#logout');
   await page.waitForFunction(() => !document.querySelector('a[href="#equipo"]')?.hasAttribute('hidden'));
-  await page.click('#nav-menu-toggle');
+
   await page.click('a[href="#equipo"]');
   await page.fill('[name="login"]', 'admin_local');
   await page.fill('[name="secret"]', 'Admin-test-928!');
