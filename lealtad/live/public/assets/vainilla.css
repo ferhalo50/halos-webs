@@ -1,0 +1,70 @@
+html[data-tenant="vainillacoffee"]{--cream:#fffaf0;--olive:#502810;--ink:#502810;--muted:#78634b;--line:#e4d7bf}
+html[data-tenant="vainillacoffee"] body{background:radial-gradient(ellipse at 10% 15%,#fff1c9,transparent 48%),#fffaf0}
+html[data-tenant="vainillacoffee"] body>header .brand{width:145px!important;flex-basis:145px!important;background:none;padding:0}
+html[data-tenant="vainillacoffee"] body>header .brand img{width:100%;height:62px;object-fit:contain}
+html[data-tenant="vainillacoffee"] .eyebrow{color:#795825;letter-spacing:.16em}
+html[data-tenant="vainillacoffee"] .button,html[data-tenant="vainillacoffee"] button{border-radius:18px}
+html[data-tenant="vainillacoffee"] .secondary{background:#fffdf8;color:#502810;border-color:#d8c9ae}
+html[data-tenant="vainillacoffee"] .hero{gap:55px}
+html[data-tenant="vainillacoffee"] .intro h1{font-size:clamp(42px,5vw,66px);letter-spacing:-1.5px}
+html[data-tenant="vainillacoffee"] .intro h1 em{color:#946824}
+html[data-tenant="vainillacoffee"] .vainilla-public-card{width:min(100%,340px);justify-self:center}
+html[data-tenant="vainillacoffee"] .vainilla-card{height:100%;aspect-ratio:.54;display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 14px 10px;background:#fffdf8;border:1px solid #dfd1b8;border-radius:24px;box-shadow:0 14px 35px #50281013;color:#502810;animation:none;text-align:center}
+html[data-tenant="vainillacoffee"] .vainilla-card-logo{display:block;width:42%;height:38px;object-fit:contain}
+html[data-tenant="vainillacoffee"] .vainilla-card-rule{font:700 12px/1.3 'Segoe UI',sans-serif;letter-spacing:.08em;margin:0}
+html[data-tenant="vainillacoffee"] .vainilla-card h2{margin:0;font:15px/1.3 Georgia,serif}
+html[data-tenant="vainillacoffee"] .vainilla-card h2 strong{display:block;font:700 21px/1.15 'Segoe UI',sans-serif;margin-top:3px}
+html[data-tenant="vainillacoffee"] .vainilla-bouquet{position:relative;width:78%;flex:none;aspect-ratio:1123/1280;margin:auto 0}
+html[data-tenant="vainillacoffee"] .vainilla-stems{width:100%;height:100%;display:block;object-fit:fill;mix-blend-mode:multiply}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot{position:absolute;transform:translate(-50%,-50%);width:17%;aspect-ratio:1;display:block}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot img{width:100%;height:100%;display:block;object-fit:contain}
+html[data-tenant="vainillacoffee"] .vainilla-card-owner{display:flex;gap:10px;justify-content:space-between;width:100%;align-items:center;padding-top:8px;border-top:1px solid #e4d7bf;font-size:11px;line-height:1.3}
+html[data-tenant="vainillacoffee"] .vainilla-card-owner>span{min-width:0;overflow-wrap:anywhere;text-align:left}
+html[data-tenant="vainillacoffee"] .vainilla-card-owner>b{white-space:nowrap;font-size:11px}
+html[data-tenant="vainillacoffee"] .vainilla-card-handle{font-size:9px;letter-spacing:.05em}
+html[data-tenant="vainillacoffee"] .vainilla-customer-view{max-width:540px;margin:auto}
+html[data-tenant="vainillacoffee"] body[data-route="tarjeta"] .vainilla-flip-wrap{width:min(100%,290px);margin:auto}
+html[data-tenant="vainillacoffee"] .vainilla-flip-card{width:100%;aspect-ratio:.54}
+html[data-tenant="vainillacoffee"] .vainilla-card-back{background:#fffdf8;border-color:#dfd1b8;color:#502810;border-radius:24px;padding-bottom:65px}
+html[data-tenant="vainillacoffee"] .vainilla-card-back .loyalty-back-decoration{display:none}
+html[data-tenant="vainillacoffee"] .vainilla-card-back .loyalty-back-logo{top:25px;left:50%;transform:translateX(-50%);width:125px;height:60px}
+html[data-tenant="vainillacoffee"] .loyalty-qr-plate{border-color:#dfd1b8;box-shadow:0 8px 20px #50281010}
+html[data-tenant="vainillacoffee"] .loyalty-qr-plate .qr svg{width:165px;height:165px}
+html[data-tenant="vainillacoffee"] .loyalty-qr-note{font-size:10px;right:0;left:0;bottom:18px;max-width:none;text-align:center}
+html[data-tenant="vainillacoffee"] .qr-brightness-help{color:#78634b;font-size:10px;bottom:50px;left:16px;right:16px;max-width:none;text-align:center}
+html[data-tenant="vainillacoffee"] .loyalty-card-details{background:#fffdf8;border-color:#dfd1b8}
+html[data-tenant="vainillacoffee"] .social{flex-wrap:wrap}
+html[data-tenant="vainillacoffee"] footer{color:#78634b}
+@media(max-width:760px){
+ html[data-tenant="vainillacoffee"] main{padding:24px 12px 30px;min-height:0}
+ html[data-tenant="vainillacoffee"] .hero{gap:24px}
+ html[data-tenant="vainillacoffee"] .vainilla-public-card{width:min(100%,290px)}
+ html[data-tenant="vainillacoffee"] body[data-route="tarjeta"] main{padding-top:12px;padding-bottom:20px}
+ html[data-tenant="vainillacoffee"] .compact-customer-head{gap:12px}
+ html[data-tenant="vainillacoffee"] .compact-customer-head h1{font-size:26px}
+ html[data-tenant="vainillacoffee"] .loyalty-quick-actions{gap:5px}
+ html[data-tenant="vainillacoffee"] .loyalty-quick-actions button{font-size:11px;padding-inline:4px}
+ html[data-tenant="vainillacoffee"] body>header nav{background:#fffaf0}
+ html[data-tenant="vainillacoffee"] body>header nav a[aria-current="page"]{background:#f7e8c5;color:#502810}
+}
+
+html[data-tenant="vainillacoffee"] #staff-card>.vainilla-card{width:min(100%,290px);height:auto;margin:0 auto 18px}
+@media(max-width:1000px){
+ html[data-tenant="vainillacoffee"] body:has(#staff-link:not([hidden])){padding-bottom:0}
+ html[data-tenant="vainillacoffee"] body:has(#staff-link:not([hidden]))>header{flex-wrap:wrap!important}
+ html[data-tenant="vainillacoffee"] body:has(#staff-link:not([hidden]))>header #primary-navigation{position:static!important;order:4;flex:1 0 100%;width:100%;height:auto;min-height:44px;padding:0!important;box-shadow:none;border:0;background:transparent;display:flex!important;justify-content:flex-end}
+ html[data-tenant="vainillacoffee"] #staff-link{min-height:44px!important;padding:8px 12px!important;flex-direction:row!important}
+ html[data-tenant="vainillacoffee"] .staff-heading{flex-wrap:wrap}
+ html[data-tenant="vainillacoffee"] .staff-dashboard{grid-template-columns:1fr;min-width:0}
+ html[data-tenant="vainillacoffee"] .stamp-quantity{flex-wrap:wrap}
+}
+
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="1"]{left:36.15316117542298%;top:5.078125%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="2"]{left:70.79252003561888%;top:8.59375%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="3"]{left:24.39893143365984%;top:17.1875%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="4"]{left:55.20926090828139%;top:20.3125%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="5"]{left:43.63312555654497%;top:25.78125%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="6"]{left:74.08726625111309%;top:32.8125%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="7"]{left:61.798753339269815%;top:36.328125%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="8"]{left:24.487978628673197%;top:34.921875%}
+html[data-tenant="vainillacoffee"] .vainilla-flower-slot[data-stamp-number="9"]{left:49.42119323241318%;top:37.265625%}

@@ -1,0 +1,12 @@
+/* Only the two per-item tenants render this compact balance block. */
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-balance{border:1px solid var(--line,#d9d4c4);border-radius:14px;padding:10px 14px;margin:10px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink);background:var(--cream);flex-wrap:wrap}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-balance>div{display:flex;gap:12px;align-items:center;justify-content:space-between;flex:1;font-size:13px}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-count{font-size:23px;line-height:1.2;font-variant-numeric:tabular-nums}
+html[data-tenant="vainillacoffee"] .reward-balance.has-reward{background:#fff1bc;border-color:#c28b21;color:#502810}
+html[data-tenant="santofe"] .reward-balance.has-reward{background:#e4eadb;border-color:#716066;color:#594a50}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-balance button{min-height:44px}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .mobile-reward-count{display:none}
+@media(max-width:760px){
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel th:nth-child(5),html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td:nth-child(5){display:none}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .mobile-reward-count{display:block;font-size:11px;line-height:1.5;white-space:nowrap}
+}

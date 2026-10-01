@@ -17,6 +17,7 @@
     }
   ],
   "vars": {
+    "MAINTENANCE_MODE": "OFF",
     "APP_TIMEZONE": "America/Tijuana",
     "SESSION_DAYS": "30"
   },

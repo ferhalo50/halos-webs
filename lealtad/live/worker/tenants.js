@@ -1,6 +1,18 @@
 const classic={name:'Clásico'};
 
 export const TENANTS={
+ vainillacoffee:{
+  slug:'vainillacoffee',hostname:'vainillacoffee.haloswebs.com',localOnly:true,displayName:'Vainilla Coffee',shortName:'Vainilla Coffee',cardPrefix:'VAINILLA',
+  rewardGoal:9,rewardName:'Bebida gratis',timezone:'America/Tijuana',stampPolicy:'per_item',maxStampsPerTransaction:99,petFriendly:false,
+  cardLayout:{stampColumns:3,stampRows:3,rewardSlot:false,variant:'bouquet'},
+  logo:'/assets/vainilla/logo.svg',icon:'/assets/vainilla/icon-192.png',touchIcon:'/assets/vainilla/icon-192.png',
+  pwaIcons:[{src:'/assets/vainilla/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/assets/vainilla/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}],
+  colors:{cream:'#fffaf0',ink:'#502810',accent:'#c28b21'},
+  stampStyles:{flower:{name:'Flor',src:'/assets/vainilla/flower.svg'}},
+  socialLinks:[{label:'Instagram',url:'https://www.instagram.com/vainillacoffee.mx?stkn=MTIxaW1pcW42cm5xag=='},{label:'TikTok',url:'https://www.tiktok.com/@vainilla.coffee6?_r=1&_t=ZS-9ACJRKwC8f4'},{label:'Cómo llegar',url:'https://maps.app.goo.gl/V33tbMBdwbxGe34XA'}],
+  address:'',texts:{concept:'Completa 9 flores y llévate una bebida gratis.',ready:'Tu bebida gratis está lista.',tagline:'Un café. Una flor. Un momento para ti.'},
+  replacements:[['Renace Café Shop','Vainilla Coffee'],['RENACE CAFÉ SHOP','VAINILLA COFFEE'],['Renace Card','Vainilla Coffee'],['Renace','Vainilla Coffee'],['RENACE','VAINILLA'],['Tu momento favorito empieza con café.','Un café. Una flor. Un momento para ti.'],['Cada café pagado suma un sello.','Cada café pagado suma una flor.'],['Clásico, Vaquero o Moño','Flor'],['/assets/app-icon.svg','/assets/vainilla/flower.svg'],['Canjear café gratis','Canjear bebida gratis'],['Café canjeado','Bebida canjeada'],['REN-','VAINILLA-'],['>R</div>','>✿</div>'],['Cada visita cuenta.','Cada café florece.'],['9 visitas · Un café de regalo','9 cafés pagados · Una bebida gratis'],['Acerca el QR a la cámara. Confirma la compra antes de registrar el sello.','Acerca el QR a la cámara. Confirma cuántos cafés incluye el pedido.'],['Los cafés pagados generan sello; el gratuito no.','Los cafés pagados generan flores; el gratuito no.'],['Sellos hoy','Flores hoy'],['Ajustar sellos','Ajustar flores'],['Sellos','Flores'],['Sello registrado.','Flor registrada.'],['sellos registrados.','flores registradas.'],['Cafés canjeados','Bebidas canjeadas'],['café gratis','bebida gratis']]
+ },
  renace:{
   slug:'renace',hostname:'renacecafe.haloswebs.com',displayName:'Renace Café Shop',shortName:'Renace',cardPrefix:'REN',
   rewardGoal:9,rewardName:'Café gratis',timezone:'America/Tijuana',stampPolicy:'daily',maxStampsPerTransaction:1,petFriendly:false,
@@ -34,14 +46,14 @@ export const TENANTS={
  },
  santofe:{
   slug:'santofe',hostname:'santofe.haloswebs.com',displayName:'Santofé',shortName:'Santofé',cardPrefix:'SANTOFE',
-  rewardGoal:10,rewardName:'Café gratis',timezone:'America/Tijuana',stampPolicy:'per_item',maxStampsPerTransaction:10,petFriendly:true,
+  rewardGoal:10,rewardName:'Café gratis',timezone:'America/Tijuana',stampPolicy:'per_item',maxStampsPerTransaction:99,petFriendly:true,
   cardLayout:{stampColumns:5,stampRows:2,rewardSlot:false,variant:'santofe'},
   logo:'/assets/santofe/logo-santofe.png',icon:'/assets/santofe/icon-192-v2.png',touchIcon:'/assets/santofe/icon-192-v2.png',
   pwaIcons:[{src:'/assets/santofe/icon-192-v2.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/assets/santofe/icon-512-v2.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}],
   colors:{cream:'#e8ecde',ink:'#6f5e62',accent:'#77666a'},
   stampStyles:{santofe:{name:'Santofé',src:'/assets/santofe/mark-santofe.png'}},
   socialLinks:[{label:'Facebook',url:'https://www.facebook.com/profile.php?id=61578395980108'},{label:'Instagram',url:'https://www.instagram.com/santofe_mx/'},{label:'TikTok',url:'https://www.tiktok.com/@santofecafe'},{label:'Cómo llegar · Pinos',url:'https://maps.app.goo.gl/rdBsjChh92f7uXsj9'},{label:'Cómo llegar · Otay',url:'https://maps.app.goo.gl/1hbD3RYi4vcQUjVB8'}],
-  address:'',texts:{concept:'El café número 11 va por nuestra cuenta.',ready:'Tu café gratis está listo.',tagline:'Coffee · Deli · Pet friendly.'},
+  address:'',texts:{concept:'Cada 10 cafés pagados ganas una bebida gratis.',ready:'Tu café gratis está listo.',tagline:'Coffee · Deli · Pet friendly.'},
   replacements:[
    ['Renace Café Shop','Santofé'],['RENACE CAFÉ SHOP','SANTOFÉ'],['Renace Card','Santofé'],['Renace','Santofé'],['RENACE','SANTOFÉ'],
    ['Tu momento favorito empieza con café.','Coffee · Deli · Pet friendly.'],['Tu momento<br>favorito empieza<br><em>con café.</em>','Coffee.<br>Deli.<br><em>Santofé.</em>'],
@@ -55,7 +67,7 @@ export const TENANTS={
 
 export function resolveTenant(url,env){
  const local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);
- const tenant=local?TENANTS[env.DEV_TENANT||'renace']:Object.values(TENANTS).find(t=>t.hostname===url.hostname);
+ const tenant=local?TENANTS[env.DEV_TENANT||'renace']:Object.values(TENANTS).find(t=>!t.localOnly&&t.hostname===url.hostname);
  return tenant?{...tenant,demo:local&&env.ALLOW_DEMO==='true'}:null;
 }
 export function publicTenant(t){return {...t};}

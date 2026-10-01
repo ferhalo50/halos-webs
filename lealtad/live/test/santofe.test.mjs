@@ -13,6 +13,7 @@ const credentials={
 };
 
 async function request(base,path,{cookie,body,method=body?'POST':'GET',headers={}}={}){
+  if(base===santofe&&['/api/staff/stamp','/api/staff/redeem'].includes(path)&&body&&body.expectedVersion===undefined){const snapshot=await request(base,'/api/staff/card?value='+body.cardId,{cookie});if(snapshot.status===200)body={...body,expectedVersion:snapshot.data.card.rewardVersion,operationId:crypto.randomUUID()};}
   const response=await fetch(base+path,{method,headers:{'content-type':'application/json',...(cookie?{cookie}:{}),...headers},body:body?JSON.stringify(body):undefined});
   return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
 }
@@ -43,7 +44,7 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
   const customer=await request(santofe,'/api/register',{body:{name:'Cliente Santofé',phone,pin:'4826'}});
   assert.equal(customer.status,201);
   const card=(await request(santofe,'/api/card',{cookie:customer.cookie})).data.card;
-  assert.equal(card.goal,10);assert.equal(card.stampPolicy,'per_item');assert.equal(card.maxStampsPerTransaction,10);
+  assert.equal(card.goal,10);assert.equal(card.stampPolicy,'per_item');assert.equal(card.maxStampsPerTransaction,99);
   assert.equal(card.stampStyle,'santofe');assert.ok(card.qrValue.startsWith('santofe:'));
 
   const samePhoneRenace=await request(renace,'/api/register',{body:{name:'Mismo teléfono otra cafetería',phone,pin:'4826'}});
@@ -72,17 +73,17 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:3}});
   assert.equal(result.status,200);assert.equal(result.data.card.stamps,4);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:6}});
-  assert.equal(result.status,200);assert.equal(result.data.card.stamps,10);
+  assert.equal(result.status,200);assert.equal(result.data.card.stamps,0);assert.ok(result.data.card.rewardsPending>=1);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:1}});
-  assert.equal(result.status,200);assert.equal(result.data.card.stamps,0);assert.equal(result.data.card.redeemed,1);
-  assert.deepEqual(result.data.operation,{totalCoffees:1,paidCoffees:0,freeCoffees:1,stampsAfter:0});
+  assert.equal(result.status,200);assert.equal(result.data.card.stamps,1);assert.equal(result.data.card.redeemed,0);
+  assert.equal(result.data.operation.paidCoffees,1);assert.equal(result.data.operation.freeCoffees,0);assert.equal(result.data.operation.rewardsGenerated,0);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:10}});
-  assert.equal(result.status,200);assert.equal(result.data.card.stamps,10);
+  assert.equal(result.status,200);assert.equal(result.data.card.stamps,1);assert.equal(result.data.card.rewardsPending,2);
 
   const crossingCases=[
-    {before:8,order:3,after:0,paid:2,label:'8 más 3'},
-    {before:8,order:4,after:1,paid:3,label:'8 más 4'},
-    {before:9,order:2,after:0,paid:1,label:'9 más 2'}
+    {before:8,order:3,after:1,paid:3,label:'8 más 3'},
+    {before:8,order:4,after:2,paid:4,label:'8 más 4'},
+    {before:9,order:2,after:1,paid:2,label:'9 más 2'}
   ];
   let caseIndex=0;
   for(const scenario of crossingCases){
@@ -91,8 +92,8 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
     const caseCard=(await request(santofe,'/api/card',{cookie:account.cookie})).data.card;
     const prepared=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:caseCard.id,quantity:scenario.before}});assert.equal(prepared.data.card.stamps,scenario.before);
     const crossed=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:caseCard.id,quantity:scenario.order}});
-    assert.equal(crossed.status,200);assert.equal(crossed.data.card.stamps,scenario.after);assert.equal(crossed.data.card.redeemed,1);
-    assert.deepEqual(crossed.data.operation,{totalCoffees:scenario.order,paidCoffees:scenario.paid,freeCoffees:1,stampsAfter:scenario.after});
+    assert.equal(crossed.status,200);assert.equal(crossed.data.card.stamps,scenario.after);assert.equal(crossed.data.card.redeemed,0);assert.equal(crossed.data.card.rewardsPending,1);
+    assert.equal(crossed.data.operation.paidCoffees,scenario.paid);assert.equal(crossed.data.operation.freeCoffees,0);assert.equal(crossed.data.operation.stampsAfter,scenario.after);assert.equal(crossed.data.operation.rewardsGenerated,1);
   }
 
   const dashboard=await request(santofe,'/api/admin/dashboard?q='+phone,{cookie:admin.cookie});
@@ -101,8 +102,8 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
   assert.ok(Number(dashboard.data.metrics.stamps_today)>=20);
   const activity=await exportAll('activity',admin.cookie);
   const quantities=activity.filter(item=>item.card_id===card.id&&item.event_type==='stamp').map(item=>Number(item.quantity));
-  assert.deepEqual(quantities.sort((a,b)=>a-b),[1,3,6,10]);
-  assert.ok(activity.some(item=>item.card_id===card.id&&item.event_type==='redeem'&&/Café gratis aplicado/.test(item.reason)));
+  assert.deepEqual(quantities.sort((a,b)=>a-b),[1,1,3,6,10]);
+  assert.ok(activity.some(item=>item.card_id===card.id&&item.event_type==='stamp'&&/recompensas generadas: 1/.test(item.reason)));assert.ok(!activity.some(item=>item.card_id===card.id&&item.event_type==='redeem'));
   const clients=await exportAll('clients',admin.cookie);
   assert.ok(clients.some(item=>item.id===card.id));assert.ok(!clients.some(item=>item.id===renaceCard.id));
 
@@ -142,25 +143,25 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   assert.doesNotMatch(await page.locator('body').innerText(),/Renace|MOON Coffee/i);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight*1.3));
-  await page.click('#role-guide');assert.match(await page.locator('dialog').innerText(),/10\/10/);assert.match(await page.locator('dialog').innerText(),/cada café/i);await page.keyboard.press('Escape');
+  await page.click('#role-guide');assert.match(await page.locator('dialog').innerText(),/X\/10/);assert.match(await page.locator('dialog').innerText(),/cada café/i);await page.keyboard.press('Escape');
 
   const manifest=await(await fetch(santofe+'/manifest.webmanifest')).json();
   assert.match(manifest.name,/Santofé/);assert.ok(manifest.icons.every(icon=>icon.src.includes('/assets/santofe/')));
   const staffContext=await browser.newContext({viewport:{width:390,height:844}});
   const staffLogin=await request(santofe,'/api/login/staff',{body:credentials.staff});assert.equal(staffLogin.status,200);const [staffCookieName,staffCookieValue]=staffLogin.cookie.split('=');await staffContext.addCookies([{name:staffCookieName,value:staffCookieValue,url:santofe}]);
   const cardId=(await page.locator('code').innerText()).trim();
-  const prepared=await staffContext.request.post(santofe+'/api/staff/stamp',{data:{cardId,quantity:8}});assert.equal(prepared.status(),200);
+  const prepared=await staffContext.request.post(santofe+'/api/staff/stamp',{data:{cardId,quantity:8,expectedVersion:0,operationId:crypto.randomUUID()}});assert.equal(prepared.status(),200);
   const staffPage=await staffContext.newPage();await staffPage.goto(santofe+'/#empleado');await staffPage.waitForSelector('#lookup');
   await staffPage.fill('#lookup input',cardId);await staffPage.click('#lookup button');await staffPage.waitForSelector('#stamp-quantity');
-  assert.match(await staffPage.locator('#stamp-operation').innerText(),/Quedará en 9\/10/);
+  assert.match(await staffPage.locator('#stamp-operation').innerText(),/Progreso resultante: 9\/10/);
   await staffPage.click('#stamp-plus');await staffPage.click('#stamp-plus');
   assert.equal(await staffPage.locator('#stamp-quantity').innerText(),'3');
-  const operationText=await staffPage.locator('#stamp-operation').innerText();assert.match(operationText,/agregará 2 sellos/i);assert.match(operationText,/1 café gratis/i);assert.match(operationText,/0 sellos en la siguiente tarjeta/i);
+  const operationText=await staffPage.locator('#stamp-operation').innerText();assert.match(operationText,/Cafés pagados: 3/i);assert.match(operationText,/Recompensas generadas: 1/i);assert.match(operationText,/Progreso resultante: 1\/10/i);
   assert.ok(await staffPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const adminContext=await browser.newContext({viewport:{width:1280,height:900}});
   const adminLogin=await request(santofe,'/api/login/staff',{body:credentials.admin});assert.equal(adminLogin.status,200);const [adminCookieName,adminCookieValue]=adminLogin.cookie.split('=');await adminContext.addCookies([{name:adminCookieName,value:adminCookieValue,url:santofe}]);
   const adminPage=await adminContext.newPage();await adminPage.goto(santofe+'/#admin');await adminPage.waitForSelector('.stats');
-  const adminText=await adminPage.locator('body').innerText();assert.match(adminText,/COMUNIDAD SANTOFÉ/);assert.match(adminText,/9\/10/);assert.doesNotMatch(adminText,/COMUNIDAD RENACE|8\/9/);
+  const adminText=await adminPage.locator('body').innerText();assert.match(adminText,/COMUNIDAD SANTOFÉ/);assert.match(adminText,/8\/10/);assert.doesNotMatch(adminText,/COMUNIDAD RENACE|8\/9/);
   const download=adminPage.waitForEvent('download');await adminPage.click('#export-all-customers');const file=await download,parts=[];for await(const chunk of await file.createReadStream())parts.push(chunk);
   const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(Buffer.concat(parts));const sheet=workbook.worksheets[0];assert.equal(sheet.getCell('A1').value,'Santofé');assert.ok(sheet.getColumn(2).values.some(value=>String(value)===phone));
   assert.deepEqual(errors,[]);

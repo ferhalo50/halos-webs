@@ -43,7 +43,7 @@ export async function tenantAssets(request, env) {
     code = code
       .replace(
         'renace-shell-v8',
-        t.slug + '-shell-v11'
+        t.slug + (t.stampPolicy==='per_item'?'-shell-v12':'-shell-v11')
       )
       .replace(
         "'/assets/style.css'",
@@ -73,6 +73,8 @@ export async function tenantAssets(request, env) {
         .join(',')
     );
 
+    if(t.slug==='vainillacoffee')code=code.replace("const SHELL=[","const SHELL=[...new Set(['/assets/vainilla.js','/assets/vainilla.css','/assets/vainilla/bouquet.jpg','/assets/vainilla/icon-192.png','/assets/vainilla/icon-512.png',").replace('];','])];');
+    if(t.stampPolicy==='per_item')code=code.replace("'/manifest.webmanifest'","'/manifest.webmanifest','/assets/pending-rewards.css'");
     return new Response(code, {
       headers: {
         'content-type': 'application/javascript'
@@ -101,11 +103,13 @@ export async function tenantAssets(request, env) {
     );
 
     // CSS específico del tenant.
+    if(t.slug==='vainillacoffee')html=html.replace('<script defer src="/assets/live.js">','<script defer src="/assets/vainilla.js"></script><script defer src="/assets/live.js">').replace('</head>','<link rel="stylesheet" href="/assets/vainilla.css"></head>');
     html = html.replace(
       '</head>',
       '<link rel="stylesheet" href="/assets/tenant.css"></head>'
     );
 
+    if(t.stampPolicy==='per_item')html=html.replace('</head>','<link rel="stylesheet" href="/assets/pending-rewards.css"></head>');
     // Favicon correcto.
     const faviconType = t.icon.toLowerCase().endsWith('.png')
       ? 'image/png'

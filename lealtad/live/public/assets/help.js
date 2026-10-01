@@ -39,42 +39,11 @@
     ]]
   };
 
-  if(tenant.stampPolicy==='per_item'){
-    guides.customer=['Tu tarjeta, paso a paso',[
-      ['Tu tarjeta Santofé','Cada café comprado suma un sello. Al completar 10/10 tienes un café gratis, que corresponde al número 11. El contador y los diez círculos muestran tu progreso actual.'],
-      ['Un sello con identidad','Los sellos digitales usan el símbolo oficial de Santofé dentro de los círculos, inspirado en el sello de la tarjeta física. El diseño no cambia tu saldo ni tu recompensa.'],
-      ['Muestra tu QR en caja','El QR identifica tu tarjeta Santofé. El equipo lo escanea, confirma cuántos cafés compraste y registra esa misma cantidad de sellos. No existe un límite artificial de un sello por día.'],
-      ['Lleva tu QR sin internet','“Descargar QR” guarda una imagen con tu nombre, celular y código. “Compartir QR” abre las opciones del dispositivo. La imagen puede quedar desactualizada; consulta tu saldo actual con internet o en mostrador.'],
-      ['Disfruta tu café gratis','Después de 10 cafés pagados, el siguiente café es gratis y no genera sello. Si sucede dentro de un pedido con más cafés, los cafés pagados restantes comienzan automáticamente la siguiente tarjeta. Escanear el QR no canjea la recompensa.'],
-      ['Instala tu tarjeta','Pulsa “Instalar app” junto a esta guía. En iPhone o iPad, abre la página en Safari y usa Compartir → Agregar a pantalla de inicio → Agregar.'],
-      ['Tu cuenta y Santofé','En “Mi cuenta” puedes cambiar tu PIN. Si lo olvidaste, pide un PIN temporal al equipo con tu identidad confirmada en mostrador. Debajo del QR están los enlaces oficiales de Facebook, Instagram y TikTok.']
-    ]];
-    guides.employee=['Una atención sencilla en mostrador',[
-      ['1. Encuentra la tarjeta','Abre la cámara y acerca el QR completo al marco. También puedes buscar por celular de 10 dígitos o código SANTOFE-…. Escanear o buscar todavía no añade sellos.'],
-      ['2. Confirma la cantidad','Pregunta cuántos cafés incluye el pedido. Usa − y + en “Cantidad de cafés del pedido”; la pantalla separa cuántos cafés son pagados, si corresponde uno gratis y cuántos sellos quedarán en la siguiente tarjeta.'],
-      ['3. Procesa el pedido','Pulsa “Procesar cafés” y revisa la confirmación. Cada café pagado genera un sello. El café que sigue a los 10 pagados se aplica gratis, no genera sello y los cafés pagados restantes comienzan automáticamente el recorrido siguiente.'],
-      ['4. Entrega la recompensa','Si el cliente ya llega con 10/10, procesa un café para aplicarlo gratis y volver a 0/10. “Canjear café gratis” continúa disponible cuando deseas registrar únicamente la entrega de esa recompensa.'],
-      ['Mensajes y correcciones','Si hay un error de conexión, vuelve a buscar la tarjeta antes de repetir. Si registraste una cantidad incorrecta, pide al administrador corregir los sellos con un motivo.'],
-      ['PIN temporal','Con el cliente presente, pulsa “PIN temporal”. Sus sesiones se cerrarán y deberá usar ese PIN una vez para crear uno nuevo. La acción queda registrada.'],
-      ['Cuida tu acceso','Cambia tu contraseña desde “Mi cuenta” y cierra sesión al terminar en dispositivos compartidos. El mostrador necesita internet para consultar y registrar operaciones.']
-    ]];
-    guides.admin=['Tu guía de administración',[
-      ['Las métricas','“Sellos hoy” suma todos los cafés registrados hoy, incluso cuando una sola compra añade varios sellos. “Recompensas pendientes” muestra cafés gratis listos para canjear y “Cafés canjeados” los ya entregados.'],
-      ['Clientes y búsquedas','Busca por nombre, celular o código de tarjeta. Editar nombre o celular cierra las sesiones del cliente para proteger su cuenta.'],
-      ['Ajustar sellos','Puedes añadir o quitar un sello por corrección, entre 0 y 10, con un motivo obligatorio. El ajuste queda registrado con tu usuario, fecha y saldo anterior y nuevo.'],
-      ['Recompensas y canjes','Con 10 sellos, el siguiente café se registra como gratuito y no genera sello. Una compra que cruce la meta aplica el café gratis y conserva en la nueva tarjeta los sellos de los cafés pagados restantes.'],
-      ['Recuperar un PIN en persona','Genera un PIN temporal únicamente con el cliente presente. Se muestra una vez, cierra sus sesiones y obliga a elegir un PIN nuevo. No hay recuperación por SMS.'],
-      ['Equipo','Puedes agregar empleados, editar su acceso, desactivarlos o eliminarlos. Usa cuentas individuales para conservar una auditoría clara.'],
-      ['Actividad y exportación','La actividad separa los sellos antes del premio, el café gratis y los sellos que empiezan la siguiente tarjeta. Los Excel incluyen únicamente clientes y movimientos de Santofé, con fechas de Tijuana y teléfonos conservados como texto.'],
-      ['Eliminar cuentas','Eliminar invalida el acceso y el QR, retira los datos personales y conserva la actividad sin identidad para los reportes.']
-    ]];
-  }
-
   if(!tenant.demo)guides.admin[1]=guides.admin[1].filter(([label])=>label!=='Demostración');
 
   const englishGuides = {
     customer: ['Your card, step by step', [
-      ['Your digital loyalty card', tenant.stampPolicy==='per_item' ? `Each paid coffee adds one stamp. After ${tenant.rewardGoal} paid coffees, the next coffee is free and does not add a stamp.` : `Show your card on each eligible visit. Your progress and available reward are always shown on the front.`],
+      ['Your digital loyalty card', tenant.stampPolicy==='per_item' ? `Each paid coffee adds progress. Every ${tenant.rewardGoal} paid coffees earns one pending free drink, redeemed separately.` : `Show your card on each eligible visit. Your progress and available reward are always shown on the front.`],
       ['Show your QR at the counter', 'Tap the card to reveal its QR. The team scans it, confirms the purchase and records the operation. Scanning alone never adds stamps or redeems a reward.'],
       ['Keep it available offline', 'Use Download QR to save an image or Share QR to use the options on your device. The saved image identifies your card, while the live app shows your current balance.'],
       ['Install the app', 'Use Install app beside this guide. On iPhone or iPad, open this page in Safari, tap Share, choose Add to Home Screen and confirm.'],
@@ -82,8 +51,8 @@
     ]],
     employee: ['A simple counter workflow', [
       ['Find the card', 'Open the camera and place the full QR inside the frame. You can also search by the 10-digit mobile number or card code. Finding a card does not change its balance.'],
-      ['Confirm the purchase', tenant.stampPolicy==='per_item' ? 'Select the total number of coffees in the order. The summary separates paid coffees, any free coffee and the stamps that will start the next card.' : 'Confirm the customer and purchase before adding today\'s stamp. The daily limit follows the business rule shown on screen.'],
-      ['Apply the reward', tenant.stampPolicy==='per_item' ? `After ${tenant.rewardGoal} paid coffees, the next coffee is free and creates no stamp. Any paid coffees left in the same order automatically start the next card.` : 'When the reward is ready, deliver it and use Redeem free coffee. The next loyalty cycle then starts at zero.'],
+      ['Confirm the purchase', tenant.stampPolicy==='per_item' ? 'Select only paid coffees. The summary shows progress, rewards earned and available free drinks.' : 'Confirm the customer and purchase before adding today\'s stamp. The daily limit follows the business rule shown on screen.'],
+      ['Apply the reward', tenant.stampPolicy==='per_item' ? `Every ${tenant.rewardGoal} paid coffees earns one pending free drink. Redeem explicitly; redemption does not change progress.` : 'When the reward is ready, deliver it and use Redeem free coffee. The next loyalty cycle then starts at zero.'],
       ['Temporary PIN and access', 'Create a temporary PIN only with the customer present. Use My account to change your own password and log out when you finish on a shared device.'],
       ['Install on this device', 'Use Install app to keep the counter shortcut on the tablet or computer. On iPhone or iPad, use Safari → Share → Add to Home Screen.']
     ]],
@@ -95,6 +64,23 @@
       ['Install and security', 'Use Install app for quick access on the administration device. Change your password in My account and log out on shared devices.']
     ]]
   };
+
+  if(tenant.stampPolicy==='per_item'){
+    const floral=tenant.slug==='vainillacoffee',goal=tenant.rewardGoal,unit=floral?'flores':'sellos',enUnit=floral?'flowers':'stamps';
+    const rule='Cada café pagado suma '+(floral?'una flor':'un sello')+'. Cada '+goal+' cafés pagados genera una bebida gratis pendiente. El progreso pasa al siguiente recorrido; las recompensas se acumulan por separado. No hay límite diario.';
+    const redeem='Canjear bebida gratis entrega una recompensa pendiente. Reduce el saldo en uno y no cambia el progreso, no añade '+unit+' ni reinicia la tarjeta. Nunca se canjea automáticamente.';
+    guides.customer=['Tu tarjeta, paso a paso',[
+      ['Tu tarjeta '+tenant.shortName,rule],['Bebidas gratis disponibles','Revisa el progreso X/'+goal+' '+unit+' y el contador separado de bebidas gratis disponibles. Puedes guardar varias recompensas.'],['Disfruta tu bebida gratis',redeem],['QR y descarga','Muestra tu QR en caja. Escanear no modifica el saldo. La imagen descargada incluye una foto del progreso y recompensas; consulta el saldo actualizado en la app.'],['Tu cuenta e instalación','Cambia tu PIN en Mi cuenta. Si lo olvidaste, pide un PIN temporal al equipo con tu identidad confirmada. Usa Instalar app para guardar el acceso.']]];
+    guides.employee=['Una atención sencilla en mostrador',[
+      ['Encuentra la tarjeta','Escanea el QR o busca por celular o código. Confirma nombre, progreso y bebidas gratis disponibles.'],['Confirma los cafés pagados',rule+' Selecciona de 1 a 99 cafés pagados por operación. La confirmación muestra el progreso y las recompensas generadas.'],['Entrega la recompensa',redeem],['Errores y acceso','Si la tarjeta cambió o hay un error de conexión, vuelve a buscarla antes de confirmar. No repitas una operación ya registrada. Crea PIN temporales solo con el cliente presente y cierra sesión al terminar.']]];
+    guides.admin=['Tu guía de administración',[
+      ['Clientes y recompensas','La lista muestra progreso y Gratis. El detalle muestra Bebidas gratis disponibles. Las métricas suman recompensas pendientes, no clientes con una tarjeta completa.'],['Compras y canjes',rule+' '+redeem],['Actividad y exportación','La compra registra cafés pagados, progreso resultante, recompensas generadas y saldo pendiente en un evento. El canje se registra por separado. El Excel conserva columnas existentes y agrega bebidas gratis disponibles.'],['Equipo y ajustes','Mantén accesos individuales. Solo el administrador puede gestionar cuentas, equipo, exportaciones y ajustes con motivo. Una corrección que complete la meta crea una recompensa pendiente.']]];
+    const enRule='Each paid coffee adds one '+(floral?'flower':'stamp')+'. Every '+goal+' paid coffees earns one pending free drink. Progress starts the next cycle and rewards accumulate separately. There is no daily limit.';
+    const enRedeem='Redeem free drink consumes exactly one available reward. It does not change progress, add '+enUnit+' or reset the card. Redemption is never automatic.';
+    englishGuides.customer=['Your card, step by step',[['Your '+tenant.shortName+' card',enRule],['Free drinks available','Check X/'+goal+' '+enUnit+' and the separate available free drinks counter. You can keep several rewards.'],['Enjoy your free drink',enRedeem],['QR and download','Show your QR at the counter. Scanning does not change balances. A downloaded image is a snapshot; check current progress and rewards in the app.'],['Your account and installation','Change your PIN in My account. Request a temporary PIN in person if needed. Use Install app to keep the shortcut.']]];
+    englishGuides.employee=['A simple counter workflow',[['Find the card','Scan the QR or search by mobile number or card code. Confirm the name, progress and available free drinks.'],['Confirm paid coffees',enRule+' Select 1 to 99 paid coffees per operation. The confirmation shows progress and rewards earned.'],['Deliver the reward',enRedeem],['Errors and access','If the card changed or connection failed, look it up again before confirming. Do not repeat a recorded operation. Issue temporary PINs only in person and log out when finished.']]];
+    englishGuides.admin=['Administration guide',[['Customers and rewards','The list shows progress and Free. The details show Free drinks available. Metrics sum pending rewards.'],['Purchases and redemption',enRule+' '+enRedeem],['Activity and exports','Purchases record paid coffees, resulting progress, rewards earned and pending balance in one event. Redemption is audited separately. Excel preserves existing columns and adds available free drinks.'],['Team and corrections','Use individual accounts. Only administrators manage accounts, staff, exports and corrections with a reason. A correction completing the goal earns a pending reward.']]];
+  }
 
   function openGuide(title, sections, trigger) {
     document.querySelector('#renace-guide')?.close();

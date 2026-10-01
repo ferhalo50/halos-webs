@@ -6,7 +6,8 @@
     "dev": "wrangler dev --local --host localhost",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "check": "node --check worker/index.js && node --check worker/tenant-assets.js && node --check public/assets/i18n.js && node --check public/assets/live.js && node --check public/assets/help.js && node --check public/service-worker.js"
+    "check": "node --check worker/index.js && node --check worker/per-item-rewards.js && node --check scripts/local-pending-rewards.mjs && node --check public/assets/xlsx-worker.js && node --check worker/tenant-assets.js && node --check public/assets/i18n.js && node --check public/assets/live.js && node --check public/assets/vainilla.js && node --check scripts/vainilla-local.mjs && node --check scripts/vainilla-local-fixtures.mjs && node --check scripts/vainilla-icons.mjs && node --check public/assets/help.js && node --check public/service-worker.js",
+    "dev:vainilla": "node scripts/vainilla-local.mjs"
   },
   "devDependencies": {
     "exceljs": "4.4.0",

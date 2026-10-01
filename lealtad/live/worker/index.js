@@ -1,6 +1,7 @@
 import { TENANTS, resolveTenant } from './tenants.js';
 import { tenantAssets } from './tenant-assets.js';
 import { activitySource } from './activity.js';
+import { recordRewardOperation } from './per-item-rewards.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
@@ -12,6 +13,16 @@ function response(data, status = 200, extraHeaders = {}) {
 
 function error(message, status = 400, code = 'bad_request') {
   return response({ ok: false, error: { code, message } }, status);
+}
+
+// Missing/OFF preserves existing deployments. Any other value fails closed.
+function maintenanceEnabled(env) {
+  const mode = String(env.MAINTENANCE_MODE ?? 'OFF').trim().toUpperCase();
+  return mode !== 'OFF';
+}
+
+function maintenanceResponse() {
+  return response({ ok: false, error: { code: 'maintenance', message: 'Estamos realizando una actualización breve. Intenta nuevamente en unos minutos.' } }, 503, { 'retry-after': '300' });
 }
 
 function securityHeaders(res, isApi = false) {
@@ -229,7 +240,7 @@ async function register(request, env) {
 }
 
 async function cardForCustomer(env, customerId, businessId) {
-  return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
+  return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps,c.rewards_pending,c.reward_version, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
     b.slug AS business_slug,b.reward_goal, b.reward_name, b.timezone,b.stamp_policy
     FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
@@ -243,7 +254,7 @@ function publicCard(card) {
   const canStampToday=stampPolicy==='per_item'
     ? true
     : !card.last_stamp_at||businessDay(card.timezone,new Date(card.last_stamp_at))!==businessDay(card.timezone);
-  return { stampStyle: Object.hasOwn(tenant.stampStyles,card.stamp_style) ? card.stamp_style : Object.keys(tenant.stampStyles)[0], customerId: card.customer_id, id: card.id, qrValue: `${card.business_slug}:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, stampPolicy, maxStampsPerTransaction: tenant.maxStampsPerTransaction||1, canStampToday };
+  return { stampStyle: Object.hasOwn(tenant.stampStyles,card.stamp_style) ? card.stamp_style : Object.keys(tenant.stampStyles)[0], customerId: card.customer_id, id: card.id, qrValue: `${card.business_slug}:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, stampPolicy, maxStampsPerTransaction: tenant.maxStampsPerTransaction||1, canStampToday,...(stampPolicy==='per_item'?{rewardsPending:card.rewards_pending,rewardVersion:card.reward_version}:{}) };
 }
 
 async function lookupCard(request, env, staff) {
@@ -254,7 +265,7 @@ async function lookupCard(request, env, staff) {
   if(value.includes(':')&&!value.startsWith(prefix))throw new ApiError(404,'card_not_found','Esta tarjeta pertenece a otra cafetería.');
   const qrToken = value.startsWith(prefix) ? value.slice(prefix.length) : '';
   const phone = normalizePhone(value);
-  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
+  const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.rewards_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id
     WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL AND (c.id=? OR c.qr_token=? OR u.phone=?)`).bind(staff.business_id, value, qrToken, phone).first();
@@ -280,14 +291,9 @@ async function stamp(request, env, staff) {
   let operation={totalCoffees:quantity,paidCoffees:quantity,freeCoffees:0,stampsAfter:card.stamps+quantity};
   try {
     if(policy==='per_item'){
-      const remaining=card.reward_goal-card.stamps;
-      const freeCoffees=card.stamps>=card.reward_goal||quantity>remaining?1:0;
-      const stampsAfter=freeCoffees?(card.stamps>=card.reward_goal?quantity-1:quantity-remaining-1):card.stamps+quantity;
-      operation={totalCoffees:quantity,paidCoffees:quantity-freeCoffees,freeCoffees,stampsAfter};
-      await env.DB.prepare(`INSERT INTO loyalty_purchase_operations
-        (id,business_id,card_id,customer_id,employee_id,total_coffees,before_stamps,business_day,created_at)
-        VALUES (?,?,?,?,?,?,?,?,?)`)
-        .bind(crypto.randomUUID(),staff.business_id,card.id,card.customer_id,staff.id,quantity,card.stamps,day,now.toISOString()).run();
+      const total=card.stamps+quantity,rewardsGenerated=Math.floor(total/card.reward_goal);
+      operation={totalCoffees:quantity,paidCoffees:quantity,freeCoffees:0,stampsAfter:total%card.reward_goal,rewardsGenerated,rewardsPendingAfter:card.rewards_pending+rewardsGenerated};
+      await recordRewardOperation(env,staff,card,input,'purchase',quantity,day,now.toISOString(),ApiError);
     }else{
       await env.DB.batch([
         env.DB.prepare("INSERT INTO loyalty_events (id,business_id,card_id,customer_id,employee_id,event_type,business_day,created_at,quantity,daily_limited) VALUES (?,?,?,?,?,'stamp',?,?,1,1)")
@@ -305,7 +311,7 @@ async function stamp(request, env, staff) {
 }
 
 async function cardById(env, cardId, businessId) {
-  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
+  return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.rewards_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
     FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
 }
@@ -315,6 +321,10 @@ async function redeem(request, env, staff) {
   const card = await cardById(env, input.cardId, staff.business_id);
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
   const now = new Date().toISOString();
+  if(card.stamp_policy==='per_item'){
+    await recordRewardOperation(env,staff,card,input,'redeem',0,businessDay(card.timezone),now,ApiError);
+    return publicCard(await cardById(env,card.id,staff.business_id));
+  }
   const updated = await env.DB.prepare('UPDATE loyalty_cards SET stamps=0,redeemed_count=redeemed_count+1,updated_at=? WHERE id=? AND business_id=? AND stamps>=? RETURNING id')
     .bind(now, card.id, staff.business_id, card.reward_goal).first();
   if (!updated) throw new ApiError(409, 'reward_unavailable', 'La recompensa todavía no está disponible.');
@@ -363,10 +373,10 @@ async function dashboard(request, env, admin) {
   const [metrics, customerCount, customers, employees, eventCount, events] = await Promise.all([
     env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
       (SELECT COALESCE(SUM(quantity),0) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
-      (SELECT COUNT(*) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND c.stamps>=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
-      (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, admin.business_id, business.reward_goal, admin.business_id).first(),
+      (SELECT COALESCE(SUM(CASE WHEN '${business.stamp_policy}'='per_item' THEN c.rewards_pending ELSE c.stamps>=? END),0) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
+      (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, business.reward_goal, admin.business_id, admin.business_id).first(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.rewards_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})${eventWhere}`).bind(...eventBindings).first(),
     env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
@@ -691,10 +701,10 @@ async function api(request, env) {
     const user=await requireRole(request,env,['admin']), business=await getBusiness(env);
     const offset=Math.max(0,Number.parseInt(url.searchParams.get('offset')||'0',10)||0);
     const clients=path.endsWith('/clients');
-    const query=clients ? `SELECT c.id,u.name,u.phone,c.stamps,c.redeemed_count,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL ORDER BY u.created_at,u.id LIMIT 500 OFFSET ?` : `${activitySource()} ORDER BY created_at,id LIMIT 500 OFFSET ?`;
+    const query=clients ? `SELECT c.id,u.name,u.phone,c.stamps,c.redeemed_count${business.stamp_policy==='per_item'?',c.rewards_pending':''},u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL ORDER BY u.created_at,u.id LIMIT 500 OFFSET ?` : `${activitySource()} ORDER BY created_at,id LIMIT 500 OFFSET ?`;
     const binds=clients?[user.business_id,user.business_id,offset]:[user.business_id,user.business_id,user.business_id,offset];
     const rows=(await env.DB.prepare(query).bind(...binds).all()).results;
-    return response({ok:true,rows,nextOffset:rows.length===500?offset+500:null,business:{name:business.name,slug:business.slug,reward_goal:business.reward_goal,timezone:business.timezone},generatedAt:new Date().toISOString()});
+    return response({ok:true,rows,nextOffset:rows.length===500?offset+500:null,business:{name:business.name,slug:business.slug,reward_goal:business.reward_goal,stamp_policy:business.stamp_policy,timezone:business.timezone},generatedAt:new Date().toISOString()});
   }
   const staffPin=path.match(/^\/api\/staff\/customers\/([^/]+)\/pin$/);
   if(request.method==='PATCH'&&staffPin){const user=await requireRole(request,env,['employee','admin']);return response({ok:true,customer:await resetCustomerPin(request,env,user,staffPin[1])});}
@@ -750,6 +760,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const isApi = url.pathname.startsWith('/api/');
+    // Covers canonical APIs and their legacy aliases before redirects, tenant or D1 access.
+    if (maintenanceEnabled(env) && /^\/(?:renace\/)?api(?:\/|$)/.test(url.pathname)) {
+      return securityHeaders(maintenanceResponse(), true);
+    }
     try {
       if (url.hostname === LEGACY_HOST) {
         if (url.pathname === '/renace/service-worker.js') return securityHeaders(legacyServiceWorker(), false);
@@ -772,6 +786,7 @@ export default {
     }
   },
   async scheduled(_controller, env, context) {
+    if (maintenanceEnabled(env)) return;
     context.waitUntil(cleanup(env));
   }
 };

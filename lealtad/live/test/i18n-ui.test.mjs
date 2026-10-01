@@ -96,7 +96,7 @@ test('language changes preserve unsent forms, selections, open details and user 
     assert.equal(await client.locator('.personal-card [data-i18n-ignore]').first().innerText(),'Luna');
     await client.click('[data-language-toggle]');
     const rule=await client.locator('.loyalty-detail-grid>div').nth(2).innerText();
-    assert.match(rule,tenant.name==='MOON'?/8 stamps · your next drink is on us/:tenant.name==='Renace'?/9 stamps · your next coffee is free/:/10 paid coffees · number 11 is free/);
+    assert.match(rule,tenant.name==='MOON'?/8 stamps · your next drink is on us/:tenant.name==='Renace'?/9 stamps · your next coffee is free/:/10 paid coffees · one pending free drink/);
     await client.click('[data-language-toggle]');
     if(evidence&&tenant.name==='MOON'){
       await client.setViewportSize({width:1440,height:1000});await client.click('#flip-card');
@@ -114,7 +114,7 @@ test('language changes preserve unsent forms, selections, open details and user 
     assert.match(await counterPage.locator('.customer-summary').innerText(),/Luna/);
     if(tenant.name==='Santofé'){
       assert.equal(await counterPage.locator('#stamp-quantity').innerText(),'2');
-      assert.equal(await counterPage.locator('#stamp-operation').innerText(),'This operation will add 2 stamps. It will end at 2/10.');
+      assert.equal(await counterPage.locator('#stamp-operation').innerText(),'Paid coffees: 2 · Resulting progress: 2/10 stamps · Rewards earned: 0 · Free drinks available: 0\nNo reward is redeemed automatically.');
     }
     await counter.close();
 
