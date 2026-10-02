@@ -345,14 +345,28 @@ async function decideReward(request, env, staff) {
   return publicCard(await cardById(env,card.id,staff.business_id));
 }
 
-async function changeCustomerName(request,env,customer) {
+function validatedName(value) {
+  const name=typeof value==='string'?value.trim():'';
+  if([...name].length<2||[...name].length>60||!/^\p{L}[\p{L}\p{M} .’'\-]*$/u.test(name))throw new ApiError(400,'invalid_name','Escribe un nombre válido de 2 a 60 caracteres.');
+  return name;
+}
+
+async function changeOwnName(request,env,user) {
   const input=await body(request);
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>key!=='name'))throw new ApiError(400,'invalid_profile','Solo puedes cambiar tu nombre desde aquí.');
-  const name=typeof input.name==='string'?input.name.trim():'';
-  if([...name].length<2||[...name].length>60||!/[\p{L}]/u.test(name)||!/^\p{L}[\p{L}\p{M} .’'\-]*$/u.test(name))throw new ApiError(400,'invalid_name','Escribe un nombre válido de 2 a 60 caracteres.');
-  await env.DB.prepare("UPDATE users SET name=?,updated_at=? WHERE id=? AND business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL")
-    .bind(name,new Date().toISOString(),customer.id,customer.business_id).run();
-  return publicUser({...customer,name});
+  const name=validatedName(input.name),now=new Date().toISOString();
+  // Audit only an actual change. The check and update share one atomic batch,
+  // so repeating the same request cannot produce duplicate rename events.
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO admin_audit_log(id,business_id,admin_id,actor_id,target_user_id,action,created_at,metadata)
+      SELECT ?,business_id,id,id,id,?,?,? FROM users WHERE id=? AND business_id=? AND role=? AND active=1 AND deleted_at IS NULL AND name<>?`)
+      .bind(crypto.randomUUID(),user.role==='customer'?'customer_updated':'employee_updated',now,JSON.stringify({kind:'profile_name_changed'}),user.id,user.business_id,user.role,name),
+    env.DB.prepare('UPDATE users SET name=?,updated_at=? WHERE id=? AND business_id=? AND role=? AND active=1 AND deleted_at IS NULL AND name<>?')
+      .bind(name,now,user.id,user.business_id,user.role,name)
+  ]);
+  const updated=await env.DB.prepare('SELECT id,role,name,phone,username,must_change_secret FROM users WHERE id=? AND business_id=? AND active=1 AND deleted_at IS NULL').bind(user.id,user.business_id).first();
+  if(!updated)throw new ApiError(403,'forbidden','No tienes permiso para esta acción.');
+  return publicUser(updated);
 }
 
 function positiveInteger(value, fallback, maximum) {
@@ -377,7 +391,7 @@ async function dashboard(request, env, admin) {
   const eventType = String(url.searchParams.get('eventType') || '');
   const eventEmployee = String(url.searchParams.get('eventEmployee') || '').trim().slice(0, 60);
   const validEventDate = value => { const date = new Date(value); return value && !Number.isNaN(date.getTime()) ? date.toISOString() : ''; };
-  const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted','reward_generated','reward_saved','reward_redeemed_now','saved_reward_redeemed']);
+  const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted','team_admin_created','team_admin_updated','team_admin_deleted','team_staff_created','profile_name_changed','reward_generated','reward_saved','reward_redeemed_now','saved_reward_redeemed']);
   const customerWhere = search
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
@@ -404,6 +418,7 @@ async function dashboard(request, env, admin) {
     env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
   ]);
   const total = Number(customerCount.total) || 0;
+  const initialAdminId=await primaryAdminId(env,admin.business_id);
   return {
     business,
     metrics,
@@ -411,6 +426,7 @@ async function dashboard(request, env, admin) {
     customerPage: { page, perPage, total, pages: Math.max(1, Math.ceil(total / perPage)), search },
     eventPage: { page: eventPage, perPage: eventPerPage, total: Number(eventCount.total) || 0, pages: Math.max(1, Math.ceil((Number(eventCount.total) || 0) / eventPerPage)), filters: { eventStart: eventStartIso, eventEnd: eventEndIso, eventCustomer, eventType: validEventTypes.has(eventType) ? eventType : '', eventEmployee } },
     employees: employees.results,
+    teamPermissions: { primaryAdminId: initialAdminId, canManageAdmins: admin.id===initialAdminId },
     events: events.results
   };
 }
@@ -424,18 +440,56 @@ async function cleanup(env) {
   ]);
 }
 
-async function addEmployee(request, env, admin) {
+async function primaryAdminId(env,businessId) {
+  // Accounts created from Equipo carry an atomic creation audit and can never
+  // inherit this authority. Keep the original identity even if inactive/deleted;
+  // changing its name or username does not transfer the permission.
+  const original=await env.DB.prepare(`SELECT u.id FROM users u WHERE u.business_id=? AND u.role='admin'
+    AND NOT EXISTS (SELECT 1 FROM admin_audit_log a WHERE a.business_id=u.business_id AND a.target_user_id=u.id
+      AND json_extract(a.metadata,'$.kind')='team_created' AND json_extract(a.metadata,'$.role')='admin')
+    ORDER BY julianday(u.created_at),u.id LIMIT 1`).bind(businessId).first();
+  return original?.id??null;
+}
+
+async function isPrimaryAdmin(env,admin) {
+  return admin.role==='admin'&&admin.id===await primaryAdminId(env,admin.business_id);
+}
+
+async function requirePrimaryAdmin(env,admin) {
+  if(!await isPrimaryAdmin(env,admin))throw new ApiError(403,'primary_admin_required','Solo el administrador inicial puede gestionar administradores.');
+}
+
+async function managedTeamUser(env,admin,id,{protectPrimary=false}={}) {
+  const target=await env.DB.prepare("SELECT id,username,role FROM users WHERE id=? AND business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL").bind(id,admin.business_id).first();
+  if(!target)throw new ApiError(404,'employee_not_found','No encontramos esa cuenta del equipo.');
+  if(target.role==='admin'){
+    await requirePrimaryAdmin(env,admin);
+    if(protectPrimary&&target.id===admin.id)throw new ApiError(400,'primary_admin_protected','No puedes eliminar ni desactivar al administrador inicial.');
+  }
+  return target;
+}
+
+async function createTeamUser(request, env, admin) {
   const input = await body(request);
-  const username = String(input.username || '').trim().toLowerCase();
-  const password = String(input.password || '');
-  const name = String(input.name || '').trim();
-  if (name.length < 2 || !/^[a-z0-9_-]{3,30}$/i.test(username) || password.length < 8) throw new ApiError(400, 'invalid_employee', 'Escribe nombre, usuario válido y contraseña de al menos 8 caracteres.');
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['name','username','password','role'].includes(key)))throw new ApiError(400,'invalid_team_user','Solo puedes indicar nombre, usuario, rol y contraseña.');
+  const role=input.role===undefined?'employee':input.role;
+  if(!['employee','admin'].includes(role))throw new ApiError(400,'invalid_role','Elige Mostrador o Administrador.');
+  if(role==='admin')await requirePrimaryAdmin(env,admin);
+  const name=validatedName(input.name);
+  const username=typeof input.username==='string'?input.username.trim().toLowerCase():'';
+  const password=typeof input.password==='string'?input.password:'';
+  if(!/^[a-z0-9_-]{3,30}$/.test(username))throw new ApiError(400,'invalid_username','Usa un usuario de 3 a 30 caracteres: letras, números, guion o guion bajo.');
+  if(password.length<(role==='admin'?10:8))throw new ApiError(400,'invalid_password',role==='admin'?'La contraseña del administrador debe tener al menos 10 caracteres.':'La contraseña debe tener al menos 8 caracteres.');
   const secret = await hashSecret(password);
   try {
-    const id = crypto.randomUUID();
-    await env.DB.prepare("INSERT INTO users (id,business_id,role,name,username,secret_hash,secret_salt) VALUES (?,?,'employee',?,?,?,?)")
-      .bind(id, admin.business_id, name, username, secret.hash, secret.salt).run();
-    return { id, name, username, role: 'employee', active: 1 };
+    const id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO users(id,business_id,role,name,username,secret_hash,secret_salt,secret_iterations,active,must_change_secret,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,0,?,?)')
+        .bind(id,admin.business_id,role,name,username,secret.hash,secret.salt,secret.iterations,now,now),
+      env.DB.prepare("INSERT INTO admin_audit_log(id,business_id,admin_id,actor_id,target_user_id,action,created_at,metadata) VALUES(?,?,?,?,?,'employee_updated',?,?)")
+        .bind(crypto.randomUUID(),admin.business_id,admin.id,admin.id,id,now,JSON.stringify({kind:'team_created',role}))
+    ]);
+    return {id,name,username,role,active:1};
   } catch (cause) {
     if (String(cause).includes('UNIQUE')) throw new ApiError(409, 'username_exists', 'Ese usuario ya existe.');
     throw cause;
@@ -444,11 +498,13 @@ async function addEmployee(request, env, admin) {
 
 async function toggleEmployee(request, env, admin, id) {
   const input = await body(request);
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>key!=='active')||typeof input.active!=='boolean')throw new ApiError(400,'invalid_team_user','Solo puedes cambiar el estado de esta cuenta.');
+  const target=await managedTeamUser(env,admin,id,{protectPrimary:true});
   if (id === admin.id) throw new ApiError(400, 'self_change', 'No puedes desactivar tu propia cuenta.');
-  const result = await env.DB.prepare("UPDATE users SET active=?,updated_at=? WHERE id=? AND business_id=? AND role='employee' AND deleted_at IS NULL")
-    .bind(input.active ? 1 : 0, new Date().toISOString(), id, admin.business_id).run();
-  if (!result.meta.changes) throw new ApiError(404, 'employee_not_found', 'No encontramos ese empleado.');
-  if (!input.active) await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(id).run();
+  const now=new Date().toISOString(),statements=[env.DB.prepare('UPDATE users SET active=?,updated_at=? WHERE id=? AND business_id=? AND role=? AND deleted_at IS NULL').bind(input.active?1:0,now,id,admin.business_id,target.role)];
+  if(!input.active)statements.push(env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(id));
+  if(target.role==='admin')statements.push(env.DB.prepare("INSERT INTO admin_audit_log(id,business_id,admin_id,actor_id,target_user_id,action,created_at,metadata) VALUES(?,?,?,?,?,'employee_updated',?,?)").bind(crypto.randomUUID(),admin.business_id,admin.id,admin.id,id,now,JSON.stringify({kind:'team_updated',role:'admin',active:input.active})));
+  await env.DB.batch(statements);
   return { id, active: Boolean(input.active) };
 }
 
@@ -599,42 +655,39 @@ async function deleteCustomer(env, admin, customerId) {
 
 async function editEmployee(request, env, admin, employeeId) {
   const input = await body(request);
-  const name = String(input.name || '').trim();
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['name','username'].includes(key)))throw new ApiError(400,'invalid_team_user','Solo puedes editar el nombre y usuario de esta cuenta.');
+  const name = validatedName(input.name);
   const username = String(input.username || '').trim().toLowerCase();
   if (name.length < 2 || name.length > 60 || !/^[a-z0-9_-]{3,30}$/i.test(username)) throw new ApiError(400, 'invalid_employee', 'Escribe un nombre y un usuario válido de 3 a 30 caracteres.');
-  const employee = await env.DB.prepare("SELECT id,username FROM users WHERE id=? AND business_id=? AND role='employee' AND deleted_at IS NULL")
-    .bind(employeeId, admin.business_id).first();
-  if (!employee) throw new ApiError(404, 'employee_not_found', 'No encontramos ese empleado.');
+  const employee=await managedTeamUser(env,admin,employeeId);
   const now = new Date().toISOString();
   try {
     await env.DB.batch([
-      env.DB.prepare("UPDATE users SET name=?,username=?,updated_at=? WHERE id=? AND business_id=? AND role='employee'")
-        .bind(name, username, now, employee.id, admin.business_id),
+      env.DB.prepare('UPDATE users SET name=?,username=?,updated_at=? WHERE id=? AND business_id=? AND role=? AND deleted_at IS NULL')
+        .bind(name, username, now, employee.id, admin.business_id,employee.role),
       env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(employee.id),
-      env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ? OR login_key LIKE ?')
-        .bind(`${admin.business_id}:staff:${employee.username}:%`, `${admin.business_id}:staff:${username}:%`),
-      env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at) VALUES (?,?,?,?, 'employee_updated', ?)")
-        .bind(crypto.randomUUID(), admin.business_id, admin.id, employee.id, now)
+      env.DB.prepare('DELETE FROM login_attempts WHERE instr(login_key,?)=1 OR instr(login_key,?)=1')
+        .bind(`${admin.business_id}:staff:${employee.username}:`, `${admin.business_id}:staff:${username}:`),
+      env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,actor_id,target_user_id,action,created_at,metadata) VALUES (?,?,?,?,?, 'employee_updated', ?,?)")
+        .bind(crypto.randomUUID(),admin.business_id,admin.id,admin.id,employee.id,now,JSON.stringify({kind:'team_updated',role:employee.role}))
     ]);
   } catch (cause) {
     if (String(cause).includes('UNIQUE')) throw new ApiError(409, 'username_exists', 'Ese usuario ya existe.');
     throw cause;
   }
-  return { id: employee.id, name, username };
+  return { id: employee.id, name, username,role:employee.role };
 }
 
 async function deleteEmployee(env, admin, employeeId) {
-  const employee = await env.DB.prepare("SELECT id,username FROM users WHERE id=? AND business_id=? AND role='employee' AND deleted_at IS NULL")
-    .bind(employeeId, admin.business_id).first();
-  if (!employee) throw new ApiError(404, 'employee_not_found', 'No encontramos ese empleado.');
+  const employee=await managedTeamUser(env,admin,employeeId,{protectPrimary:true});
   const now = new Date().toISOString();
   await env.DB.batch([
-    env.DB.prepare("UPDATE users SET name='Empleado eliminado',username=NULL,active=0,secret_hash=?,secret_salt=?,must_change_secret=0,deleted_at=?,updated_at=? WHERE id=? AND business_id=? AND role='employee'")
-      .bind(randomToken(32), randomToken(16), now, now, employee.id, admin.business_id),
+    env.DB.prepare('UPDATE users SET name=?,username=NULL,active=0,secret_hash=?,secret_salt=?,must_change_secret=0,deleted_at=?,updated_at=? WHERE id=? AND business_id=? AND role=? AND deleted_at IS NULL')
+      .bind(employee.role==='admin'?'Administrador eliminado':'Empleado eliminado',randomToken(32),randomToken(16),now,now,employee.id,admin.business_id,employee.role),
     env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(employee.id),
-    env.DB.prepare('DELETE FROM login_attempts WHERE login_key LIKE ?').bind(`${admin.business_id}:staff:${employee.username}:%`),
-    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,target_user_id,action,created_at) VALUES (?,?,?,?, 'employee_deleted', ?)")
-      .bind(crypto.randomUUID(), admin.business_id, admin.id, employee.id, now)
+    env.DB.prepare('DELETE FROM login_attempts WHERE instr(login_key,?)=1').bind(`${admin.business_id}:staff:${employee.username}:`),
+    env.DB.prepare("INSERT INTO admin_audit_log (id,business_id,admin_id,actor_id,target_user_id,action,created_at,metadata) VALUES (?,?,?,?,?, 'employee_deleted', ?,?)")
+      .bind(crypto.randomUUID(),admin.business_id,admin.id,admin.id,employee.id,now,JSON.stringify({kind:'team_deleted',role:employee.role}))
   ]);
   return { id: employee.id, deleted: true };
 }
@@ -706,8 +759,8 @@ async function api(request, env) {
     return response({ ok: true, stampStyle: input.stampStyle });
   }
   if (request.method === 'PATCH' && path === '/api/account/profile') {
-    const user=await requireRole(request,env,['customer']);
-    return response({ok:true,user:await changeCustomerName(request,env,user)});
+    const user=await requireRole(request,env,['customer','employee','admin']);
+    return response({ok:true,user:await changeOwnName(request,env,user)});
   }
   if (request.method === 'POST' && path === '/api/account/secret') {
     const user = await requireRole(request, env, ['customer', 'employee', 'admin']);
@@ -751,7 +804,7 @@ async function api(request, env) {
   }
   if (request.method === 'POST' && path === '/api/admin/employees') {
     const user = await requireRole(request, env, ['admin']);
-    return response({ ok: true, employee: await addEmployee(request, env, user) }, 201);
+    return response({ ok: true, employee: await createTeamUser(request, env, user) }, 201);
   }
   const employeeMatch = path.match(/^\/api\/admin\/employees\/([^/]+)$/);
   if (request.method === 'PATCH' && employeeMatch) {

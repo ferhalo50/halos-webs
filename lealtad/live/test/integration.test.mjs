@@ -160,7 +160,9 @@ test('real backend flow', async () => {
   const invalidatedQr = await request(`/api/staff/card?value=${encodeURIComponent(raceCard.data.card.qrValue)}`, { cookie: staffLogin.cookie });
   assert.equal(invalidatedQr.status, 404);
 
-  const dashboardAfterManagement = await request('/api/admin/dashboard', { cookie: adminLogin.cookie });
+  // Team creation now adds its own audit event. Inspect the complete test flow,
+  // rather than assuming every management event fits in the default first page.
+  const dashboardAfterManagement = await request('/api/admin/dashboard?eventPerPage=100', { cookie: adminLogin.cookie });
   assert.ok(dashboardAfterManagement.data.events.some(event => event.event_type === 'demo_reset'));
   for (const action of ['customer_updated', 'customer_deleted', 'employee_updated', 'employee_deleted']) {
     assert.ok(dashboardAfterManagement.data.events.some(event => event.event_type === action));

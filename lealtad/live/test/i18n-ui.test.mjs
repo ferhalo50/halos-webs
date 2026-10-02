@@ -131,7 +131,7 @@ test('language changes preserve unsent forms, selections, open details and user 
     await adminPage.evaluate(()=>window.LoyaltyI18n.set('es'));assert.deepEqual(await snapshot(adminPage),unsent);
     assert.equal(await adminPage.locator('.adjust-dialog').getAttribute('open'),'');
     await adminPage.click('#cancel-adjust');await adminPage.click('[data-language-toggle]');
-    for(const [selector,message] of [['.edit-customer','Customer name:'],['.edit-employee','Employee name:']]){
+    for(const [selector,message] of [['.edit-customer','Customer name:'],['.team-row:has([data-team-role="employee"]) .edit-employee','Employee name:'],['.team-row:has([data-team-role="admin"]) .edit-employee','Administrator name:']]){
       const opened=adminPage.waitForEvent('dialog'),clicked=adminPage.locator(selector).first().click();const dialog=await opened;
       assert.equal(dialog.message(),message);await dialog.dismiss();await clicked;
     }

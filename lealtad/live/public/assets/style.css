@@ -12,3 +12,20 @@
 
 /* Name editing is separate from the existing credential form. */
 .profile-panel{margin-bottom:18px}
+
+/* Account/team controls only; cards and the existing navigation are unchanged. */
+.team-panel,.team-identity,.team-panel form{min-width:0}
+.team-identity{overflow-wrap:anywhere}
+.team-identity p{margin:0}
+.team-panel h3{margin-top:24px;margin-bottom:8px}
+.team-panel input,.team-panel select,.team-panel button,.profile-panel button{min-height:44px}
+.team-admin-warning{padding:12px;border-left:3px solid var(--olive);line-height:1.5}
+.team-confirm-dialog{width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:24px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--cream);color:var(--ink);font:inherit}
+.team-confirm-dialog::backdrop{background:#0008}
+.team-confirm-dialog h2{font-size:28px;margin-bottom:16px}
+.team-confirm-dialog dl{margin:20px 0;overflow-wrap:anywhere}
+.team-confirm-dialog dt{font-size:12px;color:var(--muted);margin-top:12px}
+.team-confirm-dialog dd{margin-left:0;font-weight:600}
+.team-confirm-dialog .actions{margin-bottom:0}
+.team-confirm-dialog button{min-height:44px;flex:1}
+@media(max-width:760px){.team-panel .row-actions{min-width:0}.team-confirm-dialog{padding:20px}.team-confirm-dialog .actions{flex-direction:column}}
