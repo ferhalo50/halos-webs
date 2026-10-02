@@ -1,6 +1,3 @@
-import { getDocument, GlobalWorkerOptions } from '/assets/vendor/pdfjs-6.3.289/pdf.min.mjs';
-
-GlobalWorkerOptions.workerSrc = '/assets/vendor/pdfjs-6.3.289/pdf.worker.min.mjs';
 const pages = document.querySelector('#pdf-pages');
 const status = document.querySelector('#viewer-status');
 let pdf;
@@ -68,6 +65,8 @@ async function renderPages() {
 
 async function loadProposal() {
   try {
+    const { getDocument, GlobalWorkerOptions } = await import('/assets/vendor/pdfjs-6.3.289/pdf.min.mjs');
+    GlobalWorkerOptions.workerSrc = '/assets/vendor/pdfjs-6.3.289/pdf.worker.min.mjs';
     const response = await fetch('/assets/document.json', { cache: 'no-cache' });
     if (!response.ok) throw new Error('Document unavailable');
     const documentInfo = await response.json();
