@@ -1,8 +1,14 @@
 # Vainilla Coffee — revisión funcional local
 
 Tenant `vainillacoffee`, business `business_vainillacoffee`, meta de 9 flores.
-El hostname `vainillacoffee.haloswebs.com` es futuro; `localOnly` impide activarlo
-como host público en el resolver. No se agregaron routes ni dominios en Wrangler.
+El hostname aprobado `vainillacoffee.haloswebs.com` se reconoce en el resolver
+y está configurado como Custom Domain en Wrangler, siguiendo el patrón de los
+otros tenants. HTTPS/HSTS aplica exclusivamente a los cuatro hosts públicos.
+El desarrollo y los fixtures descritos aquí siguen siendo exclusivamente locales.
+Los scripts locales no se ejecutan al desplegar. El registro business y el único
+administrador inicial de producción se preparan por separado, sin migraciones,
+clientes precargados ni empleados. No usar `/api/setup` para ese bootstrap: el
+endpoint antiguo también crea un empleado y no corresponde al alcance aprobado.
 
 ## Preparar y abrir
 

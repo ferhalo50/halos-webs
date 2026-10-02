@@ -5,7 +5,7 @@ import { recordRewardOperation } from './per-item-rewards.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
-const HTTPS_HOSTS = new Set(['renacecafe.haloswebs.com', 'mooncoffee.haloswebs.com', 'santofe.haloswebs.com']);
+const HTTPS_HOSTS = new Set(['renacecafe.haloswebs.com', 'mooncoffee.haloswebs.com', 'santofe.haloswebs.com', 'vainillacoffee.haloswebs.com']);
 const jsonHeaders = { 'content-type': 'application/json; charset=utf-8' };
 
 function response(data, status = 200, extraHeaders = {}) {

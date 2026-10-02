@@ -2,7 +2,7 @@ const classic={name:'Clásico'};
 
 export const TENANTS={
  vainillacoffee:{
-  slug:'vainillacoffee',hostname:'vainillacoffee.haloswebs.com',localOnly:true,displayName:'Vainilla Coffee',shortName:'Vainilla Coffee',cardPrefix:'VAINILLA',
+  slug:'vainillacoffee',hostname:'vainillacoffee.haloswebs.com',displayName:'Vainilla Coffee',shortName:'Vainilla Coffee',cardPrefix:'VAINILLA',
   rewardGoal:9,rewardName:'Bebida gratis',timezone:'America/Tijuana',stampPolicy:'per_item',maxStampsPerTransaction:99,petFriendly:false,
   cardLayout:{stampColumns:3,stampRows:3,rewardSlot:false,variant:'bouquet'},
   logo:'/assets/vainilla/logo.svg',icon:'/assets/vainilla/icon-192.png',touchIcon:'/assets/vainilla/icon-192.png',

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker/index.js';
 
-const hosts=['renacecafe.haloswebs.com','mooncoffee.haloswebs.com','santofe.haloswebs.com'];
+const hosts=['renacecafe.haloswebs.com','mooncoffee.haloswebs.com','santofe.haloswebs.com','vainillacoffee.haloswebs.com'];
 const csp="default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
 const paths=['/','/login?x=1&return=%2Ftarjeta','/api/login/customer?x=1&x=2','/api/staff/stamp','/api/admin/customers/test','/renace/api/me','/assets/live.js?v=12'];
 // The project executes D1 through prepare/batch. Copying the binding is not SQL.
@@ -37,8 +37,8 @@ test('Local HTTP/HTTPS and LAN ports are never forced to HTTPS or given producti
  }
 });
 
-test('Future Vainilla and other hosts remain outside public HTTPS policy and tenant activation',async()=>{
- for(const protocol of ['http:','https:'])for(const host of ['vainillacoffee.haloswebs.com','other.haloswebs.com','renacecafe.haloswebs.com.other.test']){
+test('Unapproved hosts remain outside public HTTPS policy and tenant activation',async()=>{
+ for(const protocol of ['http:','https:'])for(const host of ['other.haloswebs.com','renacecafe.haloswebs.com.other.test','vainillacoffee.haloswebs.com.other.test']){
   const calls=[];const result=await worker.fetch(new Request(protocol+'//'+host+'/'),{MAINTENANCE_MODE:'OFF',DB:forbiddenD1(calls)});
   assert.equal(result.status,404);assert.equal((await result.json()).error.code,'unknown_host');assert.equal(result.headers.get('location'),null);assert.equal(result.headers.get('strict-transport-security'),null);assert.deepEqual(calls,[]);
  }
