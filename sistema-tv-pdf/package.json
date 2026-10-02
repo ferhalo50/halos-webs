@@ -1,0 +1,18 @@
+{
+  "name": "haloswebs-sistema-tv-pdf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "predev": "npm run prepare:assets",
+    "dev": "wrangler dev --local --port 8798 --local-upstream 127.0.0.1",
+    "precheck": "npm run prepare:assets",
+    "check": "node --check worker/index.js && node --check public/assets/viewer.js && node --check scripts/prepare-assets.mjs && node --test test/*.test.mjs",
+    "predeploy": "npm run check",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "pdfjs-dist": "6.3.289",
+    "wrangler": "4.147.0"
+  }
+}

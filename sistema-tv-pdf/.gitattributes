@@ -1,0 +1,2 @@
+public/assets/docs/*.pdf binary
+public/assets/vendor/** -text -whitespace
