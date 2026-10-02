@@ -8,7 +8,8 @@ import {activitySource} from '../worker/activity.js';
 
 test('Activity resolves current customer phone by ID and tenant, including absent and administrative targets',()=>{
  const db=new DatabaseSync(':memory:');try{
- db.exec(`CREATE TABLE users(id TEXT,business_id TEXT,role TEXT,name TEXT,phone TEXT);
+ db.exec(`CREATE TABLE businesses(id TEXT,reward_goal INTEGER); CREATE TABLE reward_choice_operations(id TEXT,created_at TEXT,decision TEXT,card_id TEXT,customer_id TEXT,employee_id TEXT,business_id TEXT,before_stamps INTEGER,before_rewards INTEGER,before_choices INTEGER);
+ CREATE TABLE users(id TEXT,business_id TEXT,role TEXT,name TEXT,phone TEXT);
  CREATE TABLE loyalty_cards(id TEXT,customer_id TEXT,business_id TEXT);
  CREATE TABLE loyalty_events(id TEXT,created_at TEXT,event_type TEXT,voided INTEGER,card_id TEXT,customer_id TEXT,employee_id TEXT,business_id TEXT,metadata TEXT,quantity INTEGER);
  CREATE TABLE admin_audit_log(id TEXT,created_at TEXT,action TEXT,metadata TEXT,target_user_id TEXT,actor_id TEXT,admin_id TEXT,business_id TEXT);
@@ -17,7 +18,7 @@ test('Activity resolves current customer phone by ID and tenant, including absen
  INSERT INTO loyalty_events VALUES ('purchase','2026-10-01','stamp',0,'card','c1','staff','a','{}',4),('foreign','2026-10-01','stamp',0,'other','c2','staff','a','{}',1);
  INSERT INTO admin_audit_log VALUES ('team','2026-10-01','employee_updated','{}','staff','staff','staff','a'),('missing','2026-10-01','employee_deleted','{}','gone','staff','staff','a');
  INSERT INTO stamp_adjustments VALUES ('adjust','2026-10-01',2,1,'card','c1','staff','a','Reason');`);
- const rows=()=>db.prepare(activitySource()).all('a','a','a'),byId=id=>rows().find(r=>r.id===id);
+ const rows=()=>db.prepare(activitySource()).all('a','a','a','a'),byId=id=>rows().find(r=>r.id===id);
  assert.equal(byId('purchase').customer_phone,'0001234567');assert.equal(byId('adjust').customer_phone,'0001234567');
  for(const id of ['foreign','team','missing'])assert.equal(byId(id).customer_phone,null);
  db.exec("UPDATE users SET phone='0007654321',name='New name' WHERE id='c1'");

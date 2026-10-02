@@ -9,7 +9,7 @@ const adminCredentials={username:'admin_vainilla_local',password:'Vainilla-admin
 let serial=0;
 const phone=()=>String((Date.now()+serial++)%10000000000).padStart(10,'0');
 const sizes=[[360,800],[390,844],[393,852],[412,915],[1366,768],[1440,900]];
-async function api(path,{body,cookie,host=base}={}){if(['/api/staff/stamp','/api/staff/redeem'].includes(path)&&body&&body.expectedVersion===undefined){const found=await api('/api/staff/card?value='+body.cardId,{cookie,host});if(found.status===200&&found.data.card.stampPolicy==='per_item')body={...body,expectedVersion:found.data.card.rewardVersion,operationId:crypto.randomUUID()};}const r=await fetch(host+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(cookie?{cookie}:{})},body:body?JSON.stringify(body):undefined});return{status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
+async function api(path,{body,cookie,host=base}={}){if(['/api/staff/stamp','/api/staff/redeem','/api/staff/reward-choice'].includes(path)&&body&&body.expectedVersion===undefined){const found=await api('/api/staff/card?value='+body.cardId,{cookie,host});if(found.status===200&&found.data.card.stampPolicy==='per_item')body={...body,expectedVersion:found.data.card.rewardVersion,operationId:crypto.randomUUID()};}const r=await fetch(host+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(cookie?{cookie}:{})},body:body?JSON.stringify(body):undefined});return{status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
 async function account(stamps=0){const number=phone(),created=await api('/api/register',{body:{name:'Cliente Vainilla',phone:number,pin}});assert.equal(created.status,201);const card=(await api('/api/card',{cookie:created.cookie})).data.card;if(stamps){const staff=await api('/api/login/staff',{body:staffCredentials});assert.equal((await api('/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:stamps}})).status,200);}return{...created,card,phone:number};}
 async function loginPage(page,number){await page.goto(base+'/#login');await page.fill('[name="login"]',number);await page.fill('[name="secret"]',pin);await page.click('#auth-form button');await page.waitForSelector('#qr svg',{state:'attached'});await page.waitForSelector('#app-loader',{state:'detached'});}
 
@@ -29,9 +29,9 @@ test('Vainilla real local cards preserve vertical geometry, all flower states, E
  for(const route of ['login','registro']){await page.goto(base+'/#'+route);await page.waitForSelector('#auth-form');for(const [width,height] of sizes){await page.setViewportSize({width,height});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}}
  let last;
  for(const flowers of [0,1,3,8,9]){
-  await context.clearCookies();last=await account(flowers);await loginPage(page,last.phone);assert.equal(await page.locator('.vainilla-flower-slot.is-earned img').count(),flowers%9);assert.equal(await page.locator('.personal-card .stamp').count(),0);
+  await context.clearCookies();last=await account(flowers);await loginPage(page,last.phone);assert.equal(await page.locator('.vainilla-flower-slot.is-earned img').count(),flowers);assert.equal(await page.locator('.personal-card .stamp').count(),0);
   assert.ok(await page.locator('.vainilla-flower-slot').first().evaluate(n=>getComputedStyle(n).left!=='auto'&&getComputedStyle(n).top!=='auto'&&!n.hasAttribute('style')),'flowers must be positioned by CSP-compatible external CSS');
-  assert.equal(await page.locator('.premium-customer .reward-count').innerText(),String(Math.floor(flowers/9)));
+  assert.equal(await page.locator('.premium-customer .reward-count').innerText(),'0');
   for(const [width,height] of sizes){await page.setViewportSize({width,height});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.ok(await page.locator('.vainilla-card').evaluate(n=>n.scrollHeight<=n.clientHeight+1));const faces=await page.locator('.loyalty-card-face').evaluateAll(ns=>ns.map(n=>({w:n.offsetWidth,h:n.offsetHeight})));assert.deepEqual(faces[0],faces[1]);assert.ok(faces[0].h>faces[0].w);}
   for(const lang of ['en','es']){await page.evaluate(l=>window.LoyaltyI18n.set(l),lang);assert.equal(await page.locator('.vainilla-card-rule').innerText(),lang==='en'?'1 coffee = 1 flower':'1 café = 1 flor');assert.ok((await page.locator('.vainilla-card-owner').innerText()).includes('Cliente Vainilla'));}
   await page.click('#flip-card');assert.equal(await page.locator('[data-loyalty-flip]').getAttribute('aria-pressed'),'true');await page.click('#flip-card');
@@ -62,16 +62,16 @@ test('Vainilla local authentication, isolation, role permissions, multiple flowe
   const exported=(await api('/api/admin/export/clients?offset=0',{cookie:admin.cookie})).data.rows;assert.ok(!exported.some(r=>r.id===otherCard.id));
  }
  for(const [quantity,expected] of [[1,1],[1,2],[5,7],[1,8],[1,0]]){const r=await api('/api/staff/stamp',{cookie:staff.cookie,body:{cardId:id,quantity}});assert.equal(r.status,200);assert.equal(r.data.card.stamps,expected);assert.equal(r.data.operation.freeCoffees,0);}
- const ready=(await api('/api/card',{cookie:customer.cookie})).data.card;assert.equal(ready.stamps,0);assert.equal(ready.rewardsPending,1);assert.equal(ready.redeemed,0);
+ const ready=(await api('/api/card',{cookie:customer.cookie})).data.card;assert.equal(ready.stamps,0);assert.equal(ready.rewardsPending,0);assert.equal(ready.rewardChoicesPending,1);assert.equal((await api('/api/staff/reward-choice',{cookie:staff.cookie,body:{cardId:id,decision:'save'}})).status,200);assert.equal(ready.redeemed,0);
  const redeemed=await api('/api/staff/redeem',{cookie:staff.cookie,body:{cardId:id}});assert.equal(redeemed.data.card.stamps,0);assert.equal(redeemed.data.card.redeemed,1);assert.equal((await api('/api/staff/redeem',{cookie:staff.cookie,body:{cardId:id}})).status,409);
  for(const [before,total,after,paid] of [[8,1,0,1],[8,2,1,2],[8,4,3,4],[9,1,1,1],[9,10,1,10]]){
-  const c=await account(before),r=await api('/api/staff/stamp',{cookie:staff.cookie,body:{cardId:c.card.id,quantity:total}});assert.equal(r.status,200);assert.equal(r.data.card.stamps,after);assert.equal(r.data.operation.paidCoffees,paid);assert.equal(r.data.operation.freeCoffees,0);assert.equal(r.data.card.redeemed,0);assert.equal(r.data.card.rewardsPending,Math.floor((before+total)/9));
+  const c=await account(before);if(before===9)assert.equal((await api('/api/staff/reward-choice',{cookie:staff.cookie,body:{cardId:c.card.id,decision:'redeem_now'}})).status,200);const r=await api('/api/staff/stamp',{cookie:staff.cookie,body:{cardId:c.card.id,quantity:total}});assert.equal(r.status,200);assert.equal(r.data.card.stamps,after);assert.equal(r.data.operation.paidCoffees,paid);assert.equal(r.data.operation.freeCoffees,0);assert.equal(r.data.card.redeemed,before===9?1:0);assert.equal(r.data.card.rewardsPending,0);assert.equal(r.data.card.rewardChoicesPending,Math.floor(((before%9)+total)/9));
  }
  assert.equal((await api('/api/staff/stamp',{cookie:staff.cookie,body:{cardId:id,quantity:100}})).status,400);
  const dash=(await api('/api/admin/dashboard?q='+customer.phone,{cookie:admin.cookie})).data;assert.equal(dash.business.id,'business_vainillacoffee');assert.equal(dash.customers.length,1);
  assert.equal((await api('/api/admin/customers/'+customer.data.user.id+'/stamps',{cookie:admin.cookie,body:{delta:1,expectedStamps:0,reason:'Ajuste local de prueba'}})).status,200);
  let offset=0,events=[];do{const exportPage=await api('/api/admin/export/activity?offset='+offset,{cookie:admin.cookie});assert.equal(exportPage.status,200);events.push(...exportPage.data.rows);offset=exportPage.data.nextOffset;}while(offset!==null);
- assert.ok(events.some(e=>e.card_id===id&&e.event_type==='redeem'));assert.ok(events.some(e=>e.card_id===id&&e.event_type==='stamp_added'));
+ assert.ok(events.some(e=>e.card_id===id&&e.event_type==='saved_reward_redeemed'));assert.ok(events.some(e=>e.card_id===id&&e.event_type==='stamp_added'));
  const employee=await api('/api/admin/employees',{cookie:admin.cookie,body:{name:'Apoyo local Vainilla',username:'vainilla_'+phone(),password:'Prueba-equipo-928!'}});assert.equal(employee.status,201);
 });
 
@@ -79,15 +79,15 @@ test('Per-item rewards preserve the paid quantity and reject stale or foreign op
  const db=new DatabaseSync(':memory:');try{
   for(const name of readdirSync(new URL('../migrations/',import.meta.url)).sort())db.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   db.exec("INSERT INTO businesses(id,slug,name,reward_goal,stamp_policy) VALUES('business_vainillacoffee','vainillacoffee','Vainilla Coffee',9,'per_item'); INSERT INTO users(id,business_id,role,name,secret_hash,secret_salt) VALUES('customer','business_vainillacoffee','customer','Local','x','x'),('staff','business_vainillacoffee','employee','Staff','x','x'); INSERT INTO loyalty_cards(id,business_id,customer_id,qr_token) VALUES('card','business_vainillacoffee','customer','local-token');");
-  const insert=db.prepare("INSERT INTO per_item_reward_operations VALUES(?,'business_vainillacoffee','card','customer','staff','purchase',?,?,0,?,'2026-10-01','2026-10-01T10:00:00.000Z')");
+  const insert=db.prepare("INSERT INTO per_item_reward_operations VALUES(?,'business_vainillacoffee','card','customer','staff','purchase',?,?,0,?,'2026-10-01','2026-10-01T10:00:00.000Z',0)");
   for(let before=0;before<9;before++)for(let total=1;total<=99;total++){
-   db.prepare("UPDATE loyalty_cards SET stamps=?,rewards_pending=0,redeemed_count=0,reward_version=reward_version+1 WHERE id='card'").run(before);const v=db.prepare("SELECT reward_version FROM loyalty_cards WHERE id='card'").get().reward_version;
-   insert.run(before+'-'+total,total,before,v);const result=db.prepare("SELECT stamps,rewards_pending,redeemed_count FROM loyalty_cards WHERE id='card'").get();assert.equal(result.stamps,(before+total)%9);assert.equal(result.rewards_pending,Math.floor((before+total)/9));assert.equal(result.redeemed_count,0);
-   const audit=db.prepare("SELECT quantity,metadata FROM loyalty_events WHERE id=?").get(before+'-'+total);assert.equal(audit.quantity,total);assert.equal(JSON.parse(audit.metadata).rewards_generated,result.rewards_pending);
+   db.exec("UPDATE loyalty_cards SET reward_choices_pending=0 WHERE id='card'");db.prepare("UPDATE loyalty_cards SET stamps=?,rewards_pending=0,redeemed_count=0,reward_version=reward_version+1 WHERE id='card'").run(before);const v=db.prepare("SELECT reward_version FROM loyalty_cards WHERE id='card'").get().reward_version;
+   insert.run(before+'-'+total,total,before,v);const result=db.prepare("SELECT stamps,rewards_pending,reward_choices_pending,redeemed_count FROM loyalty_cards WHERE id='card'").get();assert.equal(result.stamps,(before+total)%9);assert.equal(result.rewards_pending,0);assert.equal(result.reward_choices_pending,Math.floor((before+total)/9));assert.equal(result.redeemed_count,0);
+   const audit=db.prepare("SELECT quantity,metadata FROM loyalty_events WHERE id=?").get(before+'-'+total);assert.equal(audit.quantity,total);assert.equal(JSON.parse(audit.metadata).rewards_generated,result.reward_choices_pending);
   }
   const snapshot=db.prepare("SELECT * FROM loyalty_cards WHERE id='card'").get(),n=db.prepare('SELECT COUNT(*) AS n FROM loyalty_events').get().n;
-  assert.throws(()=>insert.run('stale',2,snapshot.stamps,snapshot.reward_version-1),/reward_conflict/);assert.deepEqual(db.prepare("SELECT * FROM loyalty_cards WHERE id='card'").get(),snapshot);assert.equal(db.prepare('SELECT COUNT(*) AS n FROM loyalty_events').get().n,n);
-  assert.throws(()=>db.exec("INSERT INTO per_item_reward_operations VALUES('foreign','business_santofe','card','customer','staff','purchase',1,0,0,0,'2026-10-01','2026-10-01T10:00:00.000Z')"),/reward_conflict/);
+  assert.throws(()=>insert.run('stale',2,snapshot.stamps,snapshot.reward_version-1),/reward_conflict|reward_decision_required/);assert.deepEqual(db.prepare("SELECT * FROM loyalty_cards WHERE id='card'").get(),snapshot);assert.equal(db.prepare('SELECT COUNT(*) AS n FROM loyalty_events').get().n,n);
+  assert.throws(()=>db.exec("INSERT INTO per_item_reward_operations VALUES('foreign','business_santofe','card','customer','staff','purchase',1,0,0,0,'2026-10-01','2026-10-01T10:00:00.000Z',0)"),/reward_conflict/);
  }finally{db.close();}
 });
 

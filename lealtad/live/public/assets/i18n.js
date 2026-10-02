@@ -239,6 +239,34 @@
     [/^Tarjeta de lealtad (.+) de (.+)$/,(_,business,name)=>`Loyalty card for ${name} at ${business}`],
     [/^Tarjeta de lealtad de (.+)$/,(_,name)=>`Loyalty card for ${name}`]
   );
+  Object.assign(exact,{
+    'Hola,':'Hello,','Mi nombre':'My name','Guardar nombre':'Save name','Nombre actualizado.':'Name updated.',
+    'Cambia solo tu nombre. Tu celular, tarjeta y progreso se conservan.':'Change only your name. Your mobile number, card and progress stay the same.',
+    'Solo puedes cambiar tu nombre desde aquí.':'You can only change your name here.',
+    'Escribe un nombre válido de 2 a 60 caracteres.':'Enter a valid name with 2 to 60 characters.',
+    'Recompensa pendiente de decisión':'Reward awaiting decision','Recompensas por decidir':'Rewards awaiting decision',
+    'Por decidir':'Awaiting decision','Progreso real':'Actual progress',
+    '¡Completaste tu ramo!':'You completed your bouquet!','Tu tarjeta está completa.':'Your card is complete.',
+    'Tu bebida gratis está lista.':'Your free drink is ready.',
+    'En caja puedes canjear tu bebida ahora o guardarla para después.':'At the counter, you can redeem your drink now or save it for later.',
+    'Primero decide qué hacer con tu bebida gratis para continuar.':'Choose what to do with your free drink before continuing.',
+    'Canjear ahora':'Redeem now','Guardar para después':'Save for later',
+    'Esta acción resuelve una sola recompensa. El progreso se conserva.':'This action resolves one reward. Your progress stays the same.',
+    'Recompensa guardada para después.':'Reward saved for later.',
+    'Recompensa canjeada ahora. El progreso se conserva.':'Reward redeemed now. Your progress stays the same.',
+    'Nueva recompensa por decidir.':'New reward awaiting decision.',
+    'No hay recompensas por decidir.':'There are no rewards awaiting decision.',
+    'Elige canjear ahora o guardar para después.':'Choose Redeem now or Save for later.',
+    'Recompensa generada':'Reward earned','Recompensa guardada':'Reward saved',
+    'Recompensa canjeada ahora':'Reward redeemed now','Bebida guardada canjeada':'Saved drink redeemed'
+  });
+  patterns.push(
+    [/^Recompensas por decidir: (\d+)$/,(_,n)=>`Rewards awaiting decision: ${n}`],
+    [/^Progreso real: (\d+)\/(\d+)$/,(_,n,g)=>`Actual progress: ${n}/${g}`],
+    [/^Cafés pagados: (\d+) · Progreso resultante: (\d+)\/(\d+) (flores|sellos) · Recompensas generadas: (\d+) · Recompensas por decidir: (\d+) · Bebidas gratis disponibles: (\d+)\nNo se canjea ninguna recompensa automáticamente\.\n\n¿Confirmar para (.*)\?$/,(_,q,p,g,u,r,c,s,name)=>`Paid coffees: ${q} · Resulting progress: ${p}/${g} ${u==='flores'?'flowers':'stamps'} · Rewards earned: ${r} · Rewards awaiting decision: ${c} · Free drinks available: ${s}\nNo reward is redeemed automatically.\n\nConfirm for ${name}?`],
+    [/^(\d+) cafés pagados; progreso (\d+)\/(\d+); recompensas generadas: (\d+); por decidir: (\d+); bebidas gratis guardadas: (\d+)$/,(_,q,p,g,r,c,s)=>`${q} paid coffees; progress ${p}/${g}; rewards earned: ${r}; awaiting decision: ${c}; saved free drinks: ${s}`],
+    [/^1 (recompensa guardada|recompensa canjeada ahora|bebida guardada canjeada); progreso (\d+)\/(\d+); por decidir: (\d+); bebidas gratis guardadas: (\d+)$/,(_,action,p,g,c,s)=>`${({'recompensa guardada':'1 reward saved','recompensa canjeada ahora':'1 reward redeemed now','bebida guardada canjeada':'1 saved drink redeemed'})[action]}; progress ${p}/${g}; awaiting decision: ${c}; saved free drinks: ${s}`]
+  );
   let locale='es';try{if(localStorage.getItem(STORAGE_KEY)==='en')locale='en';}catch{}
   function translate(value){if(locale!=='en'||typeof value!=='string')return value;const trimmed=value.trim();if(!trimmed)return value;let result=exact[trimmed];if(!result){for(const [pattern,replacer] of patterns){if(pattern.test(trimmed)){result=trimmed.replace(pattern,replacer);break;}}}return result?value.replace(trimmed,result):value;}
   function translateNode(node){if((node.nodeType===Node.ELEMENT_NODE?node:node.parentElement)?.closest('[data-i18n-ignore]'))return;if(node.nodeType===Node.TEXT_NODE){if(!originals.has(node))originals.set(node,node.nodeValue);const original=originals.get(node);node.nodeValue=locale==='en'?translate(original):original;return;}if(node.nodeType!==Node.ELEMENT_NODE||node.matches('script,style,[data-i18n-ignore]'))return;if(!attributeOriginals.has(node))attributeOriginals.set(node,new Map());const stored=attributeOriginals.get(node);for(const attr of ['placeholder','aria-label','title','data-label','alt']){if(node.hasAttribute(attr)&&!stored.has(attr))stored.set(attr,node.getAttribute(attr));if(stored.has(attr))node.setAttribute(attr,locale==='en'?translate(attr==='aria-label'&&node.hasAttribute('data-i18n-sample-card')?stored.get(attr).replace('Tu próxima pausa favorita','Your next favorite break'):stored.get(attr)):stored.get(attr));}for(const child of node.childNodes)translateNode(child);}

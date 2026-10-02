@@ -13,7 +13,7 @@ const credentials={
 };
 
 async function request(base,path,{cookie,body,method=body?'POST':'GET',headers={}}={}){
-  if(base===santofe&&['/api/staff/stamp','/api/staff/redeem'].includes(path)&&body&&body.expectedVersion===undefined){const snapshot=await request(base,'/api/staff/card?value='+body.cardId,{cookie});if(snapshot.status===200)body={...body,expectedVersion:snapshot.data.card.rewardVersion,operationId:crypto.randomUUID()};}
+  if(base===santofe&&['/api/staff/stamp','/api/staff/redeem','/api/staff/reward-choice'].includes(path)&&body&&body.expectedVersion===undefined){const snapshot=await request(base,'/api/staff/card?value='+body.cardId,{cookie});if(snapshot.status===200)body={...body,expectedVersion:snapshot.data.card.rewardVersion,operationId:crypto.randomUUID()};}
   const response=await fetch(base+path,{method,headers:{'content-type':'application/json',...(cookie?{cookie}:{}),...headers},body:body?JSON.stringify(body):undefined});
   return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
 }
@@ -73,12 +73,12 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:3}});
   assert.equal(result.status,200);assert.equal(result.data.card.stamps,4);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:6}});
-  assert.equal(result.status,200);assert.equal(result.data.card.stamps,0);assert.ok(result.data.card.rewardsPending>=1);
+  assert.equal(result.status,200);assert.equal(result.data.card.stamps,0);assert.equal(result.data.card.rewardChoicesPending,1);assert.equal(result.data.card.rewardsPending,0);assert.equal((await request(santofe,'/api/staff/reward-choice',{cookie:staff.cookie,body:{cardId:card.id,decision:'save'}})).status,200);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:1}});
   assert.equal(result.status,200);assert.equal(result.data.card.stamps,1);assert.equal(result.data.card.redeemed,0);
   assert.equal(result.data.operation.paidCoffees,1);assert.equal(result.data.operation.freeCoffees,0);assert.equal(result.data.operation.rewardsGenerated,0);
   result=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:card.id,quantity:10}});
-  assert.equal(result.status,200);assert.equal(result.data.card.stamps,1);assert.equal(result.data.card.rewardsPending,2);
+  assert.equal(result.status,200);assert.equal(result.data.card.stamps,1);assert.equal(result.data.card.rewardsPending,1);assert.equal(result.data.card.rewardChoicesPending,1);assert.equal((await request(santofe,'/api/staff/reward-choice',{cookie:staff.cookie,body:{cardId:card.id,decision:'save'}})).status,200);
 
   const crossingCases=[
     {before:8,order:3,after:1,paid:3,label:'8 más 3'},
@@ -92,7 +92,7 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
     const caseCard=(await request(santofe,'/api/card',{cookie:account.cookie})).data.card;
     const prepared=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:caseCard.id,quantity:scenario.before}});assert.equal(prepared.data.card.stamps,scenario.before);
     const crossed=await request(santofe,'/api/staff/stamp',{cookie:staff.cookie,body:{cardId:caseCard.id,quantity:scenario.order}});
-    assert.equal(crossed.status,200);assert.equal(crossed.data.card.stamps,scenario.after);assert.equal(crossed.data.card.redeemed,0);assert.equal(crossed.data.card.rewardsPending,1);
+    assert.equal(crossed.status,200);assert.equal(crossed.data.card.stamps,scenario.after);assert.equal(crossed.data.card.redeemed,0);assert.equal(crossed.data.card.rewardsPending,0);assert.equal(crossed.data.card.rewardChoicesPending,1);
     assert.equal(crossed.data.operation.paidCoffees,scenario.paid);assert.equal(crossed.data.operation.freeCoffees,0);assert.equal(crossed.data.operation.stampsAfter,scenario.after);assert.equal(crossed.data.operation.rewardsGenerated,1);
   }
 
@@ -101,9 +101,9 @@ test('Santofé: isolated accounts, multiple stamps per purchase and reward lifec
   assert.equal(dashboard.data.customers.length,1);assert.equal(dashboard.data.customers[0].id,card.id);
   assert.ok(Number(dashboard.data.metrics.stamps_today)>=20);
   const activity=await exportAll('activity',admin.cookie);
-  const quantities=activity.filter(item=>item.card_id===card.id&&item.event_type==='stamp').map(item=>Number(item.quantity));
+  const quantities=activity.filter(item=>item.card_id===card.id&&['stamp','reward_generated'].includes(item.event_type)).map(item=>Number(item.quantity));
   assert.deepEqual(quantities.sort((a,b)=>a-b),[1,1,3,6,10]);
-  assert.ok(activity.some(item=>item.card_id===card.id&&item.event_type==='stamp'&&/recompensas generadas: 1/.test(item.reason)));assert.ok(!activity.some(item=>item.card_id===card.id&&item.event_type==='redeem'));
+  assert.ok(activity.some(item=>item.card_id===card.id&&item.event_type==='reward_generated'&&/recompensas generadas: 1/.test(item.reason)));assert.ok(!activity.some(item=>item.card_id===card.id&&['redeem','saved_reward_redeemed','reward_redeemed_now'].includes(item.event_type)));
   const clients=await exportAll('clients',admin.cookie);
   assert.ok(clients.some(item=>item.id===card.id));assert.ok(!clients.some(item=>item.id===renaceCard.id));
 

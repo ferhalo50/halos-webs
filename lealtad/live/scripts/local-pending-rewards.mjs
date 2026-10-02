@@ -9,11 +9,16 @@ export function prepareLocalRewards(directory){
  const name=readdirSync(dir).find(n=>n.endsWith('.sqlite')&&n!=='metadata.sqlite');
  const db=new DatabaseSync(resolve(dir,name));
  try{
-  if(db.prepare('PRAGMA table_info(loyalty_cards)').all().some(c=>c.name==='rewards_pending'))return;
+  const columns=db.prepare('PRAGMA table_info(loyalty_cards)').all().map(c=>c.name);
+  if(columns.includes('reward_choices_pending'))return;
   const invalid=db.prepare("SELECT COUNT(*) AS n FROM loyalty_cards c JOIN businesses b ON b.id=c.business_id WHERE b.stamp_policy='per_item' AND c.stamps>b.reward_goal").get();
   if(invalid.n)throw new Error('Saldos locales mayores a la meta: requieren revisión explícita antes de convertir.');
   db.exec('BEGIN IMMEDIATE');
-  try{db.exec(readFileSync(resolve(root,'migrations/0013_pending_rewards.sql'),'utf8'));db.exec('COMMIT');}catch(error){db.exec('ROLLBACK');throw error;}
+  try{
+   if(!columns.includes('rewards_pending'))db.exec(readFileSync(resolve(root,'migrations/0013_pending_rewards.sql'),'utf8'));
+   db.exec(readFileSync(resolve(root,'migrations/0014_reward_choices.sql'),'utf8'));
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');throw error;}
   console.log(directory+': migración aditiva de recompensas aplicada solo al archivo local.');
  }finally{db.close();}
 }

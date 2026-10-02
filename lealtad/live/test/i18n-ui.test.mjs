@@ -114,7 +114,7 @@ test('language changes preserve unsent forms, selections, open details and user 
     assert.match(await counterPage.locator('.customer-summary').innerText(),/Luna/);
     if(tenant.name==='Santofé'){
       assert.equal(await counterPage.locator('#stamp-quantity').innerText(),'2');
-      assert.equal(await counterPage.locator('#stamp-operation').innerText(),'Paid coffees: 2 · Resulting progress: 2/10 stamps · Rewards earned: 0 · Free drinks available: 0\nNo reward is redeemed automatically.');
+      assert.equal(await counterPage.locator('#stamp-operation').innerText(),'Paid coffees: 2 · Resulting progress: 2/10 stamps · Rewards earned: 0 · Rewards awaiting decision: 0 · Free drinks available: 0\nNo reward is redeemed automatically.');
     }
     await counter.close();
 

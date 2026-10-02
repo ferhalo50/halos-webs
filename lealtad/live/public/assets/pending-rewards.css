@@ -6,7 +6,24 @@ html[data-tenant="vainillacoffee"] .reward-balance.has-reward{background:#fff1bc
 html[data-tenant="santofe"] .reward-balance.has-reward{background:#e4eadb;border-color:#716066;color:#594a50}
 html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-balance button{min-height:44px}
 html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .mobile-reward-count{display:none}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-decision{border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;background:var(--cream);color:var(--ink)}
+html[data-tenant="vainillacoffee"] .reward-decision{background:#fff4cd;border-color:#c28b21}
+html[data-tenant="santofe"] .reward-decision{background:#e4eadb;border-color:#716066}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-decision p{margin:6px 0;font-size:14px;line-height:1.5}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-choice-count{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-decision button{min-height:44px}
+html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .reward-decision .section-row{display:flex;margin-bottom:6px}
 @media(max-width:760px){
- html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel th:nth-child(5),html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td:nth-child(5){display:none}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel :is(th,td):is(:nth-child(5),:nth-child(6)){display:none}
  html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .mobile-reward-count{display:block;font-size:11px;line-height:1.5;white-space:nowrap}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel .table-scroll{overflow:visible}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel table{width:100%;min-width:0}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel :is(table,tbody,tr){display:block}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel tbody tr{border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td:not(:nth-child(5)):not(:nth-child(6)){display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;border:0;padding:7px 0;overflow-wrap:anywhere}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td::before{content:attr(data-label);font-size:11px;color:var(--muted);font-weight:600}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td:nth-child(4){display:block!important}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel td:nth-child(4)::before{display:inline-block;width:96px}
+ html:is([data-tenant="santofe"],[data-tenant="vainillacoffee"]) .customers-panel .mobile-reward-count{margin-left:96px;white-space:normal;font-size:13px}
 }
