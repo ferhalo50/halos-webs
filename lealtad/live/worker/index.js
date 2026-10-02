@@ -5,6 +5,7 @@ import { recordRewardOperation } from './per-item-rewards.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
+const HTTPS_HOSTS = new Set(['renacecafe.haloswebs.com', 'mooncoffee.haloswebs.com', 'santofe.haloswebs.com']);
 const jsonHeaders = { 'content-type': 'application/json; charset=utf-8' };
 
 function response(data, status = 200, extraHeaders = {}) {
@@ -25,7 +26,7 @@ function maintenanceResponse() {
   return response({ ok: false, error: { code: 'maintenance', message: 'Estamos realizando una actualización breve. Intenta nuevamente en unos minutos.' } }, 503, { 'retry-after': '300' });
 }
 
-function securityHeaders(res, isApi = false) {
+function securityHeaders(res, isApi = false, url) {
   const headers = new Headers(res.headers);
   headers.set('x-content-type-options', 'nosniff');
   headers.set('x-frame-options', 'DENY');
@@ -33,6 +34,7 @@ function securityHeaders(res, isApi = false) {
   headers.set('permissions-policy', 'camera=(self), geolocation=(), microphone=()');
   headers.set('content-security-policy', "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
   headers.set('cache-control', isApi ? 'no-store' : 'public, max-age=300');
+  if (url?.protocol === 'https:' && HTTPS_HOSTS.has(url.hostname)) headers.set('strict-transport-security', 'max-age=31536000');
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
@@ -759,30 +761,36 @@ async function api(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Redirect approved public hosts before reading configuration, tenant, session or D1.
+    // 308 preserves methods/bodies; it cannot protect a request already sent without TLS.
+    if (url.protocol === 'http:' && HTTPS_HOSTS.has(url.hostname)) {
+      url.protocol = 'https:';
+      return securityHeaders(Response.redirect(url.href, 308));
+    }
     const isApi = url.pathname.startsWith('/api/');
     // Covers canonical APIs and their legacy aliases before redirects, tenant or D1 access.
     if (maintenanceEnabled(env) && /^\/(?:renace\/)?api(?:\/|$)/.test(url.pathname)) {
-      return securityHeaders(maintenanceResponse(), true);
+      return securityHeaders(maintenanceResponse(), true, url);
     }
     try {
       if (url.hostname === LEGACY_HOST) {
-        if (url.pathname === '/renace/service-worker.js') return securityHeaders(legacyServiceWorker(), false);
+        if (url.pathname === '/renace/service-worker.js') return securityHeaders(legacyServiceWorker(), false, url);
         const path = url.pathname === '/renace' ? '/' : url.pathname.startsWith('/renace/') ? url.pathname.slice('/renace'.length) : url.pathname;
-        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false, url);
       }
       if (url.hostname === CANONICAL_HOST && (url.pathname === '/renace' || url.pathname.startsWith('/renace/'))) {
         const path = url.pathname.slice('/renace'.length) || '/';
-        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false);
+        return securityHeaders(Response.redirect(`https://${CANONICAL_HOST}${path}${url.search}`, 308), false, url);
       }
       const tenant=resolveTenant(url,env);
-      if(!tenant)return securityHeaders(error('Negocio no disponible.',404,'unknown_host'),true);
+      if(!tenant)return securityHeaders(error('Negocio no disponible.',404,'unknown_host'),true,url);
       const tenantEnv={...env,TENANT:tenant};
       const result = isApi ? await api(request, tenantEnv) : await tenantAssets(request,tenantEnv);
-      return securityHeaders(result, isApi);
+      return securityHeaders(result, isApi, url);
     } catch (cause) {
-      if (cause instanceof ApiError) return securityHeaders(error(cause.message, cause.status, cause.code), isApi);
+      if (cause instanceof ApiError) return securityHeaders(error(cause.message, cause.status, cause.code), isApi, url);
       console.error(cause);
-      return securityHeaders(error('Ocurrió un error inesperado.', 500, 'server_error'), isApi);
+      return securityHeaders(error('Ocurrió un error inesperado.', 500, 'server_error'), isApi, url);
     }
   },
   async scheduled(_controller, env, context) {
