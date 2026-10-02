@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "haloswebs-sistema-lealtad-pdf",
+  "main": "./worker/index.js",
+  "compatibility_date": "2026-09-18",
+  "workers_dev": false,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": true
+  },
+  "routes": [
+    { "pattern": "sistemalealtad.haloswebs.com", "custom_domain": true }
+  ]
+}

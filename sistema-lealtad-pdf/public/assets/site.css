@@ -1,0 +1,59 @@
+:root { color-scheme: light; --paper: #f8f4e9; --ink: #28372c; --green: #536748; --line: #dcd7ca; --sage: #e5ebdf; --sand: #eee3d2; }
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--ink); background: var(--paper); font-family: Arial, Helvetica, sans-serif; line-height: 1.6; }
+a { color: inherit; }
+.shell { width: min(100% - 48px, 1060px); margin-inline: auto; }
+.site-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 96px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; flex-direction: column; justify-content: center; min-height: 48px; font-size: 22px; font-weight: 700; line-height: 1.25; text-decoration: none; }
+.brand span { font-size: 12px; letter-spacing: .08em; font-weight: 400; color: var(--green); }
+.header-note { font-size: 13px; color: var(--green); }
+.eyebrow { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .1em; }
+h1 { margin: 12px 0 20px; font-size: clamp(36px, 5vw, 58px); line-height: 1.1; letter-spacing: -.035em; max-width: 800px; }
+.landing { padding-top: 54px; }
+.intro { max-width: 800px; }
+.lead { font-size: clamp(18px, 2.5vw, 22px); max-width: 720px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 22px; border: 1px solid var(--ink); border-radius: 7px; font-weight: 700; text-decoration: none; line-height: 1.4; transition: background-color .15s; }
+.primary { color: #fff; background: var(--ink); }
+.primary:hover { background: #3e513f; }
+.secondary { background: transparent; }
+.secondary:hover { background: var(--sage); }
+:focus-visible { outline: 3px solid #755640; outline-offset: 4px; }
+.hint, .service-note { font-size: 13px; color: #52614f; }
+.offer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 38px; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; max-width: 800px; }
+.offer > div { padding: 24px; background: var(--sage); }
+.offer > div + div { background: var(--sand); }
+.offer p { margin: 4px 0; }
+.offer .price { font-size: clamp(32px, 5vw, 44px); font-weight: 700; line-height: 1.4; }
+.benefits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; padding: 40px 0 20px; }
+.benefits h2 { font-size: 19px; line-height: 1.3; }
+.benefits p { margin-bottom: 0; }
+.service-note { max-width: 850px; margin-bottom: 40px; }
+.site-footer { border-top: 1px solid var(--line); padding: 24px 0; margin-top: 24px; font-size: 13px; color: var(--green); }
+.viewer { max-width: 900px; padding-top: 36px; }
+.viewer h1 { font-size: clamp(32px, 4vw, 44px); }
+.viewer-heading > p:last-of-type { max-width: 650px; }
+.viewer-status { margin: 24px 0 20px; font-size: 14px; color: var(--green); }
+.viewer-status.error { padding: 16px; color: #7b2920; border: 1px solid #b77a70; background: #fff6ee; border-radius: 7px; }
+.pdf-pages { width: 100%; }
+.pdf-page { margin: 0 0 28px; width: 100%; }
+.pdf-page figcaption { font-size: 13px; color: var(--green); margin-bottom: 8px; }
+.page-surface { position: relative; width: 100%; aspect-ratio: 210 / 297; background: #fff; border-radius: 3px; box-shadow: 0 4px 20px #28372c18; }
+.pdf-page canvas { display: block; width: 100%; height: auto; border-radius: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: pre-wrap; border: 0; }
+.skip-link { position: fixed; left: 16px; top: -100px; z-index: 10; padding: 12px 18px; color: #fff; background: var(--ink); }
+.skip-link:focus { top: 12px; }
+@media (max-width: 600px) {
+  .shell { width: calc(100% - 32px); }
+  .site-header { min-height: 80px; }
+  .header-note { font-size: 12px; }
+  .landing { padding-top: 30px; }
+  .offer > div { padding: 18px 14px; }
+  .offer .eyebrow { font-size: 10px; letter-spacing: .04em; }
+  .benefits { grid-template-columns: 1fr; gap: 8px; padding-top: 24px; }
+  .button { padding-inline: 18px; }
+  .viewer { padding-top: 24px; }
+  .viewer .actions { gap: 10px; margin-top: 20px; }
+  .viewer-status { margin-block: 20px 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }
