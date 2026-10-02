@@ -55,6 +55,8 @@ export default {
       headers.set('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${PDF_FILENAME}"`);
     } else if (html) {
       headers.set('Content-Type', 'text/html; charset=utf-8');
+      // Preserve the reviewed HTML without injected third-party scripts.
+      headers.set('Cache-Control', 'public, max-age=0, must-revalidate, no-transform');
     } else if (assetPath.endsWith('.mjs') || assetPath.endsWith('.js')) {
       headers.set('Content-Type', 'text/javascript; charset=utf-8');
     }

@@ -109,6 +109,9 @@ test('CSP estricta y HSTS también protegen descarga y errores', async () => {
     assert.match(csp, /worker-src 'self'/);
     assert.match(csp, /object-src 'none'/);
     assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval|https:|\*/);
+    if (path === '/' || path === '/propuesta/') {
+      assert.equal(res.headers.get('cache-control'), 'public, max-age=0, must-revalidate, no-transform');
+    }
     assert.equal(res.headers.get('strict-transport-security'), 'max-age=31536000');
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
   }
