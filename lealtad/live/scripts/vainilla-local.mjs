@@ -21,10 +21,10 @@ if(!existsSync(target)){
 }
 const db=new DatabaseSync(target);
 try{
- db.prepare("INSERT INTO businesses(id,slug,name,reward_goal,reward_name,timezone,active,stamp_policy) VALUES('business_vainillacoffee','vainillacoffee','Vainilla Coffee',9,'Bebida gratis','America/Tijuana',1,'per_item') ON CONFLICT(slug) DO NOTHING").run();
+ db.prepare("INSERT INTO businesses(id,slug,name,reward_goal,reward_name,timezone,active,stamp_policy) VALUES('business_vainillacoffee','vainillacoffee','Vainilla Coffee',9,'Bebida gratis','America/Tijuana',1,'daily') ON CONFLICT(slug) DO NOTHING").run();
  const business=db.prepare("SELECT * FROM businesses WHERE slug='vainillacoffee'").get();
- if(business.id!=='business_vainillacoffee'||business.reward_goal!==9||business.stamp_policy!=='per_item')throw new Error('La configuración local existente no coincide; no se modificará automáticamente.');
- console.log('Vainilla: business_vainillacoffee, per_item, meta 9. D1 exclusivamente local.');
+ if(business.id!=='business_vainillacoffee'||business.reward_goal!==9||business.stamp_policy!=='daily')throw new Error('La configuración local existente no coincide con daily/meta 9; prepara una base de prueba local compatible. No se modificará automáticamente.');
+ console.log('Vainilla: business_vainillacoffee, daily, meta 9. D1 exclusivamente local.');
 }finally{db.close();}
 prepareLocalRewards('.dev-final-vainilla');
 if(!process.argv.includes('--init-only')){

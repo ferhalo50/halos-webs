@@ -34,7 +34,7 @@ test('0014 adds zero decisions without changing existing progress, saved rewards
  }finally{db.close();}
 });
 
-for(const slug of ['vainillacoffee','santofe'])test(slug+': crossing goals generates decisions, preserves saved rewards and persistently blocks paid purchases',async()=>{
+for(const slug of ['santofe'])test(slug+': crossing goals generates decisions, preserves saved rewards and persistently blocks paid purchases',async()=>{
  const db=schema();try{
   const goal=slug==='vainillacoffee'?9:10;
   for(const [before,quantity,progress,choices]of [[goal-1,1,0,1],[8,slug==='vainillacoffee'?4:5,3,1],[goal-1,goal*2+1,0,3]]){
@@ -53,7 +53,7 @@ for(const slug of ['vainillacoffee','santofe'])test(slug+': crossing goals gener
 });
 
 test('Decisions resolve one at a time: save, redeem now and saved redemption preserve progress and never add a free-drink stamp',async()=>{
- const db=schema();try{for(const slug of ['vainillacoffee','santofe']){
+ const db=schema();try{for(const slug of ['santofe']){
   const f=await fixture(db,slug),goal=f.card.goal;await action(db,f,'stamp',{quantity:goal-1});await action(db,f,'stamp',{quantity:2*goal+1});assert.equal(f.card.rewardChoicesPending,3);
   await action(db,f,'reward-choice',{decision:'save'});assert.equal(f.card.rewardChoicesPending,2);assert.equal(f.card.rewardsPending,1);assert.equal(f.card.redeemed,0);assert.equal((await action(db,f,'stamp',{quantity:1})).status,409);
   await action(db,f,'redeem');assert.equal(f.card.rewardChoicesPending,2);assert.equal(f.card.rewardsPending,0);assert.equal(f.card.redeemed,1);assert.equal(f.card.stamps,0);
@@ -65,7 +65,7 @@ test('Decisions resolve one at a time: save, redeem now and saved redemption pre
 });
 
 test('Concurrent decisions, stale versions, replay and reused cross-action keys cannot consume a reward twice',async()=>{
- const db=schema();try{const f=await fixture(db,'vainillacoffee');await action(db,f,'stamp',{quantity:19});const card={...f.card},keys=[crypto.randomUUID(),crypto.randomUUID()];
+ const db=schema();try{const f=await fixture(db,'santofe');await action(db,f,'stamp',{quantity:21});const card={...f.card},keys=[crypto.randomUUID(),crypto.randomUUID()];
   const race=await Promise.all(keys.map((operationId,i)=>action(db,f,'reward-choice',{decision:i?'redeem_now':'save',operationId},card)));assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);
   f.card=(await invoke(db,f.slug,'/api/card',{cookie:f.customer.cookie})).data.card;assert.equal(f.card.rewardChoicesPending,1);assert.equal(f.card.rewardsPending+f.card.redeemed,1);assert.equal(f.card.stamps,1);
   const snapshot={...f.card},id=keys[race.findIndex(r=>r.status===200)];assert.equal((await action(db,f,'reward-choice',{decision:'save',operationId:id})).status,409);assert.deepEqual((await invoke(db,f.slug,'/api/card',{cookie:f.customer.cookie})).data.card,snapshot);
@@ -82,7 +82,7 @@ test('Decision routes enforce staff role, business isolation and daily-tenant ru
     const r=await invoke(db,f.slug,'/api/admin/customers/'+f.card.customerId+'/stamps',{method:'POST',cookie:f.admin.cookie,body:{delta:1,expectedStamps:f.card.stamps,reason:'Local test adjustment'}});assert.equal(r.status,409);assert.equal(r.data.error.code,'reward_decision_required');
     assert.throws(()=>db.prepare('UPDATE loyalty_cards SET stamps=stamps+1 WHERE id=?').run(f.card.id),/reward_decision_required/);
    }else{
-    assert.equal((await action(db,f,'reward-choice',{decision:'save'})).status,409);assert.equal((await action(db,f,'stamp',{quantity:1})).status,200);assert.equal((await action(db,f,'stamp',{quantity:1})).status,409);assert.equal(f.card.stamps,1);assert.equal(f.card.goal,f.slug==='renace'?9:8);
+    assert.equal((await action(db,f,'reward-choice',{decision:'save'})).status,409);assert.equal((await action(db,f,'stamp',{quantity:1})).status,200);assert.equal((await action(db,f,'stamp',{quantity:1})).status,409);assert.equal(f.card.stamps,1);assert.equal(f.card.goal,f.slug==='mooncoffee'?8:9);
    }
   }
  }finally{db.close();}

@@ -43,7 +43,7 @@ export async function tenantAssets(request, env) {
     code = code
       .replace(
         'renace-shell-v8',
-        t.slug + (t.stampPolicy==='per_item'?'-shell-v13':'-shell-v12')
+        t.slug + (t.slug==='vainillacoffee'?'-shell-v14':t.stampPolicy==='per_item'?'-shell-v13':'-shell-v12')
       )
       .replace(
         "'/assets/style.css'",

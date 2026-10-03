@@ -6,7 +6,7 @@ export const slugs=['renace','mooncoffee','santofe','vainillacoffee'];
 export function schema(until='9999'){
  const db=new DatabaseSync(':memory:');db.exec('PRAGMA foreign_keys=ON');
  for(const name of readdirSync(new URL('../migrations/',import.meta.url)).sort().filter(n=>n<until))db.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
- db.exec("INSERT INTO businesses(id,slug,name,reward_goal,reward_name,timezone,stamp_policy) VALUES('business_vainillacoffee','vainillacoffee','Vainilla Coffee',9,'Bebida gratis','America/Tijuana','per_item')");
+ db.exec("INSERT INTO businesses(id,slug,name,reward_goal,reward_name,timezone,stamp_policy) VALUES('business_vainillacoffee','vainillacoffee','Vainilla Coffee',9,'Bebida gratis','America/Tijuana','daily')");
  return db;
 }
 export function binding(db){return{prepare(sql){let args=[];const s={bind(...v){args=v;return s;},async first(column){const row=db.prepare(sql).get(...args);return column?row?.[column]??null:row??null;},async all(){return{results:db.prepare(sql).all(...args)};},async run(){const r=db.prepare(sql).run(...args);return{success:true,meta:{changes:Number(r.changes)}};}};return s;},async batch(statements){db.exec('BEGIN');try{const result=[];for(const s of statements)result.push(await s.run());db.exec('COMMIT');return result;}catch(error){db.exec('ROLLBACK');throw error;}}};}

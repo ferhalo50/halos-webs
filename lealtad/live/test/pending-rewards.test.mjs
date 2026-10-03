@@ -4,7 +4,8 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync,readdirSync,mkdirSync} from 'node:fs';
 import {chromium} from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 import ExcelJS from 'exceljs';
-const cases=[{slug:'vainillacoffee',base:'http://127.0.0.1:8790',goal:9,staff:'vainilla_staff_local',password:'Vainilla-staff-local928!',admin:'admin_vainilla_local',adminPassword:'Vainilla-admin-local928!',buy:4},{slug:'santofe',base:'http://127.0.0.1:8789',goal:10,staff:'santofe_staff_local',password:'Santofe-staff-local928!',admin:'admin_santofe_local',adminPassword:'Santofe-admin-local928!',buy:5}];
+const dailyPeer={slug:'vainillacoffee',base:'http://127.0.0.1:8790',goal:9,staff:'vainilla_staff_local',password:'Vainilla-staff-local928!',admin:'admin_vainilla_local',adminPassword:'Vainilla-admin-local928!'};
+const cases=[{slug:'santofe',base:'http://127.0.0.1:8789',goal:10,staff:'santofe_staff_local',password:'Santofe-staff-local928!',admin:'admin_santofe_local',adminPassword:'Santofe-admin-local928!',buy:5}];
 let serial=0;
 async function api(t,path,cookie,body){const r=await fetch(t.base+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(cookie?{cookie}:{})},body:body?JSON.stringify(body):undefined});return{status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
 async function fixture(t){const phone=String((Date.now()+serial++)%10000000000).padStart(10,'0'),customer=await api(t,'/api/register',null,{name:'Ramo recompensas local',phone,pin:'4826'});assert.equal(customer.status,201);const staff=await api(t,'/api/login/staff',null,{username:t.staff,password:t.password}),admin=await api(t,'/api/login/staff',null,{username:t.admin,password:t.adminPassword});const card=(await api(t,'/api/card',customer.cookie)).data.card;return{phone,customer,staff,admin,card};}
@@ -27,7 +28,7 @@ test('Pending reward migration preserves known entitlements, daily cards and his
  }finally{db.close();}
 });
 
-test('Both per-item tenants accumulate multiple rewards and redeem once without changing progress; replay, concurrency and foreign QR are rejected',async()=>{
+test('Santofe per-item cards accumulate multiple rewards and redeem once without changing progress; replay, concurrency and foreign QR are rejected',async()=>{
  const all=[];
  for(const t of cases){
   const f=await fixture(t);all.push({t,f});assert.equal((await purchase(t,f,8)).status,200);const r=await purchase(t,f,t.buy);assert.equal(r.status,200);assert.equal(f.card.stamps,3);assert.equal(f.card.rewardChoicesPending,1);assert.equal(f.card.rewardsPending,0);await saveChoices(t,f);assert.equal(f.card.rewardsPending,1);assert.equal(f.card.redeemed,0);assert.equal(r.data.operation.paidCoffees,t.buy);assert.equal(r.data.operation.freeCoffees,0);
@@ -45,9 +46,9 @@ test('Both per-item tenants accumulate multiple rewards and redeem once without 
   assert.equal(clients.find(r=>r.id===f.card.id).rewards_pending,f.card.rewardsPending);const events=activity.filter(e=>e.card_id===f.card.id);assert.equal(events.filter(e=>e.event_type==='saved_reward_redeemed').length,2);assert.ok(events.some(e=>/recompensas generadas:/.test(e.reason)));assert.ok(events.some(e=>/bebida guardada canjeada; progreso 3\//.test(e.reason)));
   assert.equal((await api(t,'/api/staff/redeem',f.customer.cookie,payload)).status,403);
  }
- for(const {t,f} of all){const other=all.find(x=>x.t!==t);assert.equal((await api(t,'/api/staff/card?value='+encodeURIComponent(other.f.card.qrValue),f.staff.cookie)).status,404);assert.equal((await api(t,'/api/staff/redeem',f.staff.cookie,{cardId:other.f.card.id,expectedVersion:other.f.card.rewardVersion,operationId:crypto.randomUUID()})).status,404);}
+ const other={t:dailyPeer,f:await fixture(dailyPeer)};for(const {t,f} of all){assert.equal((await api(t,'/api/staff/card?value='+encodeURIComponent(other.f.card.qrValue),f.staff.cookie)).status,404);assert.equal((await api(t,'/api/staff/redeem',f.staff.cookie,{cardId:other.f.card.id,expectedVersion:other.f.card.rewardVersion,operationId:crypto.randomUUID()})).status,404);}
  // Exact multiple-goal example requested by the user.
- const t=cases[0],f=await fixture(t);await purchase(t,f,8);await purchase(t,f,19);assert.equal(f.card.stamps,0);assert.equal(f.card.rewardChoicesPending,3);assert.equal(f.card.rewardsPending,0);assert.equal(f.card.redeemed,0);
+ const t=cases[0],f=await fixture(t);await purchase(t,f,t.goal-1);await purchase(t,f,t.goal*2+1);assert.equal(f.card.stamps,0);assert.equal(f.card.rewardChoicesPending,3);assert.equal(f.card.rewardsPending,0);assert.equal(f.card.redeemed,0);
  const race=await fixture(t),snapshot=race.card;const parallel=await Promise.all([purchase(t,race,1,snapshot),purchase(t,race,2,snapshot)]);assert.deepEqual(parallel.map(r=>r.status).sort(),[200,409]);const after=(await api(t,'/api/card',race.customer.cookie)).data.card;assert.equal(after.stamps,parallel.find(r=>r.status===200).data.operation.paidCoffees);assert.equal(after.rewardsPending,0);assert.equal((await api(t,'/api/staff/stamp',race.staff.cookie,{cardId:after.id,quantity:19})).status,409);
 });
 

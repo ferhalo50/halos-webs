@@ -12,7 +12,7 @@ async function download(page,selector){const pending=page.waitForEvent('download
 
 test('Per-item client and staff show full earned cards, mandatory bilingual choices, real progress after saving, responsive Admin/activity and real XLSX/PNG QR',async t=>{
  const db=schema(),browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>db.close());t.after(()=>browser.close());
- for(const slug of ['vainillacoffee','santofe']){
+ for(const slug of ['santofe']){
   const f=await fixture(db,slug);await action(db,f,'stamp',{quantity:8});await action(db,f,'stamp',{quantity:slug==='vainillacoffee'?4:5});
   const host=await server(db,slug);t.after(()=>new Promise(r=>host.app.close(r)));const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   async function view(cookie,route){await context.clearCookies();const [name,value]=cookie.split('=');await context.addCookies([{name,value,url:host.base}]);await page.goto(host.base+'/?testRole='+crypto.randomUUID()+'#'+route);await page.waitForSelector('#app-loader',{state:'detached'});await page.evaluate(()=>window.LoyaltyI18n.set('es'));}

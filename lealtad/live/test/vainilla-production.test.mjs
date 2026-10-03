@@ -15,10 +15,10 @@ test('Vainilla production host serves its approved shell/PWA while anonymous pro
  const shell=await request('/');assert.equal(shell.status,200);const html=await shell.text();
  assert.ok(html.includes('data-tenant="vainillacoffee"'));assert.ok(html.includes('/assets/vainilla/logo.svg'));assert.ok(html.includes('/assets/vainilla.js'));assert.ok(html.includes('/assets/vainilla.css'));
  const tenantResponse=await request('/assets/tenant.js');const tenant=JSON.parse((await tenantResponse.text()).replace('window.LoyaltyTenant=','').replace(/;$/,''));
- assert.equal(tenant.slug,'vainillacoffee');assert.equal(tenant.rewardGoal,9);assert.equal(tenant.stampPolicy,'per_item');assert.equal(tenant.maxStampsPerTransaction,99);assert.equal(tenant.demo,false);assert.equal(tenant.cardLayout.variant,'bouquet');assert.deepEqual(Object.keys(tenant.stampStyles),['flower']);
+ assert.equal(tenant.slug,'vainillacoffee');assert.equal(tenant.rewardGoal,9);assert.equal(tenant.stampPolicy,'daily');assert.equal(tenant.maxStampsPerTransaction,1);assert.equal(tenant.demo,false);assert.equal(tenant.cardLayout.variant,'bouquet');assert.deepEqual(Object.keys(tenant.stampStyles),['flower']);
  const manifest=await(await request('/manifest.webmanifest')).json();assert.equal(manifest.name,'Vainilla Coffee · Lealtad');assert.equal(manifest.short_name,'Vainilla Coffee');assert.equal(manifest.theme_color,'#fffaf0');assert.equal(manifest.background_color,'#fffaf0');
  for(const size of [192,512])assert.ok(manifest.icons.some(i=>i.sizes===`${size}x${size}`&&i.purpose==='any maskable'&&i.src.startsWith('/assets/vainilla/')));
- const sw=await(await request('/service-worker.js')).text();for(const asset of ['vainillacoffee-shell-v13','vainilla.js','vainilla.css','bouquet.jpg','flower.svg','icon-192.png','icon-512.png','pending-rewards.css'])assert.ok(sw.includes(asset));
+ const sw=await(await request('/service-worker.js')).text();for(const asset of ['vainillacoffee-shell-v14','vainilla.js','vainilla.css','bouquet.jpg','flower.svg','icon-192.png','icon-512.png'])assert.ok(sw.includes(asset));
  for(const path of ['/api/me','/api/card','/api/admin/dashboard','/api/admin/export/activity','/api/staff/card?value=foreign-qr'])assert.equal((await request(path)).status,401);
  const setup=await worker.fetch(new Request('https://vainillacoffee.haloswebs.com/api/setup',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}),env);assert.equal(setup.status,404);
  assert.deepEqual(calls,[]);

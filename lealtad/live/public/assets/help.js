@@ -65,6 +65,20 @@
     ]]
   };
 
+  if(tenant.slug==='vainillacoffee'&&tenant.stampPolicy==='daily'){
+    const rule='Máximo 1 flor por día calendario de Tijuana, no por cada 24 horas. Una compra válida suma una flor aunque incluya varios cafés. Otra compra del mismo cliente ese día no suma flores. Completa 9 flores en días distintos y llévate una bebida gratis.';
+    const reward='En 9/9 el ramo permanece completo y la bebida gratis está lista. En Mostrador, confirma el canje al entregar la bebida. Después comienza un nuevo ramo en 0/9. La bebida gratis no genera una flor; el canje no anula la visita registrada ese día. No hay decisiones de guardar recompensas ni sobrantes por cantidad.';
+    const enRule='Up to 1 flower per Tijuana calendar day, not per 24 hours. An eligible purchase adds one flower even if it contains several coffees. Another purchase by the same customer that day adds no flowers. Collect 9 flowers on different days and enjoy a free drink.';
+    const enReward='At 9/9 the bouquet stays complete and your free drink is ready. At the counter, confirm redemption when delivering the drink. A new bouquet then starts at 0/9. The free drink adds no flower; redemption does not cancel that day’s recorded visit. There are no save-reward decisions or quantity-based remainders.';
+    guides.customer[1]=guides.customer[1].filter(([label])=>label!=='Diseño de tus sellos').map(([label,text])=>label==='Tu momento Renace'?['Tu ramo Vainilla',rule]:label==='Disfruta tu café gratis'?['Disfruta tu bebida gratis',reward]:[label,text]);
+    guides.employee[1]=guides.employee[1].map(([label,text])=>label==='2. Confirma la compra y añade el sello'?[label,rule]:label==='3. Entrega la recompensa'?[label,reward]:[label,text]);
+    guides.admin[1]=guides.admin[1].map(([label,text])=>label==='Recompensas y canjes'?[label,rule+' '+reward]:[label,text]);
+    englishGuides.customer[1][0]=['Your Vainilla bouquet',enRule];
+    englishGuides.customer[1].splice(1,0,['Enjoy your free drink',enReward]);
+    englishGuides.employee[1]=englishGuides.employee[1].map(([label,text])=>label==='Confirm the purchase'?[label,enRule]:label==='Apply the reward'?[label,enReward]:[label,text]);
+    englishGuides.admin[1].splice(1,0,['Daily visits and rewards',enRule+' '+enReward]);
+  }
+
   if(tenant.stampPolicy==='per_item'){
     const floral=tenant.slug==='vainillacoffee',goal=tenant.rewardGoal,unit=floral?'flores':'sellos',enUnit=floral?'flowers':'stamps';
     const rule='Cada café pagado suma '+(floral?'una flor':'un sello')+'. Cada '+goal+' cafés pagados genera una bebida gratis por decidir. El progreso real pasa al siguiente recorrido; la tarjeta se muestra completa hasta decidir. Antes de registrar otra compra, el equipo debe confirmar Canjear ahora o Guardar para después, una recompensa a la vez. No hay límite diario.';

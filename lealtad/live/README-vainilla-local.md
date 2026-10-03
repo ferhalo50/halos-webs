@@ -1,55 +1,31 @@
-# Vainilla Coffee — revisión funcional local
+# Vainilla Coffee — política diaria y revisión local
 
-Tenant `vainillacoffee`, business `business_vainillacoffee`, meta de 9 flores.
-El hostname aprobado `vainillacoffee.haloswebs.com` se reconoce en el resolver
-y está configurado como Custom Domain en Wrangler, siguiendo el patrón de los
-otros tenants. HTTPS/HSTS aplica exclusivamente a los cuatro hosts públicos.
-El desarrollo y los fixtures descritos aquí siguen siendo exclusivamente locales.
-Los scripts locales no se ejecutan al desplegar. El registro business y el único
-administrador inicial de producción se preparan por separado, sin migraciones,
-clientes precargados ni empleados. No usar `/api/setup` para ese bootstrap: el
-endpoint antiguo también crea un empleado y no corresponde al alcance aprobado.
+Tenant vainillacoffee, business business_vainillacoffee, hostname vainillacoffee.haloswebs.com.
+Meta de **9 flores**, política existente **daily**, máximo una flor por día calendario de America/Tijuana (no por cada 24 horas).
+Una compra válida registra una visita, aunque incluya varios cafés. Mostrador no ofrece selector de cantidad; la API rechaza cantidades distintas de uno. El índice único diario impide duplicar la visita. Al día siguiente se permite otra flor.
+
+En 9/9 el ramo permanece completo y hay una bebida gratis disponible. El canje explícito devuelve el progreso a 0/9 y aumenta redeemed_count; no añade flores ni cancela la visita del día. Vainilla no usa rewards_pending, decisiones de reward_choices_pending, guardado de recompensas ni sobrantes por cantidad. Santofé conserva esos mecanismos per_item y su meta 10 sin cambios.
+
+No se necesita una migración: el schema instalado soporta ambas políticas. El cambio de configuración de producción y la limpieza de pruebas son acciones separadas, autorizadas y respaldadas; ninguno de estos scripts locales las ejecuta.
 
 ## Preparar y abrir
 
-Desde `lealtad/live`, ejecutar `node scripts/vainilla-local.mjs --http`.
-En otra terminal, ejecutar `node scripts/vainilla-local-fixtures.mjs` una vez.
-Las cuentas existentes se conservan y no se restablecen sus saldos o credenciales.
-Detener el servidor HTTP y ejecutar `pnpm run dev:vainilla` para HTTPS local.
-Dirección: `https://10.0.0.9:8790/` (certificado de desarrollo).
+Desde lealtad/live: node scripts/vainilla-local.mjs --http.
+El primer arranque copia solamente el schema local existente en .dev-final-santofe hacia .dev-final-vainilla, sin usuarios ni operaciones, e inserta el business local con daily/meta 9 si no existe. Si encuentra una configuración previa incompatible se detiene: no cambia saldos automáticamente. Nunca usa D1 remota. Los scripts no se ejecutan al desplegar.
 
-El primer arranque copia exclusivamente las definiciones del schema instalado
-en `.dev-final-santofe` a una D1 nueva en `.dev-final-vainilla`. El origen se abre
-en modo lectura. No copia usuarios ni operaciones y no
-usa D1 remota. Inserta únicamente el business local si todavía no existe.
-Si falta el schema local existente, se detiene. La migración aditiva de recompensas
-se prepara exclusivamente en los archivos de prueba locales con el script descrito abajo.
+En otra terminal: node scripts/vainilla-local-fixtures.mjs. Prepara cuentas ficticias únicamente en http://127.0.0.1:8790. Los estados 0, 3, 8 y 9/9 se preparan mediante ajustes administrativos locales con motivo; no simulan varias compras válidas del mismo día. Las cuentas existentes se conservan.
 
-## Accesos ficticios locales
+Clientes ficticios: PIN 4826, teléfonos 0000090000, 0000090003, 0000090008, 0000090009.
+Mostrador local: vainilla_staff_local / Vainilla-staff-local928!.
+Admin local: admin_vainilla_local / Vainilla-admin-local928!.
+**No son accesos de producción.**
 
-Clientes: PIN `4826`, celulares `0000090000`, `0000090003`, `0000090008` y
-`0000090009`, con 0, 3 y 8 flores; la cuenta terminada en 9 tiene 0 flores y una recompensa pendiente.
-Mostrador: `vainilla_staff_local` / `Vainilla-staff-local928!`.
-Administrador: `admin_vainilla_local` / `Vainilla-admin-local928!`.
-
-## Regla y cruce de objetivo
-
-Cada café pagado agrega una flor, sin límite diario. Se registran exclusivamente
-cafés pagados, de 1 a 99 por operación. Cada meta de 9 genera una bebida gratis
-pendiente y el sobrante continúa en un nuevo ramo. Ninguna recompensa se aplica
-automáticamente. Por ejemplo, 8/9 + 4 pagados = 3/9 y 1 bebida gratis pendiente.
-Canjear consume una pendiente sin cambiar las flores actuales.
-
-El saldo persistente, la migración aditiva solo local, la atomicidad y el impacto
-futuro en Santofé se documentan en README-pending-rewards-local.md.
-Las cuentas de muestra creadas con 9 flores ahora tienen 0/9 y una recompensa.
+Para HTTPS local, detener HTTP y ejecutar pnpm run dev:vainilla. Dirección LAN https://10.0.0.9:8790/ con certificado de desarrollo.
 
 ## Verificación
 
-La suite requiere los servidores locales HTTP en 8787, 8788, 8789 y 8790.
-Ejecutar `pnpm run check`, `pnpm test` y `git diff --check`.
-Los tests de Vainilla crean únicamente datos locales de prueba.
-Los iconos se regeneran con `node scripts/vainilla-icons.mjs` mientras 8790
-esté en HTTP; usan los assets aprobados dentro de la zona segura maskable.
-La instalación real en Android/iOS y Wake Lock requieren un contexto HTTPS
-confiable en el dispositivo; un certificado local no confiable puede impedirlos.
+La suite completa requiere servidores ficticios HTTP en 8787, 8788, 8789 y 8790.
+Ejecutar pnpm run check, pnpm test y git diff --check. Los tests de Vainilla crean únicamente datos locales de prueba. La cobertura independiente en memoria de test/vainilla-daily.test.mjs incluye límite diario, día siguiente, 9/9, canje, rechazo de sobrantes y regresión de Santofé.
+La UI conserva tarjeta vertical, ramo, 9 flores, ES/EN, PNG con QR decodificable, roles y responsive.
+
+Los iconos y branding aprobados no cambian. Vainilla usa su caché vainillacoffee-shell-v14, sin alterar los caches de otras cafeterías. La instalación física y Wake Lock requieren HTTPS confiable en el dispositivo.
