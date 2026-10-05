@@ -97,6 +97,23 @@ function paintStampStyle(){
  document.querySelector('.personal-card .card')?.replaceWith(document.createRange().createContextualFragment(cardView(currentCard)));
  document.querySelectorAll('[data-stamp-style]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.stampStyle===validStampStyle(currentCard.stampStyle)));b.disabled=stampStyleBusy;});
 }
+if(tenant.slug==='mooncoffee'){
+ const tapAnimations=new WeakMap();
+ const stampTapFeedback=event=>{
+  if(event.type==='pointerdown'&&event.button!==0)return;
+  if(event.type==='keydown'&&(event.repeat||!['Enter',' '].includes(event.key)))return;
+  const button=event.target.closest('.stamp-picker [data-stamp-style]');
+  if(!button||button.disabled||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  tapAnimations.get(button)?.cancel();
+  const background=getComputedStyle(button).backgroundColor;
+  tapAnimations.set(button,button.animate([
+   {backgroundColor:'#242d3e',boxShadow:'0 0 0 2px #d2a25366,0 0 18px #d2a25330'},
+   {backgroundColor:background,boxShadow:'none'}
+  ],{duration:360,easing:'ease-out'}));
+ };
+ document.addEventListener('pointerdown',stampTapFeedback);
+ document.addEventListener('keydown',stampTapFeedback);
+}
 document.addEventListener('click',async event=>{
  const button=event.target.closest('[data-stamp-style]');if(!button||stampStyleBusy||user?.role!=='customer'||!currentCard)return;
  const id=currentCard.id,previous=validStampStyle(currentCard.stampStyle),next=button.dataset.stampStyle;

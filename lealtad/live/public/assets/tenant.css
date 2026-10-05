@@ -834,3 +834,31 @@ html[data-tenant="mooncoffee"] .card.moon-loyalty-card .moon-card-head{transform
  html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"] .premium-customer>.help-actions{margin-block:0 8px}
  html:is([data-tenant="renace"],[data-tenant="mooncoffee"]) body[data-route="tarjeta"]>footer{padding-block:6px;row-gap:3px}
 }
+
+/* MOON guides use a light reading surface within the nocturnal theme. */
+html[data-tenant="mooncoffee"] dialog.renace-guide{color-scheme:light;--ink:#1b2638;--muted:#4d5664;background:#fffdf7;color:#1b2638;border-color:#9c804e}
+html[data-tenant="mooncoffee"] .renace-guide header{background:#111722;color:#f7f0e2;border-color:#9c804e}
+html[data-tenant="mooncoffee"] .renace-guide h2{color:#f7f0e2}
+html[data-tenant="mooncoffee"] .renace-guide .guide-content h3{color:#1b2638}
+html[data-tenant="mooncoffee"] .renace-guide .guide-content p,
+html[data-tenant="mooncoffee"] .renace-guide .guide-content :is(.muted,.note,.field-help,small){color:#4d5664}
+html[data-tenant="mooncoffee"] .renace-guide .guide-content section{border-color:#c9c2b5}
+html[data-tenant="mooncoffee"] .renace-guide .guide-content section::before,
+html[data-tenant="mooncoffee"] .renace-guide .guide-content a{color:#805719}
+html[data-tenant="mooncoffee"] .renace-guide .guide-close,
+html[data-tenant="mooncoffee"] .renace-guide .guide-close:not(:disabled):hover{background:#111722;color:#f7f0e2;border-color:#d2a253;box-shadow:none;transform:none}
+html[data-tenant="mooncoffee"] .renace-guide .guide-content :focus-visible,
+html[data-tenant="mooncoffee"] .renace-guide .guide-content:focus-visible{outline:3px solid #805719;outline-offset:3px}
+html[data-tenant="mooncoffee"] .renace-guide .guide-close:focus-visible{outline:3px solid #efd49f;outline-offset:3px}
+
+/* Selection stays quiet; pointer/keyboard feedback is a separate finite animation. */
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option,
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option:is(:hover,:active,:focus,[aria-pressed="true"]){background:#0b111b;color:#f7f0e2;border:1px solid #73634d;box-shadow:none;filter:none;transform:none}
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option[aria-pressed="true"]{border-color:#d2a253}
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option[aria-pressed="true"]::after{content:"✓";position:absolute;right:10px;top:7px;color:#efd49f;font:600 13px/1.2 "Segoe UI",sans-serif}
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option{position:relative}
+html[data-tenant="mooncoffee"] .stamp-picker .stamp-option:focus-visible{outline:3px solid #efd49f;outline-offset:3px}
+@media(hover:hover) and (pointer:fine){
+ html[data-tenant="mooncoffee"] .stamp-picker .stamp-option:not(:disabled):hover{background:#172131;border-color:#d2a253}
+}
+/* End MOON guide and selector accessibility. */
