@@ -174,6 +174,21 @@ test('PDF.js abre las cuatro páginas reales en orden y su versión coincide con
       const page = await doc.getPage(i);
       const text = (await page.getTextContent()).items.map(item => item.str).join(' ');
       assert.ok(text.includes(expected[i - 1]), `Page ${i}: ${expected[i - 1]}`);
+      if (i === 1 || i === 4) {
+        assert.match(text, /\$150/);
+        assert.match(text, /\$0 MXN/);
+        assert.match(text, /\+ impuestos aplicables/);
+      }
+      if (i === 4) assert.match(text, /precio base del servicio/);
+      assert.doesNotMatch(text, /\d+\s*%|\$378|\$406/);
     }
   } finally { await loadingTask.destroy(); }
+});
+
+test('la web aclara impuestos únicamente para la mensualidad y mantiene el mes gratis', async () => {
+  const html = await (await worker.fetch(request('/'), env)).text();
+  assert.match(html, /GRATIS<\/p><p>\$0 MXN<\/p><\/div>/);
+  assert.match(html, /\$150<\/p><p>MXN \/ MES<\/p><p>\+ impuestos aplicables<\/p>/);
+  assert.match(html, /Los importes de mensualidad corresponden al precio base del servicio/);
+  assert.doesNotMatch(html, /\d+\s*%|\$378|\$406/);
 });
