@@ -862,3 +862,14 @@ html[data-tenant="mooncoffee"] .stamp-picker .stamp-option:focus-visible{outline
  html[data-tenant="mooncoffee"] .stamp-picker .stamp-option:not(:disabled):hover{background:#172131;border-color:#d2a253}
 }
 /* End MOON guide and selector accessibility. */
+
+/* MOON feedback floats above the footer and the safe-area-aware mobile navigation. */
+html[data-tenant="mooncoffee"] #toast{
+ z-index:120;bottom:80px;max-width:calc(100% - 32px);padding:12px 20px;
+ background:#111722;color:#f7f0e2;border:1px solid #d2a253;border-radius:14px;
+ font-size:14px;font-weight:600;line-height:1.5;text-align:center;overflow-wrap:anywhere;
+ box-shadow:0 8px 24px #0006;
+}
+@media(max-width:1000px){
+ html[data-tenant="mooncoffee"] #toast{bottom:calc(var(--bottom-navigation-space) + 80px)}
+}
