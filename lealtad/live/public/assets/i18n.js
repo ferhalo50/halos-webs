@@ -227,6 +227,7 @@
     '02 / SU MOMENTO RENACE':'02 / THEIR RENACE MOMENT',
     '02 / SU MOMENTO MOON':'02 / THEIR MOON MOMENT',
     '02 / SU MOMENTO SANTOFÉ':'02 / THEIR SANTOFÉ MOMENT',
+    'MI QR DE LEALTAD':'MY LOYALTY QR','Muestra este QR en mostrador':'Show this QR at the counter','Consulta tu progreso actualizado en la app o en caja.':'Check your current progress in the app or at the counter.',
     'Consulta tu saldo actual en la app o en mostrador.':'Check your current balance in the app or at the counter.',
     'No pudimos generar la tarjeta.':'We could not generate the card.',
     '. Quedará en':'. It will end at'

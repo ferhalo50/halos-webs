@@ -6,7 +6,7 @@ const cases=[
  {slug:'mooncoffee',port:8788,goal:8,links:[['Cómo llegar','https://maps.app.goo.gl/CXaEb4hZ4nK5ctQ17']]},
  {slug:'santofe',port:8789,goal:10,links:[['Cómo llegar · Pinos','https://maps.app.goo.gl/rdBsjChh92f7uXsj9'],['Cómo llegar · Otay','https://maps.app.goo.gl/1hbD3RYi4vcQUjVB8']]}
 ];
-test('directions translate on public/client views and earned Moon stamps stay nocturnal in the downloaded PNG',async t=>{
+test('directions translate on public/client views and earned Moon stamps stay nocturnal in the app and backup PNG retains the QR',async t=>{
  const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());
  for(const item of cases){
   const base=`http://127.0.0.1:${item.port}`,context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'}),page=await context.newPage();
@@ -27,8 +27,8 @@ test('directions translate on public/client views and earned Moon stamps stay no
     const filled=await page.locator('.stamp.filled').evaluate(n=>getComputedStyle(n).backgroundImage),empty=await page.locator('.moon-card-stamps .stamp:not(.filled)').first().evaluate(n=>getComputedStyle(n).backgroundImage);assert.match(filled,/radial-gradient/);assert.equal(empty,'none');
     assert.equal(await page.locator('[data-stamp-style="moon"] img').getAttribute('src'),await page.locator('.stamp.filled img').getAttribute('src'));
     const pending=page.waitForEvent('download');await page.click('#download-card');const download=await pending,chunks=[];for await(const chunk of await download.createReadStream())chunks.push(chunk);
-    const pixels=await page.evaluate(async data=>{const img=new Image();img.src='data:image/png;base64,'+data;await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);const rgb=(x,y)=>[...ctx.getImageData(x,y,1,1).data].slice(0,3),qr=ctx.getImageData(216,565,648,648);return{night:rgb(290,1270),gold:rgb(264,1270),empty:rgb(455,1270),qr:jsQR(qr.data,648,648)?.data};},Buffer.concat(chunks).toString('base64'));
-    assert.ok(pixels.night.every(v=>v<65)&&pixels.night[2]>pixels.night[0],'obtained Luna has a blue-black interior');assert.ok(pixels.gold[0]>150&&pixels.gold[0]>pixels.gold[2],'gold crescent survives export');assert.ok(pixels.empty.every(v=>v>200),'empty positions remain light');assert.equal(pixels.qr,card.qrValue);
+    const pixels=await page.evaluate(async data=>{const img=new Image();img.src='data:image/png;base64,'+data;await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);const qr=ctx.getImageData(216,565,648,648);return{qr:jsQR(qr.data,648,648)?.data};},Buffer.concat(chunks).toString('base64'));
+    assert.equal(pixels.qr,card.qrValue);
    }
   }
   assert.deepEqual(unexpected,[]);await context.close();

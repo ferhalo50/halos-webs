@@ -32,7 +32,7 @@ test('customer, tablet and admin UI', async t => {
   await page.locator('.loyalty-card-details summary').click();
   assert.match(await page.locator('.loyalty-card-details').innerText(), new RegExp(phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')));
   assert.equal(await page.locator('#share-card').innerText(), 'Compartir QR');
-  assert.equal(await page.locator('#download-card').innerText(), 'Descargar');
+  assert.equal(await page.locator('#download-card').innerText(), 'Descargar QR');
   assert.equal(await page.evaluate(() => typeof window.jsQR), 'function');
   const decodedQr = await page.evaluate(async () => {
     const source = new XMLSerializer().serializeToString(document.querySelector('#qr svg'));

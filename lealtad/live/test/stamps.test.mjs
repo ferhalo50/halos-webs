@@ -5,7 +5,7 @@ import {chromium} from 'file:///C:/Users/ferha/.cache/codex-runtimes/codex-prima
 const base='http://127.0.0.1:8787';
 // APIRequestContext does not send Secure cookies to plain HTTP; only adapt the local test cookie jar.
 const localCookies=async ctx=>ctx.addCookies((await ctx.cookies()).map(c=>({...c,secure:false})));
-test('stamp styles: owned account, strict API, instant update, D1 persistence and PNG QR',async t=>{
+test('stamp styles: owned account, strict API, instant update, D1 persistence and static backup PNG QR',async t=>{
  const b=await chromium.launch({headless:true,channel:'msedge'});t.after(()=>b.close());
  const c=await b.newContext({viewport:{width:390,height:844}}),admin=await b.newContext(),staff=await b.newContext();
  const phone='662'+String(Date.now()).slice(-7),reg=await c.request.post(base+'/api/register',{data:{name:'Diseños prueba',phone,pin:'4826'}});assert.equal(reg.status(),201);const user=(await reg.json()).user;
@@ -38,10 +38,10 @@ test('stamp styles: owned account, strict API, instant update, D1 persistence an
   const chunks=[];for await(const ch of await download.createReadStream())chunks.push(ch);
   if(process.env.RENACE_SCREENSHOTS&&style==='bow')await download.saveAs(process.env.RENACE_SCREENSHOTS+'/saved-card-bow.png');
   const encoded=Buffer.concat(chunks).toString('base64');
-  const png=await p.evaluate(async data=>{const i=new Image();i.src='data:image/png;base64,'+data;await i.decode();const c=document.createElement('canvas');c.width=i.width;c.height=i.height;const x=c.getContext('2d');x.drawImage(i,0,0);const qr=x.getImageData(216,565,648,648),stamps=x.getImageData(75,1270,930,100);let hash=0;for(const v of stamps.data)hash=(hash*31+v)>>>0;return {qr:jsQR(qr.data,648,648)?.data,hash};},encoded);
+  const png=await p.evaluate(async data=>{const i=new Image();i.src='data:image/png;base64,'+data;await i.decode();const c=document.createElement('canvas');c.width=i.width;c.height=i.height;const x=c.getContext('2d');x.drawImage(i,0,0);const qr=x.getImageData(216,565,648,648),pixels=x.getImageData(0,0,i.width,i.height);let hash=0;for(const v of pixels.data)hash=(hash*31+v)>>>0;return {qr:jsQR(qr.data,648,648)?.data,hash};},encoded);
   assert.equal(png.qr,before.qrValue);snapshots.push(png.hash);
  }
- assert.equal(new Set(snapshots).size,3);
+ assert.equal(new Set(snapshots).size,1);
  const after=await card(c);assert.deepEqual({...after,stampStyle:before.stampStyle},before);assert.deepEqual(await events(),previousEvents);
  await c.request.patch(base+'/api/card/style',{data:{stampStyle:'bow',customerId:(await card(other)).id}});assert.equal((await card(other)).stampStyle,'classic');
  await c.request.post(base+'/api/logout');await c.request.post(base+'/api/login/customer',{data:{phone,pin:'4826'}});await localCookies(c);assert.equal((await card(c)).stampStyle,'bow');
