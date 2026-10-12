@@ -1,7 +1,8 @@
 import { TENANTS, resolveTenant } from './tenants.js';
 import { tenantAssets } from './tenant-assets.js';
 import { activitySource } from './activity.js';
-import { recordRewardOperation, recordRewardChoice } from './per-item-rewards.js';
+import { recordRewardOperation, recordRewardChoice, rewardOutcome } from './per-item-rewards.js';
+import {adjustmentPreview,addAdministrativeStamps} from './admin-stamp-adjustment.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
@@ -242,7 +243,7 @@ async function register(request, env) {
 }
 
 async function cardForCustomer(env, customerId, businessId) {
-  return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, u.name, u.phone,
+  return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, c.updated_at, u.name, u.phone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
     b.slug AS business_slug,b.reward_goal, b.reward_name, b.timezone,b.stamp_policy
     FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
@@ -294,8 +295,7 @@ async function stamp(request, env, staff) {
   let operation={totalCoffees:quantity,paidCoffees:quantity,freeCoffees:0,stampsAfter:card.stamps+quantity};
   try {
     if(policy==='per_item'){
-      const total=card.stamps+quantity,rewardsGenerated=Math.floor(total/card.reward_goal);
-      operation={totalCoffees:quantity,paidCoffees:quantity,freeCoffees:0,stampsAfter:total%card.reward_goal,rewardsGenerated,rewardsPendingAfter:card.rewards_pending,rewardChoicesPendingAfter:card.reward_choices_pending+rewardsGenerated};
+      operation=rewardOutcome(card,quantity);
       await recordRewardOperation(env,staff,card,input,'purchase',quantity,day,now.toISOString(),ApiError);
     }else{
       await env.DB.batch([
@@ -580,6 +580,12 @@ async function resetDemoCustomers(env, admin) {
 
 async function adjustCustomerStamps(request, env, admin, customerId) {
   const input = await body(request);
+  if(Object.hasOwn(input,'quantity')){
+    const card=await cardForCustomer(env,customerId,admin.business_id);
+    if(!card)throw new ApiError(404,'customer_not_found','No encontramos ese cliente.');
+    await addAdministrativeStamps(env,admin,card,input,ApiError);
+    return publicCard(await cardForCustomer(env,customerId,admin.business_id));
+  }
   const reason = String(input.reason || '').trim();
   if (![1, -1].includes(input.delta) || !Number.isInteger(input.expectedStamps) || reason.length < 5 || reason.length > 200 ||
       (input.cancelToday !== undefined && typeof input.cancelToday !== 'boolean') || (input.cancelToday && input.delta !== -1)) {
@@ -818,6 +824,14 @@ async function api(request, env) {
   if (request.method === 'DELETE' && employeeMatch) {
     const user = await requireRole(request, env, ['admin']);
     return response({ ok: true, employee: await deleteEmployee(env, user, employeeMatch[1]) });
+  }
+  const adjustmentPreviewMatch=path.match(/^\/api\/admin\/customers\/([^/]+)\/stamps\/preview$/);
+  if(request.method==='GET'&&adjustmentPreviewMatch){
+    const user=await requireRole(request,env,['admin']);
+    const card=await cardForCustomer(env,adjustmentPreviewMatch[1],user.business_id);
+    if(!card)throw new ApiError(404,'customer_not_found','No encontramos ese cliente.');
+    const raw=new URL(request.url).searchParams.get('quantity');
+    return response({ok:true,preview:adjustmentPreview(card,/^\d+$/.test(raw||'')?Number(raw):NaN,ApiError)});
   }
   const stampAdjustmentMatch = path.match(/^\/api\/admin\/customers\/([^/]+)\/stamps$/);
   if (request.method === 'POST' && stampAdjustmentMatch) {

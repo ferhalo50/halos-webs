@@ -1,4 +1,8 @@
 // Every balance change, operation key and audit snapshot commits in one trigger.
+export function rewardOutcome(card,quantity){
+ const total=card.stamps+quantity,rewardsGenerated=Math.floor(total/card.reward_goal);
+ return {totalCoffees:quantity,paidCoffees:quantity,freeCoffees:0,stampsAfter:total%card.reward_goal,rewardsGenerated,rewardsPendingAfter:card.rewards_pending,rewardChoicesPendingAfter:card.reward_choices_pending+rewardsGenerated};
+}
 function operationKey(card,input,ApiError){
  const version=input.expectedVersion;
  if(!Number.isSafeInteger(version)||version!==card.reward_version)throw new ApiError(409,'card_changed','La tarjeta cambió. Vuelve a buscarla antes de confirmar.');

@@ -21,9 +21,9 @@ async function earn(as,target,count){for(let i=0;i<count;i++){await unlock(as);a
 before(async()=>{
   mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:fileURLToPath(new URL('../worker/index.js',import.meta.url)),compatibilityDate:'2026-09-14',d1Databases:{DB:'tests'},bindings:{APP_TIMEZONE:'America/Tijuana'}}));
   db=await mf.getD1Database('DB');
-  const schema=await readFile(new URL('../migrations/0001_initial.sql',import.meta.url),'utf8');
+  const schema=await readFile(new URL('../migrations/0001_initial.sql',import.meta.url),'utf8')+'\n'+await readFile(new URL('../migrations/0002_admin_multistamp.sql',import.meta.url),'utf8');
   // D1 exec splits on newlines; keep complete trigger definitions on one line.
-  const statements=schema.replace(/^--.*$/gm,'').split(/;\s*(?=CREATE (?:TABLE|INDEX|UNIQUE|TRIGGER)|PRAGMA|$)/).map(s=>s.trim()).filter(Boolean);
+  const statements=schema.replace(/^--.*$/gm,'').split(/;\s*(?=CREATE (?:TABLE|INDEX|UNIQUE|TRIGGER)|DROP TRIGGER|ALTER TABLE|PRAGMA|$)/).map(s=>s.trim()).filter(Boolean);
   for(const sql of statements)await db.prepare(sql).run();
   for(const [id,name,role] of [['a','Ana','member'],['b','Beto','member'],['c','Caro','member'],['z','admin','admin']]){
     const secret=await hashPassword('test-only-secret');

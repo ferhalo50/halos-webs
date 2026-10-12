@@ -125,10 +125,10 @@ test('Renace, Santofé and Vainilla retain identical guide and card rendering',a
   const url=process.env.MOON_UX_BASE?.startsWith('https:')?'https://'+host+'.haloswebs.com':`http://127.0.0.1:${port}`;
   const s=await simulatedPage(browser,slug,url);try{
    for(const view of ['card','guide']){
-    await s.page.route('**/assets/tenant.css',route=>route.fulfill({contentType:'text/css',body:baseline}));await s.page.reload();await s.page.locator('#app-loader').waitFor({state:'detached'});if(view==='guide')await s.page.locator('#role-guide').click();
+    await s.page.route('**/assets/tenant.css',route=>route.fulfill({contentType:'text/css',body:baseline}));await s.page.reload();await s.page.locator('#app-loader').waitFor({state:'detached'});await s.page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(image=>image.decode().catch(()=>{})));scrollTo(0,0);});if(view==='guide')await s.page.locator('#role-guide').click();
     const before=await s.page.screenshot({animations:'disabled'});
-    await s.page.unroute('**/assets/tenant.css');await s.page.reload();await s.page.locator('#app-loader').waitFor({state:'detached'});if(view==='guide')await s.page.locator('#role-guide').click();
-    const after=await s.page.screenshot({animations:'disabled'});assert.equal(before.equals(after),true,slug+' '+view+' visual regression');
+    await s.page.unroute('**/assets/tenant.css');await s.page.reload();await s.page.locator('#app-loader').waitFor({state:'detached'});await s.page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(image=>image.decode().catch(()=>{})));scrollTo(0,0);});if(view==='guide')await s.page.locator('#role-guide').click();
+    const after=await s.page.screenshot({animations:'disabled'});if(!before.equals(after)&&process.env.ADMIN_MULTI_EVIDENCE){mkdirSync(process.env.ADMIN_MULTI_EVIDENCE,{recursive:true});writeFileSync(process.env.ADMIN_MULTI_EVIDENCE+'/'+slug+'-'+view+'-baseline.png',before);writeFileSync(process.env.ADMIN_MULTI_EVIDENCE+'/'+slug+'-'+view+'-current.png',after);}assert.equal(before.equals(after),true,slug+' '+view+' visual regression');
    }
    assert.deepEqual(s.errors,[]);assert.deepEqual(s.writes,[]);
   }finally{await s.close();}

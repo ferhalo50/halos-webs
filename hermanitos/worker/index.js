@@ -98,14 +98,15 @@ export function monthAfter(key) {
 async function totals(env, u) {
   const start = monthStart(monthKey(new Date(), env.APP_TIMEZONE), env.APP_TIMEZONE);
   const rows = await first(env, `SELECT
-    (SELECT COUNT(*) FROM stamps WHERE scanner_id=? AND voided_at IS NULL) stamps,
+    (SELECT COALESCE(SUM(quantity),0) FROM stamps WHERE scanner_id=? AND voided_at IS NULL) stamps,
     (SELECT COUNT(*) FROM favors WHERE creditor_id=? AND status<>'cancelled') spent,
     (SELECT COUNT(*) FROM favors WHERE debtor_id=? AND status='pending') owed,
     (SELECT COUNT(*) FROM favors WHERE creditor_id=? AND status='pending') owing_to_me,
     (SELECT COUNT(*) FROM favors WHERE debtor_id=? AND status='completed' AND completed_at>=? AND completed_at>COALESCE(?,'')) completed`,
   u.id, u.id, u.id, u.id, u.id, start, u.completed_reset_at);
-  return { ...rows, progress: rows.stamps % 10, credits: Math.max(0, Math.floor(rows.stamps / 10) - rows.spent), cooldown_until: u.last_scan_ms + 60000, month: monthKey(new Date(), env.APP_TIMEZONE) };
+  return { ...rows, ...stampBalance(rows.stamps,rows.spent), cooldown_until: u.last_scan_ms + 60000, month: monthKey(new Date(), env.APP_TIMEZONE) };
 }
+function stampBalance(stamps,spent){return{progress:stamps%10,credits:Math.max(0,Math.floor(stamps/10)-spent)};}
 const favorSql = `SELECT f.*,c.name creditor_name,d.name debtor_name FROM favors f JOIN users c ON c.id=f.creditor_id JOIN users d ON d.id=f.debtor_id`;
 const stampSql = `SELECT s.*,c.name scanner_name,d.name target_name FROM stamps s JOIN users c ON c.id=s.scanner_id JOIN users d ON d.id=s.target_id`;
 async function dashboard(env, u) {
@@ -131,7 +132,7 @@ async function history(env, u, url) {
       (SELECT COUNT(*) FROM favors WHERE debtor_id=? AND completed_at>=? AND completed_at<?) completed,
       (SELECT COUNT(*) FROM favor_events e WHERE e.debtor_id=? AND e.status='pending' AND e.created_at<? AND e.id=
         (SELECT MAX(e2.id) FROM favor_events e2 WHERE e2.favor_id=e.favor_id AND e2.recorded_at<?)) pending_at_end,
-      (SELECT COUNT(*) FROM stamps WHERE scanner_id=? AND created_at>=? AND created_at<? AND voided_at IS NULL) stamps`, u.id, start, end, u.id, end, end, u.id, start, end)
+      (SELECT COALESCE(SUM(quantity),0) FROM stamps WHERE scanner_id=? AND created_at>=? AND created_at<? AND voided_at IS NULL) stamps`, u.id, start, end, u.id, end, end, u.id, start, end)
   ]);
   return { month: key, current: key === monthKey(new Date(), env.APP_TIMEZONE), summary, stamps, favors, max_rows: 200 };
 }
@@ -167,7 +168,7 @@ async function adminRoutes(req, env, u, path, url) {
     const start = monthStart(monthKey(new Date(), env.APP_TIMEZONE), env.APP_TIMEZONE);
     const [users, stamps, favors, logs] = await Promise.all([
       all(env, `SELECT id,name,phone,role,active,deleted_at,created_at,
-        (SELECT COUNT(*) FROM stamps WHERE scanner_id=u.id AND voided_at IS NULL) stamps,
+        (SELECT COALESCE(SUM(quantity),0) FROM stamps WHERE scanner_id=u.id AND voided_at IS NULL) stamps,
         (SELECT COUNT(*) FROM favors WHERE creditor_id=u.id AND status<>'cancelled') spent,
         (SELECT COUNT(*) FROM favors WHERE debtor_id=u.id AND status='pending') owed,
         (SELECT COUNT(*) FROM favors WHERE debtor_id=u.id AND status='completed' AND completed_at>=? AND completed_at>COALESCE(u.completed_reset_at,'')) completed
@@ -176,8 +177,27 @@ async function adminRoutes(req, env, u, path, url) {
       all(env, `${favorSql} ORDER BY f.created_at DESC LIMIT 50 OFFSET ?`, offset),
       all(env, `SELECT a.*,u.name actor_name FROM audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 50 OFFSET ?`, offset)
     ]);
-    for (const person of users) if (person.role === 'member') person.stats = { stamps: person.stamps, credits: Math.max(0, Math.floor(person.stamps/10)-person.spent), owed: person.owed, completed: person.completed };
+    for (const person of users) if (person.role === 'member') person.stats = { stamps: person.stamps, spent:person.spent,...stampBalance(person.stamps,person.spent), owed: person.owed, completed: person.completed };
     return json({ users, stamps, favors, audit: logs, offset, has_more: stamps.length === 50 || favors.length === 50 || logs.length === 50 });
+  }
+  const adjustment=path.match(/^\/admin\/users\/([^/]+)\/stamps(?:\/(preview))?$/);
+  if(adjustment){
+    const target=await first(env,"SELECT * FROM users WHERE id=? AND role='member' AND active=1 AND deleted_at IS NULL",adjustment[1]);
+    if(!target)fail(404,'invalid_member','Elige a un hermano con cuenta activa.');
+    const data=req.method==='GET'?{quantity:Number(url.searchParams.get('quantity'))}:await body(req);
+    if(!Number.isSafeInteger(data.quantity)||data.quantity<1||data.quantity>99)fail(400,'invalid_quantity','Ingresa una cantidad entera de 1 a 99.');
+    const before=await totals(env,target),after=stampBalance(before.stamps+data.quantity,before.spent);
+    const preview={quantity:data.quantity,maxQuantity:99,expectedStamps:before.stamps,expectedSpent:before.spent,stampsAfter:before.stamps+data.quantity,progressAfter:after.progress,creditsAfter:after.credits,creditsBefore:before.credits};
+    if(req.method==='GET'&&adjustment[2])return json({preview});
+    if(req.method!=='POST'||adjustment[2])fail(405,'method_not_allowed','Acción no permitida.');
+    const reason=typeof data.reason==='string'?data.reason.trim():'';
+    if(reason.length<5||reason.length>200)fail(400,'invalid_reason','Escribe un motivo de 5 a 200 caracteres.');
+    if(data.confirm!==true)fail(400,'confirmation_required','Confirma el ajuste antes de continuar.');
+    if(data.expectedStamps!==before.stamps||data.expectedSpent!==before.spent)fail(409,'card_changed','La tarjeta cambió. Actualiza e intenta nuevamente.');
+    if(typeof data.request_id!=='string'||! /^[\da-f-]{36}$/i.test(data.request_id))fail(400,'bad_id','Identificador de operación inválido.');
+    // One INSERT atomically records all units, guards the snapshot and triggers the existing audit/notification.
+    await query(env,'INSERT INTO stamps(id,scanner_id,target_id,created_at,quantity,admin_id,reason,before_total,before_spent) VALUES(?,?,?,?,?,?,?,?,?)',data.request_id,target.id,u.id,iso(),data.quantity,u.id,reason,before.stamps,before.spent).run();
+    return json({ok:true,preview},201);
   }
   const match = path.match(/^\/admin\/(users|stamps|favors)\/([^/]+)(?:\/(clear-completed|clear-pending))?$/);
   if (!match) fail(404, 'not_found', 'Acción no encontrada.');
@@ -232,6 +252,7 @@ async function adminRoutes(req, env, u, path, url) {
       return json({ ok: true });
     }
     if (req.method === 'PATCH') {
+      if(stamp.admin_id)fail(409,'admin_adjustment_immutable','Un ajuste administrativo solo puede anularse; su cantidad y motivo se conservan.');
       const target = await first(env, `SELECT id FROM users WHERE id=? AND role='member' AND active=1`, String(data.target_id || ''));
       if (!target || target.id === stamp.scanner_id) fail(400, 'invalid_member', 'Elige a otro hermano.');
       const date = new Date(data.created_at);
@@ -352,6 +373,8 @@ export default {
       let status = e.status || 500, code = e.code || 'unavailable', message = e.status ? e.message : 'No pudimos guardar los cambios. Inténtalo de nuevo.';
       const detail = `${e.message || ''} ${e.cause?.message || ''}`;
       if (detail.includes('scan_cooldown')) { status = 429; code = 'scan_cooldown'; message = 'Espera un minuto entre sellitos.'; }
+      else if(detail.includes('admin_adjustment_conflict')){status=409;code='card_changed';message='La tarjeta cambió. Actualiza e intenta nuevamente.';}
+      else if(detail.includes('invalid_adjustment')){status=400;code='invalid_adjustment';message='Escribe un motivo de 5 a 200 caracteres.';}
       else if (detail.includes('no_credit')) { status = 409; code = 'no_credit'; message = 'Necesitas 10 sellitos disponibles para pedir un favor mayor.'; }
       else if (detail.includes('invalid_member')) { status = 400; code = 'invalid_member'; message = 'Elige a un hermano con cuenta activa.'; }
       else if (detail.includes('users.username')) { status = 409; code = 'name_taken'; message = 'Ese nombre ya está en uso. Elige otro.'; }
