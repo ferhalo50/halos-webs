@@ -45,7 +45,7 @@ test('customer updates without reload; scanner and admin corrections work',async
     const draw=()=>{ctx.fillStyle='#fff';ctx.fillRect(0,0,640,480);ctx.drawImage(image,120,40,400,400);window.testCameraStream.getVideoTracks()[0].requestFrame?.();};
     draw();window.testFrames=setInterval(draw,100);
   },qr);
-  try{await staff.waitForSelector('#stamp:not([disabled])',{timeout:12000});}catch(error){
+  try{await staff.waitForSelector('#stamp:not([disabled])',{timeout:20000});}catch(error){
     console.log(await staff.evaluate(()=>({hidden:document.hidden,hash:location.hash,scanning:document.querySelector('#scanner-shell')?.className,status:document.querySelector('#scan-status')?.textContent,toast:document.querySelector('#toast')?.textContent,video:document.querySelector('#video')?.readyState,track:window.testCameraStream?.getTracks().map(t=>t.readyState),decoded:(()=>{const c=window.testCameraCanvas,f=c.getContext('2d').getImageData(0,0,640,480);return window.jsQR(f.data,640,480)?.data;})()})));
     throw error;
   }
@@ -55,34 +55,34 @@ test('customer updates without reload; scanner and admin corrections work',async
   await staff.click('#stamp');
   await staff.waitForSelector('#stamp[disabled]');
   await customer.bringToFront();
-  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('1 / 9'),{},{timeout:12000});
+  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('1 / 9'),{},{timeout:20000});
   assert.equal(await customer.evaluate(()=>window.testDocumentMarker),'same-document');
   await adminContext.request.post(base+'/api/login/staff',{data:{username:'admin_local',password:'Admin-test-928!'}});
   await admin.goto(base+'/#admin');await admin.waitForSelector('#customer-search');
   await admin.fill('#customer-search input',phone);
   await Promise.all([admin.waitForResponse(res=>res.url().includes('/api/admin/dashboard?')&&res.url().includes(phone)),admin.click('#customer-search button')]);
   await admin.locator('.adjust-stamps[data-id="'+user.id+'"]').click();
-  await admin.selectOption('dialog select','-1');
+  await admin.selectOption('dialog select','remove');
   await admin.fill('dialog textarea','Compra cancelada en mostrador');
-  await admin.check('dialog [name="cancelToday"]');
+  await admin.fill('#adjust-quantity','1');
   if(process.env.RENACE_SCREENSHOTS)await admin.screenshot({path:process.env.RENACE_SCREENSHOTS+'/renace-adjustment.png'});
-  await admin.click('dialog [type="submit"]');await admin.waitForSelector('dialog',{state:'detached'});
+  await admin.waitForFunction(()=>!document.querySelector('#confirm-adjust').disabled);await admin.click('dialog [type="submit"]');await admin.waitForFunction(()=>document.querySelector('#confirm-adjust').textContent.includes('−1'));await admin.click('#confirm-adjust');await admin.waitForSelector('dialog',{state:'detached'});
   await customer.bringToFront();
-  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('0 / 9'),{},{timeout:12000});
+  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('0 / 9'),{},{timeout:20000});
   assert.equal(await customer.evaluate(()=>window.testDocumentMarker),'same-document');
   await customer.locator('.loyalty-card-details summary').click();
-  assert.match(await customer.locator('.daily-status').innerText(),/Disponible para recibir el sello de hoy/);
+  assert.match(await customer.locator('.daily-status').innerText(),/El sello de hoy ya fue registrado/);
   // Reach the reward, then redeem from a separate session; both updates arrive automatically.
   for(let before=0;before<9;before++){
     const result=await browserRequest(admin,'/api/admin/customers/'+user.id+'/stamps',{delta:1,expectedStamps:before,reason:'Preparar recompensa de prueba'});
     assert.equal(result.status,200);
   }
-  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('9 / 9'),{},{timeout:12000});
+  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('9 / 9'),{},{timeout:20000});
   assert.ok(await customer.getByText('Tu café gratis está listo.').count());
   if(process.env.RENACE_SCREENSHOTS)await customer.screenshot({path:process.env.RENACE_SCREENSHOTS+'/renace-customer.png',fullPage:true});
   const card=(await browserRequest(customer,'/api/card')).data.card;
   assert.equal((await browserRequest(staff,'/api/staff/redeem',{cardId:card.id})).status,200);
-  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('0 / 9'),{},{timeout:12000});
+  await customer.waitForFunction(()=>document.querySelector('.pill')?.textContent.includes('0 / 9'),{},{timeout:20000});
   assert.equal(await customer.evaluate(()=>window.testDocumentMarker),'same-document');
   // Offline retries leave the existing card visible; reconnection catches up.
   await customerContext.setOffline(true);

@@ -20,7 +20,7 @@ for(const slug of ['renace','mooncoffee','vainillacoffee'])test(slug+': +1/+2/+5
   assert.equal((await add(db,f,3)).status,400);assert.equal((await add(db,f,2)).data.card.stamps,goal);assert.equal((await add(db,f,1)).status,400);
   f.card=(await invoke(db,slug,'/api/card',{cookie:f.customer.cookie})).data.card;
   assert.equal((await action(db,f,'redeem')).data.card.stamps,0);
-  assert.equal((await add(db,f,2)).status,200);assert.equal((await action(db,f,'stamp')).status,200);assert.equal((await action(db,f,'stamp')).status,409);
+  assert.equal((await add(db,f,2)).status,200);f.card=(await invoke(db,slug,'/api/card',{cookie:f.customer.cookie})).data.card;assert.equal((await action(db,f,'stamp')).status,200);assert.equal((await action(db,f,'stamp')).status,409);
   assert.equal((await add(db,f,1)).status,200);assert.equal((await action(db,f,'stamp')).status,409);
   const raw=db.prepare('SELECT * FROM loyalty_cards WHERE id=?').get(f.card.id);assert.equal(raw.stamps,4);assert.equal(raw.reward_choices_pending,0);assert.equal(raw.rewards_pending,0);
  }finally{db.close();}

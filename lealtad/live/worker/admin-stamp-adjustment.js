@@ -25,7 +25,7 @@ export async function addAdministrativeStamps(env,admin,card,input,ApiError){
    env.DB.prepare(`UPDATE loyalty_cards SET stamps=stamps+?,updated_at=? WHERE id=? AND business_id=? AND customer_id=? AND stamps=? AND reward_version=? AND updated_at=?
     AND (?='per_item' OR stamps+?<=?) AND NOT EXISTS(SELECT 1 FROM admin_audit_log WHERE id=?)
     AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL)
-    AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role='admin' AND active=1 AND deleted_at IS NULL)`)
+    AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role='admin' AND active=1 AND deleted_at IS NULL AND must_change_secret=0)`)
     .bind(input.quantity,now,card.id,admin.business_id,card.customer_id,card.stamps,card.reward_version,card.updated_at,card.stamp_policy,input.quantity,card.reward_goal,input.operationId,card.customer_id,admin.business_id,admin.id,admin.business_id),
    // The NOT NULL admin_id constraint is the transaction guard: a failed CAS aborts the whole D1 batch.
    // One existing audit row represents the adjustment, with the actual post-trigger state, never a purchase.

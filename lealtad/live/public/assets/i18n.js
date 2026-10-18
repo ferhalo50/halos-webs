@@ -290,7 +290,12 @@
     'Ingresa una cantidad válida.':'Enter a valid quantity.','Ingresa una cantidad entera de 1 a 99.':'Enter a whole quantity from 1 to 99.',
     'Escribe un motivo de 5 a 200 caracteres.':'Enter a reason between 5 and 200 characters.',
     'La tarjeta cambió o el ajuste ya fue registrado. Actualiza e intenta nuevamente.':'The card changed or the adjustment was already recorded. Refresh and try again.',
-    'Elige un ajuste válido.':'Choose a valid adjustment.'
+    'Elige un ajuste válido.':'Choose a valid adjustment.',
+    'Esta tarjeta tiene una recompensa disponible. Canjéala antes de retirar progreso.':'This card has an available reward. Redeem it before removing progress.',
+    'Ingresa una cantidad válida para el saldo actual.':'Enter a valid quantity for the current balance.',
+    'La tarjeta cambió. Actualiza e intenta nuevamente.':'The card changed. Refresh and try again.',
+    'La tarjeta cambió o la operación ya fue registrada. Actualiza e intenta nuevamente.':'The card changed or the operation was already recorded. Refresh and try again.',
+    'Cambia tu contraseña temporal para continuar.':'Change your temporary password to continue.'
   });
   patterns.push([/^Con el estado actual de la tarjeta puedes agregar hasta (\d+) (sellos|flores)\.$/,(_,n,term)=>`With this card's current state you can add up to ${n} ${term==='flores'?'flowers':'stamps'}.`]);
   function translate(value){if(locale!=='en'||typeof value!=='string')return value;const trimmed=value.trim();if(!trimmed)return value;let result=exact[trimmed];if(!result){for(const [pattern,replacer] of patterns){if(pattern.test(trimmed)){result=trimmed.replace(pattern,replacer);break;}}}return result?value.replace(trimmed,result):value;}

@@ -2,7 +2,7 @@ import { TENANTS, resolveTenant } from './tenants.js';
 import { tenantAssets } from './tenant-assets.js';
 import { activitySource } from './activity.js';
 import { recordRewardOperation, recordRewardChoice, rewardOutcome } from './per-item-rewards.js';
-import {adjustmentPreview,addAdministrativeStamps} from './admin-stamp-adjustment.js';
+import {cardAdjustmentPreview,adjustAdministrativeCard} from './admin-card-adjustment.js';
 const encoder = new TextEncoder();
 const CANONICAL_HOST = 'renacecafe.haloswebs.com';
 const LEGACY_HOST = 'app.haloswebs.com';
@@ -135,7 +135,7 @@ async function getSession(request, env) {
   `).bind(tokenHash, new Date().toISOString(), env.TENANT.slug).first();
   if (!session) return null;
   const lastSeen = Date.parse(session.last_seen_at.includes('T') ? session.last_seen_at : session.last_seen_at.replace(' ', 'T') + 'Z');
-  if (Date.now() - lastSeen > 15 * 60000) {
+  if (!(request.method==='GET' && ['/api/card','/api/staff/card'].includes(new URL(request.url).pathname)) && Date.now() - lastSeen > 15 * 60000) {
     await env.DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE id = ?').bind(new Date().toISOString(), session.session_id).run();
   }
   return session;
@@ -242,6 +242,36 @@ async function register(request, env) {
   return response({ ok: true, user: { id: customerId, role: 'customer', name, phone, mustChangeSecret: false } }, 201, { 'set-cookie': sessionCookie(session.token, session.days) });
 }
 
+async function conditionalCard(request,card){
+  // Authenticate and tenant-scope every request before comparing: this is never a shared cache.
+  const etag='"'+await sha256(JSON.stringify(card))+'"';
+  const headers={etag,vary:'Cookie','cache-control':'no-store'};
+  return request.headers.get('if-none-match')===etag?new Response(null,{status:304,headers}):response({ok:true,card},200,headers);
+}
+
+async function recordDailyOperation(env,staff,card,input,type,day,now){
+  if(input.expectedVersion!==undefined&&input.expectedVersion!==card.reward_version)throw new ApiError(409,'card_changed','La tarjeta cambió. Actualiza e intenta nuevamente.');
+  const id=input.operationId??crypto.randomUUID();
+  if(typeof id!=='string'||!/^[A-Za-z0-9_-]{8,80}$/.test(id))throw new ApiError(400,'invalid_operation','Identificador de operación inválido.');
+  try{
+    await env.DB.batch([
+      env.DB.prepare(`UPDATE loyalty_cards SET ${type==='stamp'?'stamps=stamps+1':'stamps=0,redeemed_count=redeemed_count+1'},updated_at=?
+        WHERE id=? AND business_id=? AND reward_version=? AND stamps=?
+        AND NOT EXISTS(SELECT 1 FROM loyalty_events WHERE id=?)
+        AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL)
+        AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role IN ('employee','admin') AND active=1 AND deleted_at IS NULL)`)
+        .bind(now,card.id,staff.business_id,card.reward_version,card.stamps,id,card.customer_id,staff.business_id,staff.id,staff.business_id),
+      env.DB.prepare(`INSERT INTO loyalty_events(id,business_id,card_id,customer_id,employee_id,event_type,business_day,created_at,quantity,daily_limited)
+        VALUES(?,?,?,?,CASE WHEN changes()=1 THEN ? ELSE NULL END,?,?,?,?,?)`)
+        .bind(id,staff.business_id,card.id,card.customer_id,staff.id,type,day,now,1,type==='stamp'?1:0)
+    ]);
+  }catch(error){
+    const detail=String(error)+' '+String(error.cause?.message||'');
+    if(detail.includes('UNIQUE')||detail.includes('loyalty_events.employee_id'))throw new ApiError(409,'card_changed','La tarjeta cambió o la operación ya fue registrada. Actualiza e intenta nuevamente.');
+    throw error;
+  }
+}
+
 async function cardForCustomer(env, customerId, businessId) {
   return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, c.updated_at, u.name, u.phone,
     (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
@@ -257,7 +287,7 @@ function publicCard(card) {
   const canStampToday=stampPolicy==='per_item'
     ? card.reward_choices_pending===0
     : !card.last_stamp_at||businessDay(card.timezone,new Date(card.last_stamp_at))!==businessDay(card.timezone);
-  return { stampStyle: Object.hasOwn(tenant.stampStyles,card.stamp_style) ? card.stamp_style : Object.keys(tenant.stampStyles)[0], customerId: card.customer_id, id: card.id, qrValue: `${card.business_slug}:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, stampPolicy, maxStampsPerTransaction: tenant.maxStampsPerTransaction||1, canStampToday,...(stampPolicy==='per_item'?{rewardsPending:card.rewards_pending,rewardChoicesPending:card.reward_choices_pending,rewardVersion:card.reward_version}:{}) };
+  return { stampStyle: Object.hasOwn(tenant.stampStyles,card.stamp_style) ? card.stamp_style : Object.keys(tenant.stampStyles)[0], customerId: card.customer_id, id: card.id, qrValue: `${card.business_slug}:${card.qr_token}`, name: card.name, phone: card.phone, stamps: card.stamps, goal: card.reward_goal, reward: card.reward_name, redeemed: card.redeemed_count, lastStampAt: card.last_stamp_at, stampPolicy, maxStampsPerTransaction: tenant.maxStampsPerTransaction||1, canStampToday,rewardVersion:card.reward_version,...(stampPolicy==='per_item'?{rewardsPending:card.rewards_pending,rewardChoicesPending:card.reward_choices_pending}:{}) };
 }
 
 async function lookupCard(request, env, staff) {
@@ -298,12 +328,7 @@ async function stamp(request, env, staff) {
       operation=rewardOutcome(card,quantity);
       await recordRewardOperation(env,staff,card,input,'purchase',quantity,day,now.toISOString(),ApiError);
     }else{
-      await env.DB.batch([
-        env.DB.prepare("INSERT INTO loyalty_events (id,business_id,card_id,customer_id,employee_id,event_type,business_day,created_at,quantity,daily_limited) VALUES (?,?,?,?,?,'stamp',?,?,1,1)")
-          .bind(crypto.randomUUID(), staff.business_id, card.id, card.customer_id, staff.id, day, now.toISOString()),
-        env.DB.prepare('UPDATE loyalty_cards SET stamps=stamps+1,updated_at=? WHERE id=? AND stamps < ?')
-          .bind(now.toISOString(), card.id, card.reward_goal)
-      ]);
+      await recordDailyOperation(env,staff,card,input,'stamp',day,now.toISOString());
     }
   } catch (cause) {
     if (String(cause).includes('UNIQUE')) throw new ApiError(409, 'already_stamped_today', 'Este cliente ya recibió su sello de hoy.');
@@ -328,11 +353,8 @@ async function redeem(request, env, staff) {
     await recordRewardOperation(env,staff,card,input,'redeem',0,businessDay(card.timezone),now,ApiError);
     return publicCard(await cardById(env,card.id,staff.business_id));
   }
-  const updated = await env.DB.prepare('UPDATE loyalty_cards SET stamps=0,redeemed_count=redeemed_count+1,updated_at=? WHERE id=? AND business_id=? AND stamps>=? RETURNING id')
-    .bind(now, card.id, staff.business_id, card.reward_goal).first();
-  if (!updated) throw new ApiError(409, 'reward_unavailable', 'La recompensa todavía no está disponible.');
-  await env.DB.prepare("INSERT INTO loyalty_events (id,business_id,card_id,customer_id,employee_id,event_type,business_day,created_at) VALUES (?,?,?,?,?,'redeem',?,?)")
-    .bind(crypto.randomUUID(), staff.business_id, card.id, card.customer_id, staff.id, businessDay(card.timezone), now).run();
+  if(card.stamps<card.reward_goal)throw new ApiError(409,'reward_unavailable','La recompensa todavía no está disponible.');
+  await recordDailyOperation(env,staff,card,input,'redeem',businessDay(card.timezone),now);
   return publicCard(await cardById(env, card.id, staff.business_id));
 }
 
@@ -391,7 +413,7 @@ async function dashboard(request, env, admin) {
   const eventType = String(url.searchParams.get('eventType') || '');
   const eventEmployee = String(url.searchParams.get('eventEmployee') || '').trim().slice(0, 60);
   const validEventDate = value => { const date = new Date(value); return value && !Number.isNaN(date.getTime()) ? date.toISOString() : ''; };
-  const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted','team_admin_created','team_admin_updated','team_admin_deleted','team_staff_created','profile_name_changed','reward_generated','reward_saved','reward_redeemed_now','saved_reward_redeemed']);
+  const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','progress_cleared','saved_reward_added','saved_reward_removed','saved_rewards_cleared','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted','team_admin_created','team_admin_updated','team_admin_deleted','team_staff_created','profile_name_changed','reward_generated','reward_saved','reward_redeemed_now','saved_reward_redeemed']);
   const customerWhere = search
     ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
@@ -579,11 +601,13 @@ async function resetDemoCustomers(env, admin) {
 
 
 async function adjustCustomerStamps(request, env, admin, customerId) {
+  if(admin.must_change_secret)throw new ApiError(403,'secret_change_required','Cambia tu contraseña temporal para continuar.');
   const input = await body(request);
-  if(Object.hasOwn(input,'quantity')){
+  if(!input||typeof input!=='object'||Array.isArray(input))throw new ApiError(400,'invalid_adjustment','Elige un ajuste válido.');
+  if(Object.hasOwn(input,'quantity')||Object.hasOwn(input,'action')){
     const card=await cardForCustomer(env,customerId,admin.business_id);
     if(!card)throw new ApiError(404,'customer_not_found','No encontramos ese cliente.');
-    await addAdministrativeStamps(env,admin,card,input,ApiError);
+    await adjustAdministrativeCard(env,admin,card,input,ApiError);
     return publicCard(await cardForCustomer(env,customerId,admin.business_id));
   }
   const reason = String(input.reason || '').trim();
@@ -595,6 +619,7 @@ async function adjustCustomerStamps(request, env, admin, customerId) {
   if (!card) throw new ApiError(404, 'customer_not_found', 'No encontramos ese cliente.');
   if(card.stamp_policy==='per_item'&&card.reward_choices_pending>0&&input.delta===1)throw new ApiError(409,'reward_decision_required','Primero decide qué hacer con tu bebida gratis para continuar.');
   if (card.stamps !== input.expectedStamps) throw new ApiError(409, 'card_changed', 'La tarjeta cambió. Actualízala antes de ajustar los sellos.');
+  if(input.delta===-1&&card.stamp_policy!=='per_item'&&card.stamps>=card.reward_goal)throw new ApiError(409,'earned_reward_protected','Esta tarjeta tiene una recompensa disponible. Canjéala antes de retirar progreso.');
   const after = card.stamps + input.delta;
   if (after < 0 || after > card.reward_goal) throw new ApiError(400, 'invalid_balance', `La tarjeta debe tener entre 0 y ${card.reward_goal} sellos.`);
   const now = new Date();
@@ -605,8 +630,10 @@ async function adjustCustomerStamps(request, env, admin, customerId) {
     if (!voidEvent) throw new ApiError(409, 'no_visit_today', 'No hay un sello de hoy para anular. Actualiza la tarjeta.');
   }
   try {
-    await env.DB.prepare('INSERT INTO stamp_adjustments (id,business_id,card_id,customer_id,admin_id,before_stamps,after_stamps,reason,void_event_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
-      .bind(crypto.randomUUID(), admin.business_id, card.id, customerId, admin.id, card.stamps, after, reason, voidEvent?.id || null, now.toISOString()).run();
+    const result=await env.DB.prepare(`INSERT INTO stamp_adjustments (id,business_id,card_id,customer_id,admin_id,before_stamps,after_stamps,reason,void_event_id,created_at)
+      SELECT ?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM loyalty_cards WHERE id=? AND business_id=? AND reward_version=? AND stamps=? AND updated_at=?)`)
+      .bind(crypto.randomUUID(), admin.business_id, card.id, customerId, admin.id, card.stamps, after, reason, voidEvent?.id || null, now.toISOString(),card.id,admin.business_id,card.reward_version,card.stamps,card.updated_at).run();
+    if(!result.meta.changes)throw new ApiError(409,'card_changed','La tarjeta cambió. Actualiza e intenta nuevamente.');
   } catch (cause) {
     if (String(cause).includes('stamp_adjustment_conflict')) throw new ApiError(409, 'card_changed', 'La tarjeta cambió. Actualízala antes de ajustar los sellos.');
     if (String(cause).includes('reward_decision_required')) throw new ApiError(409,'reward_decision_required','Primero decide qué hacer con tu bebida gratis para continuar.');
@@ -754,7 +781,8 @@ async function api(request, env) {
     const user = await requireRole(request, env, ['customer']);
     if (user.must_change_secret) throw new ApiError(403, 'secret_change_required', 'Cambia tu PIN temporal para abrir tu tarjeta.');
     const card = await cardForCustomer(env, user.id, user.business_id);
-    return response({ ok: true, card: publicCard(card) });
+    if(!card)throw new ApiError(404,'card_not_found','No encontramos esa tarjeta.');
+    return conditionalCard(request,publicCard(card));
   }
   if (request.method === 'PATCH' && path === '/api/card/style') {
     const user = await requireRole(request, env, ['customer']);
@@ -774,7 +802,8 @@ async function api(request, env) {
   }
   if (request.method === 'GET' && path === '/api/staff/card') {
     const user = await requireRole(request, env, ['employee', 'admin']);
-    return response({ ok: true, card: await lookupCard(request, env, user) });
+    if(user.must_change_secret)throw new ApiError(403,'secret_change_required','Cambia tu contraseña temporal para continuar.');
+    return conditionalCard(request,await lookupCard(request,env,user));
   }
   if (request.method === 'POST' && path === '/api/staff/stamp') {
     const user = await requireRole(request, env, ['employee', 'admin']);
@@ -828,10 +857,11 @@ async function api(request, env) {
   const adjustmentPreviewMatch=path.match(/^\/api\/admin\/customers\/([^/]+)\/stamps\/preview$/);
   if(request.method==='GET'&&adjustmentPreviewMatch){
     const user=await requireRole(request,env,['admin']);
+    if(user.must_change_secret)throw new ApiError(403,'secret_change_required','Cambia tu contraseña temporal para continuar.');
     const card=await cardForCustomer(env,adjustmentPreviewMatch[1],user.business_id);
     if(!card)throw new ApiError(404,'customer_not_found','No encontramos ese cliente.');
     const raw=new URL(request.url).searchParams.get('quantity');
-    return response({ok:true,preview:adjustmentPreview(card,/^\d+$/.test(raw||'')?Number(raw):NaN,ApiError)});
+    return response({ok:true,preview:cardAdjustmentPreview(card,/^\d+$/.test(raw||'')?Number(raw):NaN,url.searchParams.get('action')??'add',ApiError)});
   }
   const stampAdjustmentMatch = path.match(/^\/api\/admin\/customers\/([^/]+)\/stamps$/);
   if (request.method === 'POST' && stampAdjustmentMatch) {

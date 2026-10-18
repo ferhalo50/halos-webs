@@ -105,6 +105,20 @@
   guides.admin[1]=guides.admin[1].map(([label,text])=>label==='Equipo'||label==='Equipo y ajustes'?[label,teamGuide+(tenant.stampPolicy==='per_item'?' Los ajustes de progreso requieren un motivo. Una corrección que complete la meta genera una recompensa por decidir. No se permite añadir progreso mientras haya decisiones pendientes.':'')]:[label,text]);
   englishGuides.admin[1]=englishGuides.admin[1].map(([label,text])=>label==='Team'||label==='Team and corrections'?[label,englishTeamGuide+(tenant.stampPolicy==='per_item'?' Progress corrections require a reason. A correction completing the goal earns a reward awaiting decision. Progress cannot be added while decisions are pending.':'')]:[label,text]);
 
+  const adjustmentGuide='En Ajustar sellos, elige agregar, quitar o limpiar progreso. Indica una cantidad válida y un motivo de 5 a 200 caracteres; revisa el resultado y confirma. Cada ajuste registra cantidad, motivo y administrador sin borrar historial ni cambiar la visita diaria. Una tarjeta diaria completa conserva su recompensa: canjéala antes de retirar progreso. Si la tarjeta cambió, actualiza y revisa de nuevo.';
+  const adjustmentGuideEn='In Adjust stamps, choose add, remove or clear progress. Enter a valid quantity and a reason of 5 to 200 characters; review the result and confirm. Each adjustment records quantity, reason and administrator without deleting history or changing the daily visit. A full daily card keeps its reward: redeem it before removing progress. If the card changed, refresh and review again.';
+  guides.admin[1]=guides.admin[1].filter(([label])=>label!=='Ajustar sellos');
+  englishGuides.admin[1]=englishGuides.admin[1].filter(([label])=>!['Adjust stamps','Stamp corrections'].includes(label));
+  guides.admin[1].push(['Ajustar sellos',adjustmentGuide]);englishGuides.admin[1].push(['Adjust stamps',adjustmentGuideEn]);
+  if(tenant.slug==='santofe'){
+    guides.admin[1].push(['Ajustar recompensas guardadas','En Ajustar sellos también puedes agregar, quitar o retirar todas las recompensas guardadas. Revisa el saldo anterior y el nuevo, escribe un motivo y confirma. No cambia el progreso, las decisiones pendientes ni los canjes históricos. No registra compras ficticias.']);
+    englishGuides.admin[1].push(['Adjust saved rewards','In Adjust stamps you can also add, remove or clear saved rewards. Review the previous and new balance, enter a reason and confirm. This does not change progress, pending decisions or past redemptions. It does not record fictitious purchases.']);
+  }
+  for(const role of ['customer','employee']){
+    guides[role][1].push(['Tarjeta al día','Con la tarjeta visible y conexión, los cambios se consultan automáticamente. La sincronización se pausa en segundo plano y se reanuda al volver. Mostrador mantiene la tarjeta seleccionada; si cambia durante una operación, comprueba el saldo antes de confirmar de nuevo.']);
+    englishGuides[role][1].push(['Up-to-date card','While the card is visible and online, changes are checked automatically. Sync pauses in the background and resumes when you return. Counter keeps the selected card; if it changes during an operation, check the balance before confirming again.']);
+  }
+
   function openGuide(title, sections, trigger) {
     document.querySelector('#renace-guide')?.close();
     const dialog = document.createElement('dialog');

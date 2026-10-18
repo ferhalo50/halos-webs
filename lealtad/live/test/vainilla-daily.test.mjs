@@ -34,8 +34,14 @@ test('Vainilla next local calendar day permits one new flower; Tijuana midnight 
 test('Vainilla 8/9 plus a daily visit stays 9/9 until redeem; free drink resets to zero without a flower or decision',async()=>{
  const db=schema();try{const f=await fixture(db,'vainillacoffee');db.prepare('UPDATE loyalty_cards SET stamps=8 WHERE id=?').run(f.card.id);
   assert.equal((await action(db,f,'stamp',{quantity:4})).status,400);assert.equal(db.prepare('SELECT stamps FROM loyalty_cards WHERE id=?').get(f.card.id).stamps,8);
+  // The direct fixture update advances the version: the old client snapshot must fail without a write.
+  assert.equal((await action(db,f,'stamp',{quantity:1})).data.error.code,'card_changed');
+  assert.equal(db.prepare('SELECT stamps FROM loyalty_cards WHERE id=?').get(f.card.id).stamps,8);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM loyalty_events WHERE card_id=?').get(f.card.id).n,0);
+  f.card=(await invoke(db,f.slug,'/api/card',{cookie:f.customer.cookie})).data.card;
   assert.equal((await action(db,f,'stamp',{quantity:1})).status,200);assert.equal(f.card.stamps,9);
-  for(const field of ['rewardChoicesPending','rewardsPending','rewardVersion'])assert.equal(Object.hasOwn(f.card,field),false);
+  for(const field of ['rewardChoicesPending','rewardsPending'])assert.equal(Object.hasOwn(f.card,field),false);
+  assert.equal(Number.isSafeInteger(f.card.rewardVersion),true);
   assert.equal((await action(db,f,'stamp',{quantity:1})).data.error.code,'reward_ready');
   assert.equal((await action(db,f,'reward-choice',{decision:'save'})).status,409);
   assert.equal((await action(db,f,'redeem')).status,200);assert.equal(f.card.stamps,0);assert.equal(f.card.redeemed,1);

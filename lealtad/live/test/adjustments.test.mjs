@@ -41,9 +41,8 @@ test('admin adjustments preserve daily visits, permissions and audit history',as
   assert.equal((await adjust(movement(9,1))).status,400);
   const reward=await request('/api/card',{cookie:client.cookie});
   assert.equal(reward.data.card.stamps,9);
-  assert.equal((await adjust(movement(9,-1))).data.card.stamps,8);
-  assert.equal((await request('/api/staff/redeem',{method:'POST',cookie:staff.cookie,body:{cardId:card.data.card.id}})).status,409);
-  assert.equal((await adjust(movement(8,1))).status,200);
+  assert.equal((await adjust(movement(9,-1))).status,409,'completed daily reward is protected');
+  assert.equal((await request('/api/card',{cookie:client.cookie})).data.card.stamps,9);
   assert.equal((await request('/api/staff/redeem',{method:'POST',cookie:staff.cookie,body:{cardId:card.data.card.id}})).status,200);
   assert.equal((await adjust(movement(9,-1))).status,409);
   const dashboard=await request('/api/admin/dashboard?eventPerPage=100',{cookie:admin.cookie});

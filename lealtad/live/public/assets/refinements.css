@@ -90,3 +90,7 @@ html[data-tenant="mooncoffee"] .admin-multi{background:#111722;color:#f7f0e2;bor
 html[data-tenant="mooncoffee"] .admin-multi :is(input,textarea,select){background:#090d15;color:#f7f0e2;border-color:#73634d}
 html[data-tenant="mooncoffee"] .admin-multi .error{color:#ffb4ad}
 html[data-tenant="mooncoffee"] .admin-multi .note{color:#b8b1a5}
+
+/* Compact, readable review of an audited administrative adjustment. */
+.admin-multi .admin-adjust-preview{white-space:pre-line;overflow-wrap:anywhere}
+.admin-multi fieldset[hidden]{display:none}

@@ -10,7 +10,7 @@ return `SELECT id,created_at,event_type,card_id,customer,customer_phone,employee
         CASE WHEN audit.action='customer_updated' AND audit.metadata='{"kind":"demo_reset"}' THEN 'demo_reset'
           WHEN json_extract(audit.metadata,'$.kind')='team_created' THEN CASE WHEN json_extract(audit.metadata,'$.role')='admin' THEN 'team_admin_created' ELSE 'team_staff_created' END
           WHEN json_extract(audit.metadata,'$.kind')='profile_name_changed' THEN 'profile_name_changed'
-          WHEN json_extract(audit.metadata,'$.kind')='stamp_added' THEN 'stamp_added'
+          WHEN json_extract(audit.metadata,'$.kind') IN ('stamp_added','stamp_removed','progress_cleared','saved_reward_added','saved_reward_removed','saved_rewards_cleared') THEN json_extract(audit.metadata,'$.kind')
           WHEN json_extract(audit.metadata,'$.kind')='team_updated' AND json_extract(audit.metadata,'$.role')='admin' THEN 'team_admin_updated'
           WHEN json_extract(audit.metadata,'$.kind')='team_deleted' AND json_extract(audit.metadata,'$.role')='admin' THEN 'team_admin_deleted'
           ELSE audit.action END AS event_type,
