@@ -160,7 +160,7 @@ test('Santofé responsive UI carries its own identity and per-coffee controls',a
   assert.ok(await staffPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const adminContext=await browser.newContext({viewport:{width:1280,height:900}});
   const adminLogin=await request(santofe,'/api/login/staff',{body:credentials.admin});assert.equal(adminLogin.status,200);const [adminCookieName,adminCookieValue]=adminLogin.cookie.split('=');await adminContext.addCookies([{name:adminCookieName,value:adminCookieValue,url:santofe}]);
-  const adminPage=await adminContext.newPage();await adminPage.goto(santofe+'/#admin');await adminPage.waitForSelector('.stats');
+  const adminPage=await adminContext.newPage();await adminPage.goto(santofe+'/#admin');await adminPage.waitForSelector('#customer-search');
   const adminText=await adminPage.locator('body').innerText();assert.match(adminText,/COMUNIDAD SANTOFÉ/);assert.match(adminText,/8\/10/);assert.doesNotMatch(adminText,/COMUNIDAD RENACE|8\/9/);
   const download=adminPage.waitForEvent('download');await adminPage.click('#export-all-customers');const file=await download,parts=[];for await(const chunk of await file.createReadStream())parts.push(chunk);
   const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(Buffer.concat(parts));const sheet=workbook.worksheets[0];assert.equal(sheet.getCell('A1').value,'Santofé');assert.ok(sheet.getColumn(2).values.some(value=>String(value)===phone));

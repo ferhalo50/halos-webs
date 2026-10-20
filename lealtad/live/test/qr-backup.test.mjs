@@ -14,7 +14,7 @@ const sizes=[[360,800],[390,844],[412,915],[430,932]];
 // Serve the actual frontend with fictitious GET responses. No D1 or remote requests.
 for(const slug of ['renace','mooncoffee','santofe','vainillacoffee'])test(`${slug}: static QR credential, final PNG decoding, share, ES/EN and mobile actions`,async t=>{
  const tenant=TENANTS[slug],unexpected=[],errors=[];
- const card={id:'EJEMPLO-LOCAL-'+tenant.cardPrefix,name:'Cliente de ejemplo',phone:'0000000000',stamps:3,goal:tenant.rewardGoal,reward:tenant.rewardName,stampPolicy:tenant.stampPolicy,stampStyle:slug==='mooncoffee'?'moon':Object.keys(tenant.stampStyles)[0],canStampToday:true,lastStampAt:'2026-10-01T12:00:00Z',qrValue:slug+':QR-FICTICIO-SOLO-LOCAL',rewardsPending:0,rewardChoicesPending:0,redeemedCount:0};
+ const card={id:'EJEMPLO-LOCAL-'+tenant.cardPrefix,customerId:'LOCAL-CUSTOMER',name:'Cliente de ejemplo',phone:'0000000000',stamps:3,goal:tenant.rewardGoal,reward:tenant.rewardName,stampPolicy:tenant.stampPolicy,stampStyle:slug==='mooncoffee'?'moon':Object.keys(tenant.stampStyles)[0],canStampToday:true,lastStampAt:'2026-10-01T12:00:00Z',qrValue:slug+':QR-FICTICIO-SOLO-LOCAL',rewardsPending:0,rewardChoicesPending:0,redeemedCount:0};
  const server=http.createServer(async(req,res)=>{
   try{
    const url=new URL(req.url,'http://127.0.0.1');

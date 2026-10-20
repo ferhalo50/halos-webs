@@ -107,11 +107,14 @@ test('customer, tablet and admin UI', async t => {
   await page.fill('[name="login"]', 'admin_local');
   await page.fill('[name="secret"]', 'Admin-test-928!');
   await page.click('#auth-form button');
-  await page.waitForSelector('.stats');
+  await page.waitForSelector('#customer-search');
   assert.equal(await page.locator('#reset-demo-customers').innerText(), 'Restablecer clientes de prueba');
   assert.match(await page.locator('.demo-tools').innerText(), /000 000 0001[\s\S]*0\/9[\s\S]*000 000 0008[\s\S]*8\/9[\s\S]*246810/);
   await page.click('#reset-demo-customers');
   await page.waitForFunction(() => document.querySelector('#toast')?.textContent.includes('Clientes de prueba listos'));
+  // The refresh now replaces stale data with a loading shell immediately.
+  // Assert the resulting dashboard, not the interval between toast and response.
+  await page.waitForSelector('#customer-search');
   assert.ok(await page.getByText('Cliente visual').count());
   assert.ok(await page.locator('.reset-pin').count());
   assert.ok(await page.locator('.edit-customer').count());

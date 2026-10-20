@@ -256,11 +256,11 @@ async function recordDailyOperation(env,staff,card,input,type,day,now){
   try{
     await env.DB.batch([
       env.DB.prepare(`UPDATE loyalty_cards SET ${type==='stamp'?'stamps=stamps+1':'stamps=0,redeemed_count=redeemed_count+1'},updated_at=?
-        WHERE id=? AND business_id=? AND reward_version=? AND stamps=?
+        WHERE id=? AND business_id=? AND customer_id=? AND reward_version=? AND stamps=?
         AND NOT EXISTS(SELECT 1 FROM loyalty_events WHERE id=?)
         AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL)
         AND EXISTS(SELECT 1 FROM users WHERE id=? AND business_id=? AND role IN ('employee','admin') AND active=1 AND deleted_at IS NULL)`)
-        .bind(now,card.id,staff.business_id,card.reward_version,card.stamps,id,card.customer_id,staff.business_id,staff.id,staff.business_id),
+        .bind(now,card.id,staff.business_id,card.customer_id,card.reward_version,card.stamps,id,card.customer_id,staff.business_id,staff.id,staff.business_id),
       env.DB.prepare(`INSERT INTO loyalty_events(id,business_id,card_id,customer_id,employee_id,event_type,business_day,created_at,quantity,daily_limited)
         VALUES(?,?,?,?,CASE WHEN changes()=1 THEN ? ELSE NULL END,?,?,?,?,?)`)
         .bind(id,staff.business_id,card.id,card.customer_id,staff.id,type,day,now,1,type==='stamp'?1:0)
@@ -274,9 +274,9 @@ async function recordDailyOperation(env,staff,card,input,type,day,now){
 
 async function cardForCustomer(env, customerId, businessId) {
   return env.DB.prepare(`SELECT c.id, c.customer_id, c.qr_token, c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version, COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style, c.redeemed_count, c.created_at, c.updated_at, u.name, u.phone,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id = c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type = 'stamp' AND voided=0) AS last_stamp_at,
     b.slug AS business_slug,b.reward_goal, b.reward_name, b.timezone,b.stamp_policy
-    FROM loyalty_cards c JOIN users u ON u.id = c.customer_id JOIN businesses b ON b.id = c.business_id
+    FROM loyalty_cards c JOIN users u ON u.id = c.customer_id AND u.business_id=c.business_id AND u.role='customer' JOIN businesses b ON b.id = c.business_id
     WHERE c.customer_id = ? AND c.business_id = ? AND u.active=1 AND u.deleted_at IS NULL`).bind(customerId, businessId).first();
 }
 
@@ -299,8 +299,8 @@ async function lookupCard(request, env, staff) {
   const qrToken = value.startsWith(prefix) ? value.slice(prefix.length) : '';
   const phone = normalizePhone(value);
   const card = await env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
-    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type='stamp' AND voided=0) AS last_stamp_at
+    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id AND u.business_id=c.business_id AND u.role='customer' JOIN businesses b ON b.id=c.business_id
     WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL AND (c.id=? OR c.qr_token=? OR u.phone=?)`).bind(staff.business_id, value, qrToken, phone).first();
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
   return publicCard(card);
@@ -309,8 +309,8 @@ async function lookupCard(request, env, staff) {
 async function stamp(request, env, staff) {
   const input = await body(request);
   const card = await env.DB.prepare(`SELECT c.*,u.id AS customer_id,u.name,b.slug AS business_slug,b.reward_goal,b.timezone,b.stamp_policy,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
-    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(input.cardId, staff.business_id).first();
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type='stamp' AND voided=0) AS last_stamp_at
+    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id AND u.business_id=c.business_id AND u.role='customer' JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(input.cardId, staff.business_id).first();
   if (!card) throw new ApiError(404, 'card_not_found', 'No encontramos esa tarjeta.');
   const policy=card.stamp_policy||'daily';
   if(policy==='per_item'&&card.reward_choices_pending>0)throw new ApiError(409,'reward_decision_required','Primero decide qué hacer con tu bebida gratis para continuar.');
@@ -340,8 +340,8 @@ async function stamp(request, env, staff) {
 
 async function cardById(env, cardId, businessId) {
   return env.DB.prepare(`SELECT c.id,c.qr_token,c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.id AS customer_id,u.name,u.phone,b.slug AS business_slug,b.reward_goal,b.reward_name,b.timezone,b.stamp_policy,
-    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at
-    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
+    (SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type='stamp' AND voided=0) AS last_stamp_at
+    FROM loyalty_cards c JOIN users u ON u.id=c.customer_id AND u.business_id=c.business_id AND u.role='customer' JOIN businesses b ON b.id=c.business_id WHERE c.id=? AND c.business_id=? AND u.active=1 AND u.deleted_at IS NULL`).bind(cardId, businessId).first();
 }
 
 async function redeem(request, env, staff) {
@@ -414,10 +414,13 @@ async function dashboard(request, env, admin) {
   const eventEmployee = String(url.searchParams.get('eventEmployee') || '').trim().slice(0, 60);
   const validEventDate = value => { const date = new Date(value); return value && !Number.isNaN(date.getTime()) ? date.toISOString() : ''; };
   const validEventTypes = new Set(['stamp','redeem','pin_reset','demo_reset','stamp_added','stamp_removed','progress_cleared','saved_reward_added','saved_reward_removed','saved_rewards_cleared','stamp_voided','customer_updated','customer_deleted','employee_updated','employee_deleted','team_admin_created','team_admin_updated','team_admin_deleted','team_staff_created','profile_name_changed','reward_generated','reward_saved','reward_redeemed_now','saved_reward_redeemed']);
+  // Only phone-shaped terms participate in phone matching. An empty normalized
+  // phone matches every string in SQLite; digits inside names/card IDs are not phones.
+  const searchPhone = /^[+\d\s().-]+$/.test(search) ? normalizePhone(search) : '';
   const customerWhere = search
-    ? "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0 OR instr(u.phone, ?) > 0 OR instr(c.id, ?) > 0)"
+    ? `u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL AND (instr(lower(u.name), lower(?)) > 0${searchPhone ? ' OR instr(u.phone, ?) > 0' : ''} OR instr(c.id, ?) > 0)`
     : "u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL";
-  const customerBindings = search ? [admin.business_id, search, normalizePhone(search), search.toUpperCase()] : [admin.business_id];
+  const customerBindings = search ? [admin.business_id, search, ...(searchPhone ? [searchPhone] : []), search.toUpperCase()] : [admin.business_id];
   const eventSource = activitySource();
   const eventBindings = [admin.business_id, admin.business_id, admin.business_id, admin.business_id];
   const eventFilters = [];
@@ -428,19 +431,21 @@ async function dashboard(request, env, admin) {
   if (validEventTypes.has(eventType)) { eventFilters.push('event_type = ?'); eventBindings.push(eventType); }
   if (eventEmployee) { eventFilters.push('instr(lower(employee), lower(?)) > 0'); eventBindings.push(eventEmployee); }
   const eventWhere = eventFilters.length ? ` WHERE ${eventFilters.join(' AND ')}` : '';
-  const [metrics, customerCount, customers, employees, eventCount, events] = await Promise.all([
+  // This permission read depends only on the authenticated business, not on
+  // dashboard results. Keep it in the same read phase instead of a final wait.
+  const [metrics, customerCount, customers, employees, eventCount, events, initialAdminId] = await Promise.all([
     env.DB.prepare(`SELECT (SELECT COUNT(*) FROM users WHERE business_id=? AND role='customer' AND active=1 AND deleted_at IS NULL) AS customers,
       (SELECT COALESCE(SUM(quantity),0) FROM loyalty_events WHERE business_id=? AND event_type='stamp' AND voided=0 AND business_day=?) AS stamps_today,
-      (SELECT COALESCE(SUM(CASE WHEN '${business.stamp_policy}'='per_item' THEN c.rewards_pending ELSE c.stamps>=? END),0) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
+      (SELECT COALESCE(SUM(CASE WHEN '${business.stamp_policy}'='per_item' THEN c.rewards_pending ELSE c.stamps>=? END),0) FROM loyalty_cards c JOIN users u ON u.id=c.customer_id AND u.business_id=c.business_id AND u.role='customer' WHERE c.business_id=? AND u.active=1 AND u.deleted_at IS NULL) AS rewards_ready,
       (SELECT COALESCE(SUM(redeemed_count),0) FROM loyalty_cards WHERE business_id=?) AS redeemed`).bind(admin.business_id, admin.business_id, today, business.reward_goal, admin.business_id, admin.business_id).first(),
-    env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere}`).bind(...customerBindings).first(),
-    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM users u JOIN loyalty_cards c ON c.customer_id=u.id AND c.business_id=u.business_id WHERE ${customerWhere}`).bind(...customerBindings).first(),
+    env.DB.prepare(`SELECT u.id AS customer_id,c.id,c.stamps,c.rewards_pending,c.reward_choices_pending,c.reward_version,COALESCE((SELECT p.stamp_style FROM loyalty_card_preferences p WHERE p.card_id=c.id AND p.business_id=c.business_id),c.stamp_style) AS stamp_style,c.redeemed_count,u.name,u.phone,u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM users u JOIN loyalty_cards c ON c.customer_id=u.id AND c.business_id=u.business_id WHERE ${customerWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).bind(...customerBindings, perPage, offset).all(),
     env.DB.prepare("SELECT id,name,username,role,active,created_at FROM users WHERE business_id=? AND role IN ('employee','admin') AND deleted_at IS NULL ORDER BY role,name").bind(admin.business_id).all(),
     env.DB.prepare(`SELECT COUNT(*) AS total FROM (${eventSource})${eventWhere}`).bind(...eventBindings).first(),
-    env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all()
+    env.DB.prepare(`${eventSource}${eventWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...eventBindings, eventPerPage, eventOffset).all(),
+    primaryAdminId(env,admin.business_id)
   ]);
   const total = Number(customerCount.total) || 0;
-  const initialAdminId=await primaryAdminId(env,admin.business_id);
   return {
     business,
     metrics,
@@ -625,8 +630,8 @@ async function adjustCustomerStamps(request, env, admin, customerId) {
   const now = new Date();
   let voidEvent = null;
   if (input.cancelToday) {
-    voidEvent = await env.DB.prepare("SELECT id FROM loyalty_events WHERE card_id=? AND business_id=? AND event_type='stamp' AND voided=0 AND business_day=?")
-      .bind(card.id, admin.business_id, businessDay(card.timezone, now)).first();
+    voidEvent = await env.DB.prepare("SELECT id FROM loyalty_events WHERE card_id=? AND business_id=? AND customer_id=? AND event_type='stamp' AND voided=0 AND business_day=?")
+      .bind(card.id, admin.business_id, card.customer_id, businessDay(card.timezone, now)).first();
     if (!voidEvent) throw new ApiError(409, 'no_visit_today', 'No hay un sello de hoy para anular. Actualiza la tarjeta.');
   }
   try {
@@ -821,7 +826,7 @@ async function api(request, env) {
     const user=await requireRole(request,env,['admin']), business=await getBusiness(env);
     const offset=Math.max(0,Number.parseInt(url.searchParams.get('offset')||'0',10)||0);
     const clients=path.endsWith('/clients');
-    const query=clients ? `SELECT c.id,u.name,u.phone,c.stamps,c.redeemed_count${business.stamp_policy==='per_item'?',c.rewards_pending,c.reward_choices_pending':''},u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL ORDER BY u.created_at,u.id LIMIT 500 OFFSET ?` : `${activitySource()} ORDER BY created_at,id LIMIT 500 OFFSET ?`;
+    const query=clients ? `SELECT c.id,u.name,u.phone,c.stamps,c.redeemed_count${business.stamp_policy==='per_item'?',c.rewards_pending,c.reward_choices_pending':''},u.created_at,(SELECT MAX(created_at) FROM loyalty_events WHERE card_id=c.id AND business_id=c.business_id AND customer_id=c.customer_id AND event_type='stamp' AND voided=0) AS last_stamp_at FROM loyalty_cards c JOIN users u ON u.id=c.customer_id WHERE c.business_id=? AND u.business_id=? AND u.role='customer' AND u.active=1 AND u.deleted_at IS NULL ORDER BY u.created_at,u.id LIMIT 500 OFFSET ?` : `${activitySource()} ORDER BY created_at,id LIMIT 500 OFFSET ?`;
     const binds=clients?[user.business_id,user.business_id,offset]:[user.business_id,user.business_id,user.business_id,user.business_id,offset];
     const rows=(await env.DB.prepare(query).bind(...binds).all()).results;
     return response({ok:true,rows,nextOffset:rows.length===500?offset+500:null,business:{name:business.name,slug:business.slug,reward_goal:business.reward_goal,stamp_policy:business.stamp_policy,timezone:business.timezone},generatedAt:new Date().toISOString()});

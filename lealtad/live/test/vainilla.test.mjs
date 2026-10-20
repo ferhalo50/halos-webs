@@ -111,18 +111,18 @@ test('Vainilla staff/admin layouts, bilingual controls, PWA manifest, PNG icons 
  const sw=await(await fetch(base+'/service-worker.js')).text();for(const asset of ['vainilla.js','vainilla.css','bouquet.jpg','flower.svg','icon-192.png','icon-512.png'])assert.ok(sw.includes(asset));assert.ok(sw.includes("url.pathname.startsWith('/api/')"));assert.deepEqual(errors,[]);await context.close();
 });
 
-test('Vainilla navigation preserves the active counter when an obsolete Admin request succeeds or fails',async t=>{
+test('Vainilla navigation cancels obsolete Admin reads and preserves the active counter for late success/error responses',{timeout:30000},async t=>{
  const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());
  for(const status of [200,503]){
   const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
   await context.request.post(base+'/api/login/staff',{data:adminCredentials});const page=await context.newPage();
-  // Observe completion of the actual API JSON consumption and its next paint.
-  await page.addInitScript(()=>{const original=window.fetch;window.dashboardConsumed=new Promise(resolve=>{window.fetch=async(...args)=>{const response=await original(...args);if(String(args[0]).includes('/api/admin/dashboard?')){const json=response.json.bind(response);response.json=async()=>{try{return await json();}finally{requestAnimationFrame(resolve);}};}return response;};});});
+  // Observe actual cancellation as well as JSON completion; cancelled reads never consume the late body.
+  await page.addInitScript(()=>{const original=window.fetch;window.dashboardCancelled=false;window.dashboardConsumed=new Promise(resolve=>{window.fetch=async(...args)=>{const dashboard=String(args[0]).includes('/api/admin/dashboard?');try{const response=await original(...args);if(dashboard){const json=response.json.bind(response);response.json=async()=>{try{return await json();}finally{requestAnimationFrame(resolve);}};}return response;}catch(error){if(dashboard&&error.name==='AbortError'){window.dashboardCancelled=true;requestAnimationFrame(resolve);}throw error;}};});});
   let release,seen;const blocked=new Promise(r=>release=r),requested=new Promise(r=>seen=r);
   await page.route('**/api/admin/dashboard?**',async route=>{const response=await route.fetch();seen();await blocked;await route.fulfill(status===200?{response}:{status,contentType:'application/json',body:JSON.stringify({ok:false,error:{message:'Controlled local failure'}})});});
   await page.goto(base+'/#admin');await requested;await page.waitForSelector('#app-loader',{state:'detached'});
   await page.click('#counter-link');await page.locator('#lookup input').fill('0000090003');release();
-  await page.evaluate(()=>window.dashboardConsumed);
+  await page.evaluate(()=>window.dashboardConsumed);assert.equal(await page.evaluate(()=>window.dashboardCancelled),true,'obsolete dashboard fetch must be cancelled');
   assert.equal(new URL(page.url()).hash,'#empleado');assert.equal(await page.locator('#lookup input').inputValue(),'0000090003');assert.equal(await page.locator('#customer-search').count(),0);assert.doesNotMatch(await page.locator('#app').innerText(),/No pudimos cargar esta vista/);
   await context.close();
  }

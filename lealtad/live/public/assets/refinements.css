@@ -94,3 +94,16 @@ html[data-tenant="mooncoffee"] .admin-multi .note{color:#b8b1a5}
 /* Compact, readable review of an audited administrative adjustment. */
 .admin-multi .admin-adjust-preview{white-space:pre-line;overflow-wrap:anywhere}
 .admin-multi fieldset[hidden]{display:none}
+
+/* Static placeholders: no artificial delay or motion; use each tenant's colors. */
+.admin-loading .admin-loading-bar{display:block;height:1.5rem;width:5rem;max-width:100%;border-radius:6px;background:currentColor;opacity:.12}
+.admin-loading .admin-loading-line{width:100%;height:.8rem;margin-top:1.25rem}
+.admin-loading .admin-loading-line:last-child{width:65%}
+.admin-loading [role="status"]{margin:0 0 1rem}
+.admin-loading .stats .panel{min-width:0}
+.admin-loading .stats .admin-loading-bar{height:38px}
+@media(max-width:760px){.admin-loading .stats .admin-loading-bar{height:30px}}
+
+.card-loading{max-width:44rem;margin-inline:auto;min-width:0}
+.card-loading-placeholder{height:18rem;max-height:40vh;border-radius:1rem;background:currentColor;opacity:.08}
+[data-logout-state]{max-width:44rem;margin-inline:auto;overflow-wrap:anywhere}
