@@ -95,15 +95,35 @@ html[data-tenant="mooncoffee"] .admin-multi .note{color:#b8b1a5}
 .admin-multi .admin-adjust-preview{white-space:pre-line;overflow-wrap:anywhere}
 .admin-multi fieldset[hidden]{display:none}
 
-/* Static placeholders: no artificial delay or motion; use each tenant's colors. */
-.admin-loading .admin-loading-bar{display:block;height:1.5rem;width:5rem;max-width:100%;border-radius:6px;background:currentColor;opacity:.12}
-.admin-loading .admin-loading-line{width:100%;height:.8rem;margin-top:1.25rem}
-.admin-loading .admin-loading-line:last-child{width:65%}
-.admin-loading [role="status"]{margin:0 0 1rem}
+/* Public brand only: reveal after 150ms, without delaying ready content.
+   The real stat typography reserves its exact line box; blanks aren't balances. */
 .admin-loading .stats .panel{min-width:0}
-.admin-loading .stats .admin-loading-bar{height:38px}
-@media(max-width:760px){.admin-loading .stats .admin-loading-bar{height:30px}}
-
-.card-loading{max-width:44rem;margin-inline:auto;min-width:0}
-.card-loading-placeholder{height:18rem;max-height:40vh;border-radius:1rem;background:currentColor;opacity:.08}
+.loading-status-accessible{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.card-loading{width:min(100%,620px);margin-inline:auto;min-width:0}
+.card-loading>.page-title{font-size:clamp(30px,4vw,42px);letter-spacing:-1px;margin-bottom:22px}
+.card-loading-brand{position:relative;display:grid;place-items:center;min-height:clamp(300px,48vh,420px);padding:32px 24px;border:1px solid var(--line);border-radius:26px;background:radial-gradient(ellipse at 50% 36%,#fffdf6,var(--cream));box-shadow:0 18px 44px #30372808}
+.loading-reveal{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;width:100%;opacity:0;animation:loading-brand-reveal 180ms ease-out 150ms forwards}
+.loading-brand-logo{display:block;width:min(78%,260px);height:150px;object-fit:contain;animation:loading-brand-breathe 2.8s ease-in-out 330ms infinite}
+.loading-brand-caption{margin:0;text-align:center;font-size:14px;line-height:1.6;color:var(--ink)}
+.admin-loading .loading-stat{position:relative}
+.admin-loading .admin-loading-value{position:absolute;inset:0 auto 0 0;width:auto;flex-direction:row;justify-content:flex-start;gap:6px;color:var(--olive)}
+.admin-loading-value>i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;animation:admin-value-breathe 2.8s ease-in-out 330ms infinite}
+.admin-loading .customers-panel h2{margin-bottom:12px}
+.admin-loading .customers-panel>.section-row{margin-bottom:0}
+.admin-loading-customers{position:relative;min-height:36px;display:grid;align-items:center}
+.admin-loading-customers .loading-reveal{flex-direction:row;justify-content:flex-start;gap:14px}
+.admin-loading-customers .loading-brand-logo{width:40px;height:36px}
+.admin-loading-customers .loading-brand-caption{font-size:14px;line-height:1.6;text-align:left}
+html[data-tenant="mooncoffee"] .card-loading-brand{border-color:#d2a25355;background:radial-gradient(ellipse at 50% 30%,#202637,#101620);box-shadow:0 20px 50px #0003}
+html[data-tenant="mooncoffee"] .loading-brand-logo{padding:16px;border:1px solid #efd49f55;border-radius:18px;background:#f5ead7}
+html[data-tenant="mooncoffee"] .admin-loading-customers .loading-brand-logo{width:64px;padding:5px;border-radius:8px}
+html[data-tenant="santofe"] .card-loading-brand{background:radial-gradient(ellipse at 50% 32%,#fafbf6,#e8ecde);border-color:#c9cbbf}
+html[data-tenant="santofe"] .loading-brand-logo{width:150px}
+html[data-tenant="santofe"] .admin-loading-customers .loading-brand-logo{width:36px}
+html[data-tenant="vainillacoffee"] .card-loading-brand{max-width:390px;min-height:clamp(380px,56vh,520px);margin-inline:auto;background:radial-gradient(ellipse at 50% 32%,#fffdf3,#fff3cb);border-color:#dfc897}
+@keyframes loading-brand-reveal{to{opacity:1}}
+@keyframes loading-brand-breathe{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.78;transform:scale(.985)}}
+@keyframes admin-value-breathe{0%,100%{opacity:.45}50%{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.loading-reveal{animation-duration:0s}.loading-brand-logo{animation:none}}
+@media(prefers-reduced-motion:reduce){.admin-loading-value>i{animation:none;opacity:.65}}
 [data-logout-state]{max-width:44rem;margin-inline:auto;overflow-wrap:anywhere}
