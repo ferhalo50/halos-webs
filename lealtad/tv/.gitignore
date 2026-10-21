@@ -1,4 +1,6 @@
 node_modules/
+.local-tv/
+.build/
 .wrangler/
 *.log
 .dev.vars

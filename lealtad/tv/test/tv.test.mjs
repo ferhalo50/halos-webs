@@ -34,6 +34,9 @@ test('real photos, MP4s and MP3: sequences, loop, keyboard, full screen and mobi
   assert.equal(await page.locator('.media-card').count(),config.items.length);
   for(const item of images){
     const locator=page.locator(`[data-media-id="${item.id}"] img`);await locator.scrollIntoViewIfNeeded();
+    // Lazy thumbnails must have completed their actual load before decoding.
+    // An absent/corrupt image still fails this check; no decode assertion removed.
+    await page.waitForFunction(id=>{const img=document.querySelector(`[data-media-id="${id}"] img`);return img?.complete&&img.naturalWidth>0;},item.id,{timeout:10000});
     await locator.evaluate(async img=>{await img.decode();});
     assert.equal(await locator.evaluate(img=>getComputedStyle(img).objectFit),'contain');
   }

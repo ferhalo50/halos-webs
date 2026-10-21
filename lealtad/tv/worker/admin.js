@@ -8,6 +8,8 @@ import {
   validateUploadMetadata, verifyFileSignature, verifySignatureBytes,
 } from './admin-media.js';
 import { objectResponse } from './media.js';
+import { saveDuration } from './photo-duration.js';
+import { reserveUpload, discardUpload, retryCleanup, reconcileStorage, verifiedStream, objectUploadStream, storageSummary as quotaSummary } from './storage.js';
 
 const ADMIN_FILES = new Map([
   ['/admin', '/admin/panel'], ['/admin/', '/admin/panel'],
@@ -120,7 +122,10 @@ async function readUpload(request) {
   const contentType = (request.headers.get('content-type') || '').toLowerCase();
   if (/^multipart\/form-data(?:;|$)/i.test(contentType)) {
     let form;
-    try { form = await request.formData(); }
+    try {
+      const bounded = new Request(request.url,{method:'POST',headers:request.headers,body:verifiedStream(request.body,null,configuredUploadMax({})+1_000_000),duplex:'half'});
+      form = await bounded.formData();
+    }
     catch { return { error: 'No se pudo leer el archivo. Selecciónalo de nuevo e intenta otra vez.', status: 400, stage: 'multipart' }; }
     const file = form.get('file');
     if (!file || typeof file.name !== 'string' || typeof file.stream !== 'function') return { error: 'Selecciona una imagen o video.', status: 400, stage: 'missing_file' };
@@ -136,7 +141,7 @@ async function readUpload(request) {
   catch { return { error: 'El nombre del archivo no es válido.', status: 400, stage: 'filename' }; }
   if (!request.body) return { error: 'Selecciona una imagen o video.', status: 400, stage: 'missing_body' };
   if (!Number.isSafeInteger(declaredSize) || declaredSize <= 0) return { error: 'El archivo debe tener un tamaño válido.', status: 400, stage: 'declared_size' };
-  if (Number.isFinite(contentLength) && contentLength !== declaredSize) return { error: 'La subida llegó incompleta. Intenta nuevamente.', status: 400, stage: 'content_length' };
+  if (contentLength !== null && Number.isFinite(contentLength) && contentLength !== declaredSize) return { error: 'La subida llegó incompleta. Intenta nuevamente.', status: 400, stage: 'content_length' };
   const [signatureStream, uploadStream] = request.body.tee();
   const signature = await readStreamPrefix(signatureStream);
   return { name, size: declaredSize, declaredMime: contentType.split(';')[0], stream: uploadStream, signature, transport: 'raw' };
@@ -169,7 +174,7 @@ export async function upload(request, env, auth) {
     return uploadJson({ error: incoming.error }, incoming.status, requestId);
   }
   let storage;
-  try { storage = await storageSummary(env); }
+  try { await retryCleanup(env); storage = await storageSummary(env); }
   catch {
     uploadLog('error', 'upload.database_error', { ...context, stage: 'storage_summary', status: 503 });
     return uploadJson({ error: 'No se pudo consultar el espacio disponible. Intenta nuevamente.' }, 503, requestId);
@@ -191,29 +196,48 @@ export async function upload(request, env, auth) {
   const storageKey = safeStorageKey(id, checked.extension);
   const displayName = (incoming.name.replace(/\.[^.]+$/, '').trim() || 'Contenido').slice(0, 120);
   try {
-    await env.MEDIA_BUCKET.put(storageKey, incoming.stream, { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
+    if (!await reserveUpload(env,auth,id,storageKey,checked.size)) {
+      incoming.stream.cancel().catch(()=>{});
+      return uploadJson({error:'Espacio insuficiente. Otra subida puede estar usando el espacio disponible. Actualiza el almacenamiento.'},413,requestId);
+    }
+  } catch {
+    incoming.stream.cancel().catch(()=>{});
+    await discardUpload(env,id,storageKey).catch(()=>{});
+    return uploadJson({error:'No se pudo reservar espacio. Actualiza la biblioteca e intenta nuevamente.'},503,requestId);
+  }
+  const pendingUpload = objectUploadStream(incoming.stream,checked.size);
+  const uploadStream = pendingUpload.stream;
+  try {
+    await env.MEDIA_BUCKET.put(storageKey, uploadStream, { httpMetadata: { contentType: checked.mime }, customMetadata: { mediaId: id } });
+    await pendingUpload.complete;
+    const object = await env.MEDIA_BUCKET.head(storageKey);
+    if (!object || Number(object.size) !== checked.size) throw new Error('Stored size mismatch');
     uploadLog('info', 'upload.r2_ok', { ...context, mediaId: id, size: checked.size, canonicalMime: checked.mime });
   } catch {
+    uploadStream.cancel().catch(()=>{});
+    await discardUpload(env,id,storageKey).catch(()=>{});
     uploadLog('error', 'upload.r2_error', { ...context, mediaId: id, status: 503, size: checked.size, canonicalMime: checked.mime });
     return uploadJson({ error: 'No se pudo guardar el archivo. Intenta nuevamente.' }, 503, requestId);
   }
   try {
     const statements = [
       env.TV_DB.prepare(`INSERT INTO media(id,original_filename,display_name,storage_key,media_type,mime_type,size_bytes,active,sort_order,created_by)
-        SELECT ?,?,?,?,?,?,?,1,COALESCE((SELECT MAX(sort_order)+1 FROM media),1),? FROM settings
-        WHERE id='main' AND used_bytes+?<=storage_limit_bytes`).bind(id, incoming.name, displayName, storageKey, checked.type, checked.mime, checked.size, auth.user_id, checked.size),
-      env.TV_DB.prepare(`UPDATE settings SET used_bytes=used_bytes+?,updated_at=CURRENT_TIMESTAMP
-        WHERE id='main' AND EXISTS(SELECT 1 FROM media WHERE id=?)`).bind(checked.size, id),
+        SELECT ?,?,?,?,?,?,?,1,COALESCE((SELECT MAX(sort_order)+1 FROM media),1),? FROM upload_intents
+        WHERE id=? AND state='uploading' AND size_bytes=?`).bind(id, incoming.name, displayName, storageKey, checked.type, checked.mime, checked.size, auth.user_id, id, checked.size),
+      env.TV_DB.prepare(`UPDATE settings SET used_bytes=COALESCE((SELECT SUM(size_bytes) FROM media),0),updated_at=CURRENT_TIMESTAMP WHERE id='main'`),
+      env.TV_DB.prepare('DELETE FROM upload_intents WHERE id=? AND EXISTS(SELECT 1 FROM media WHERE id=?)').bind(id,id),
     ];
     const results = await env.TV_DB.batch(statements);
     if (!Number(results[0]?.meta?.changes)) {
-      await env.MEDIA_BUCKET.delete(storageKey);
+      await discardUpload(env,id,storageKey);
       uploadLog('warn', 'upload.validation_error', { ...context, mediaId: id, stage: 'storage_quota', status: 413, size: checked.size });
       return uploadJson({ error: 'No hay espacio suficiente para este archivo.' }, 413, requestId);
     }
     uploadLog('info', 'upload.database_ok', { ...context, mediaId: id, size: checked.size });
   } catch {
-    await env.MEDIA_BUCKET.delete(storageKey).catch(() => {});
+    // A lost response after commit must not delete a valid file.
+    const committed = await discardUpload(env,id,storageKey).catch(()=>null);
+    if (committed) return uploadJson({ok:true,id},201,requestId);
     uploadLog('error', 'upload.database_error', { ...context, mediaId: id, stage: 'media_insert', status: 503, size: checked.size });
     return uploadJson({ error: 'No se pudo registrar el contenido. Intenta nuevamente.' }, 503, requestId);
   }
@@ -228,14 +252,17 @@ async function deleteMedia(env, auth, id) {
   if (!row) return json({ error: 'Contenido no encontrado.' }, 404);
   const claimed = await env.TV_DB.prepare('UPDATE media SET deleting=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleting=0').bind(id).run();
   if (!Number(claimed.meta?.changes)) return json({ error: 'El contenido ya está siendo eliminado.' }, 409);
-  try { await env.MEDIA_BUCKET.delete(row.storage_key); }
+  try {
+    await env.MEDIA_BUCKET.delete(row.storage_key);
+    if(await env.MEDIA_BUCKET.head(row.storage_key))throw new Error('Removal not confirmed');
+  }
   catch {
     await env.TV_DB.prepare('UPDATE media SET deleting=0 WHERE id=?').bind(id).run();
     return json({ error: 'No se pudo eliminar el archivo. Intenta de nuevo.' }, 503);
   }
   await env.TV_DB.batch([
     env.TV_DB.prepare('DELETE FROM media WHERE id=? AND deleting=1').bind(id),
-    env.TV_DB.prepare('UPDATE settings SET used_bytes=MAX(0,used_bytes-?),updated_at=CURRENT_TIMESTAMP WHERE id=\'main\'').bind(row.size_bytes),
+    env.TV_DB.prepare('UPDATE settings SET used_bytes=COALESCE((SELECT SUM(size_bytes) FROM media),0),updated_at=CURRENT_TIMESTAMP WHERE id=\'main\''),
   ]);
   await audit(env, auth.user_id, 'delete', id, { sizeBytes: Number(row.size_bytes) });
   return json({ ok: true });
@@ -296,12 +323,28 @@ export async function handleAdmin(request, env) {
   if (pathname === '/admin/api/session' && request.method === 'GET') return json({ username: auth.username, displayName: auth.display_name });
   if (pathname === '/admin/api/logout' && request.method === 'POST') {
     await revokeSession(env, auth.tokenHash);
-    return json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie(request) });
+    return json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie(request, env) });
   }
   if (pathname === '/admin/api/password' && request.method === 'POST') return changePassword(request, env, auth);
   if (pathname === '/admin/api/content' && request.method === 'GET') return json({ items: await listMedia(env), storage: await storageSummary(env), uploadEnabled: true });
+  if (pathname === '/admin/api/storage' && request.method === 'GET') return json(await quotaSummary(env));
+  if (pathname === '/admin/api/storage/reconcile' && request.method === 'GET') return json(await reconcileStorage(env));
+  if (pathname === '/admin/api/storage/cleanup' && request.method === 'POST') {
+    try { return json({ cleaned:await retryCleanup(env), storage:await quotaSummary(env) }); }
+    catch { return json({error:'No se pudo confirmar la limpieza de una subida incompleta. El espacio permanece reservado por seguridad.'},503); }
+  }
   if (pathname === '/admin/api/uploads' && request.method === 'POST') return upload(request, env, auth);
   if (pathname === '/admin/api/reorder' && request.method === 'POST') return reorder(request, env, auth);
+  const duration = /^\/admin\/api\/content\/([a-z0-9][a-z0-9-]{0,63})\/duration$/.exec(pathname);
+  if (duration && request.method === 'PATCH') {
+    try {
+      const result = await saveDuration(env, auth.user_id, duration[1], await readJson(request));
+      const { status, ...body } = result;
+      return json(body, status);
+    } catch {
+      return json({ error: 'No se pudo guardar. Actualiza la biblioteca y vuelve a intentarlo.' }, 503);
+    }
+  }
   const preview = /^\/admin\/api\/media\/([a-z0-9][a-z0-9-]{0,63})$/.exec(pathname);
   if (preview && ['GET', 'HEAD'].includes(request.method)) {
     const row = await env.TV_DB.prepare('SELECT id,storage_key,mime_type,size_bytes,active,deleting FROM media WHERE id=?').bind(preview[1]).first();

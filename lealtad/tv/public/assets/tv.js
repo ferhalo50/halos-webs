@@ -1,3 +1,6 @@
+import { siteKey, initSettings, applyDisplay } from './tv-settings.js';
+import { renderStorage } from './storage-view.js';
+
 const elements = {
   grid: document.querySelector('#media-grid'),
   empty: document.querySelector('#empty-state'),
@@ -33,8 +36,9 @@ const state = {
   fullscreenWasActive: false,
   returnFocus: null,
   generation: 0, failed: new Set(), transitioning: false, transitionTimer: null, watchdog: null, mediaListeners: null,
-  refreshing: false, refreshLabelTimer: null
+  refreshing: false, refreshLabelTimer: null, syncBusy: false, playAll: false
 };
+const settings = initSettings(() => state.config, () => syncContent());
 
 function showToast(message, duration = 4200) {
   clearTimeout(state.toastTimer);
@@ -78,6 +82,7 @@ async function loadConfig(forceNetwork = false) {
     version: String(value.version || 'current'),
     slideDurationSeconds: Math.max(.25, Number(value.slideDurationSeconds) || 10),
     music: normalizeMusic(value.music),
+    storage: value.storage || null,
     items
   };
 }
@@ -141,6 +146,7 @@ function createCard(item) {
 }
 
 function renderLibrary() {
+  renderStorage(document.querySelector('#home-storage'),state.config.storage);
   elements.grid.textContent = '';
   state.config.items.forEach(item => elements.grid.append(createCard(item)));
   elements.empty.hidden = state.config.items.length > 0;
@@ -151,6 +157,7 @@ function renderLibrary() {
   elements.playAll.disabled = state.config.items.length === 0;
   elements.selectAll.disabled = state.config.items.length === 0;
   updateSelection();
+  settings.render();
 }
 
 function toggleSelection(id) {
@@ -160,7 +167,7 @@ function toggleSelection(id) {
 }
 
 function updateSelection() {
-  try{localStorage.setItem('renace-tv-selection',JSON.stringify([...state.selected]));}catch{}
+  try{localStorage.setItem(`${siteKey}-tv-selection`,JSON.stringify([...state.selected]));}catch{}
   const total = state.selected.size;
   document.querySelectorAll('.media-card').forEach(card => {
     const selected = state.selected.has(card.dataset.mediaId);
@@ -246,6 +253,8 @@ function startPresentation(items,trigger){
   if(!items.length)return showToast('Selecciona al menos un elemento para reproducir.');
   state.playlist=items.slice();state.index=0;state.failed=new Set();state.playing=true;state.returnFocus=trigger||document.activeElement;state.fullscreenWasActive=false;
   elements.presentation.hidden=false;document.body.style.overflow='hidden';document.body.classList.add('presenting');elements.toast.hidden=true;
+  state.playAll = trigger === elements.playAll;
+  applyDisplay();
   showCurrentItem();requestPresentationFullscreen();elements.presentation.focus({preventScroll:true});
 }
 async function exitPresentation(){
@@ -337,13 +346,14 @@ async function prepareOffline() {
 }
 
 function updateConnection() {
+  renderStorage(document.querySelector('#home-storage'),state.config.storage);
   const online = navigator.onLine;
   elements.connection.classList.toggle('is-offline', !online);
   elements.connection.querySelector('b').textContent = online ? 'Conectado' : 'Sin conexión';
 }
 
 async function refreshContent() {
-  if (state.refreshing || state.playing) return;
+  if (state.refreshing || state.syncBusy || state.playing) return;
   state.refreshing = true;
   clearTimeout(state.refreshLabelTimer);
   elements.refresh.disabled = true;
@@ -385,6 +395,40 @@ async function refreshContent() {
   }
 }
 
+// One in-flight refresh. Keep a healthy current video/image alive; edited photo
+// durations apply on its next appearance. Removed media is released immediately.
+async function syncContent() {
+  if (state.syncBusy || state.refreshing || !navigator.onLine) return;
+  state.syncBusy = true;
+  try {
+    const next = await loadConfig(true);
+    const contentChanged = JSON.stringify([next.items,next.slideDurationSeconds,next.music]) !== JSON.stringify([state.config.items,state.config.slideDurationSeconds,state.config.music]);
+    state.config.storage = next.storage;
+    renderStorage(document.querySelector('#home-storage'),next.storage);
+    if (!contentChanged) return; // A changed usage bar must not steal library focus.
+    const current = state.playlist[state.index];
+    state.config = next;
+    const available = new Set(next.items.map(item => item.id));
+    state.selected = new Set([...state.selected].filter(id => available.has(id)));
+    if (state.playing) {
+      const ids = new Set(state.playlist.map(item => item.id));
+      const playlist = next.items.filter(item => state.playAll || ids.has(item.id));
+      const position = playlist.findIndex(item => item.id === current?.id && item.source === current.source && item.type === current.type);
+      state.playlist = playlist;
+      if (!playlist.length) await exitPresentation();
+      else if (position < 0) {
+        clearTimeout(state.transitionTimer); state.transitioning = false;
+        state.index = Math.min(state.index, playlist.length - 1); showCurrentItem();
+      } else {
+        state.index = position;
+        elements.presentation.dataset.index = String(position);
+      }
+    }
+    renderLibrary();
+  } catch { /* Offline/error: keep the last usable playlist, never a blank TV. */ }
+  finally { state.syncBusy = false; }
+}
+
 function handlePresentationKeys(event) {
   if(document.querySelector('.tv-guide[open]'))return;
   if(!state.playing)return moveLibraryFocus(event);
@@ -400,9 +444,10 @@ async function registerServiceWorker() {
 }
 
 function moveLibraryFocus(event) {
+  if (event.target.matches('input,textarea,select')) return;
   const direction = {ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]}[event.key];
   if (!direction) return;
-  const buttons = [...document.querySelectorAll('.header-actions button:not(:disabled), .header-actions a[href], main button:not(:disabled), main a.button')].filter(button => button.getClientRects().length);
+  const buttons = [...document.querySelectorAll('.header-actions button:not(:disabled), .header-actions a[href], main button:not(:disabled), main input:not(:disabled), main a.button')].filter(button => button.getClientRects().length);
   const active = document.activeElement;
   if (!buttons.includes(active)) { event.preventDefault(); buttons[0]?.focus(); return; }
   const from = active.getBoundingClientRect(), x = from.x + from.width/2, y = from.y + from.height/2;
@@ -441,7 +486,7 @@ async function init() {
   registerServiceWorker();
   try {
     state.config = await loadConfig();
-    try{const saved=JSON.parse(localStorage.getItem('renace-tv-selection')||'[]');if(Array.isArray(saved))state.selected=new Set(saved.filter(id=>state.config.items.some(item=>item.id===id)));}catch{}
+    try{const saved=JSON.parse(localStorage.getItem(`${siteKey}-tv-selection`)||'[]');if(Array.isArray(saved))state.selected=new Set(saved.filter(id=>state.config.items.some(item=>item.id===id)));}catch{}
     if (state.config.music) {
       elements.audio.src = state.config.music.source;
       elements.audio.setAttribute('aria-label', state.config.music.name);
@@ -457,3 +502,6 @@ async function init() {
 }
 
 init();
+setInterval(() => { if (!document.hidden) syncContent(); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { applyDisplay(); syncContent(); } });
+window.addEventListener('online', syncContent);

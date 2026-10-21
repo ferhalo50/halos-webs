@@ -1,5 +1,5 @@
 const encoder = new TextEncoder();
-const COOKIE = 'renace_tv_session';
+const cookieName = env => env?.TV_SITE === 'santofe' ? 'santofe_tv_session' : 'renace_tv_session';
 const SESSION_SECONDS = 8 * 60 * 60;
 // Cloudflare Workers caps one PBKDF2 deriveBits call at 100,000 iterations.
 // Chaining three independently salted stages preserves a 300,000-iteration cost.
@@ -72,25 +72,23 @@ export function sameOrigin(request, env) {
   const origin = request.headers.get('origin');
   if (!origin) return false;
   if (origin === new URL(request.url).origin) return true;
-  if (env.TV_ADMIN_LOCAL_HTTP !== 'true') return false;
-  try {
-    const url = new URL(origin);
-    return url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-  } catch { return false; }
+  return false; // Local origins/ports must remain isolated too.
 }
 
-function cookieValue(request) {
+function cookieValue(request, env) {
+  const COOKIE = cookieName(env);
   const part = (request.headers.get('cookie') || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${COOKIE}=`));
   return part ? part.slice(COOKIE.length + 1) : null;
 }
 
-function cookie(request, token, maxAge) {
+function cookie(request, token, maxAge, env) {
+  const COOKIE = cookieName(env);
   const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
   return `${COOKIE}=${token}; Path=/admin; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
 }
 
-export function clearSessionCookie(request) {
-  return cookie(request, '', 0);
+export function clearSessionCookie(request, env) {
+  return cookie(request, '', 0, env);
 }
 
 export async function createSession(request, env, userId) {
@@ -99,11 +97,11 @@ export async function createSession(request, env, userId) {
   const expiresAt = new Date(Date.now() + SESSION_SECONDS * 1000).toISOString();
   const userAgent = (request.headers.get('user-agent') || '').slice(0, 180);
   await env.TV_DB.prepare('INSERT INTO sessions(token_hash,user_id,expires_at,user_agent) VALUES(?,?,?,?)').bind(tokenHash, userId, expiresAt, userAgent).run();
-  return { tokenHash, setCookie: cookie(request, token, SESSION_SECONDS) };
+  return { tokenHash, setCookie: cookie(request, token, SESSION_SECONDS, env) };
 }
 
 export async function authenticate(request, env) {
-  const token = cookieValue(request);
+  const token = cookieValue(request, env);
   if (!token || !/^[0-9a-f]{64}$/.test(token)) return null;
   const tokenHash = await sha256(token);
   const row = await env.TV_DB.prepare(`SELECT s.token_hash,s.user_id,u.username,u.display_name

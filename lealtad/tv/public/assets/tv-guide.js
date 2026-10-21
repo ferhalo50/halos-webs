@@ -3,6 +3,8 @@
 
   const guides = {
     viewer: ['Guía de Renace Café TV', [
+      ['Configura esta pantalla', 'Elige Automática, Horizontal o Vertical en la página principal. Si la TV está de lado, usa el giro de 90°. Se guarda únicamente en este navegador; no cambia las otras pantallas.'],
+      ['Duración de fotografías', 'En la página principal, pulsa “Editar duraciones” e inicia sesión como administrador. Guarda entre 1 y 300 segundos por foto. Las pantallas conectadas consultan cambios cada 30 segundos; una foto en curso termina con su tiempo anterior. Los videos se reproducen completos.'],
       ['Selecciona el contenido', 'Elige una o varias tarjetas de la biblioteca. Usa “Seleccionar todo” para marcar la lista completa y “Limpiar selección” para empezar de nuevo.'],
       ['Reproduce fotos y videos', 'Pulsa “Reproducir selección” para mostrar solamente lo elegido o “Reproducir todo” para usar la biblioteca activa completa. Las fotos avanzan automáticamente y cada video se reproduce completo.'],
       ['Actualiza la biblioteca', 'Pulsa “Actualizar contenido” después de hacer cambios en el administrador. La pantalla conservará las selecciones que todavía existan y mostrará la nueva biblioteca sin recargar toda la página.'],

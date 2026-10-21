@@ -9,6 +9,7 @@ import {
 import { safeStorageKey, storageState, validateUploadMetadata, verifyFileSignature, verifySignatureBytes } from '../worker/admin-media.js';
 import { upload } from '../worker/admin.js';
 import { handlePlaylist, objectResponse, parseRange } from '../worker/media.js';
+import { fixtureDb } from './fixtures.mjs';
 
 const origin = 'https://renacecafetv.haloswebs.com';
 const legacy = JSON.parse(await readFile(new URL('../public/media.json', import.meta.url)));
@@ -106,29 +107,7 @@ test('validación backend cubre formatos, firmas, tamaño, cuota y claves segura
 });
 
 class UploadDb {
-  constructor({ failBatch=false }={}) { this.failBatch=failBatch; this.used=0; this.limit=5_000_000_000; this.rows=[]; }
-  prepare(sql) {
-    const db=this;
-    const first=async () => {
-      if(sql.includes('FROM settings')) return {storage_limit_bytes:db.limit,used_bytes:db.used};
-      throw new Error(`Consulta first no simulada: ${sql}`);
-    };
-    return { first, bind(...args) { return {
-      async first() {
-        if(sql.includes('FROM settings')) return {storage_limit_bytes:db.limit,used_bytes:db.used};
-        throw new Error(`Consulta first no simulada: ${sql}`);
-      },
-      async run() {
-        if(sql.startsWith('INSERT INTO audit_log')) return {meta:{changes:1}};
-        throw new Error(`Consulta run no simulada: ${sql}`);
-      },
-    }; } };
-  }
-  async batch(statements) {
-    if(this.failBatch) throw new Error('D1 no disponible');
-    this.rows.push(statements);
-    return [{meta:{changes:1}},{meta:{changes:1}}];
-  }
+  constructor(options) { return fixtureDb(options); }
 }
 
 function uploadRequest(bytes, filename='captura.jpg', type='application/octet-stream') {
@@ -153,6 +132,7 @@ test('subida mantiene compatibilidad multipart y devuelve errores humanos de R2 
   const bucket={
     async put(key,stream,options){stored.push({key,bytes:new Uint8Array(await new Response(stream).arrayBuffer()),options});},
     async delete(key){stored.push({deleted:key});},
+    async head(key){const row=stored.find(x=>x.key===key);return row?{size:row.bytes.length}:null;},
   };
   const db=new UploadDb();
   const response=await upload(uploadRequest(bytes),{TV_DB:db,MEDIA_BUCKET:bucket,TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
@@ -162,12 +142,12 @@ test('subida mantiene compatibilidad multipart y devuelve errores humanos de R2 
   assert.deepEqual([...stored[0].bytes],bytes);
   assert.equal(stored[0].options.httpMetadata.contentType,'image/jpeg');
 
-  const r2Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb(),MEDIA_BUCKET:{async put(){throw new Error('R2 no disponible');}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  const r2Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb(),MEDIA_BUCKET:{async put(){throw new Error('R2 no disponible');},async delete(){},async head(){return null;}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
   assert.equal(r2Failure.status,503);
   assert.equal((await r2Failure.json()).error,'No se pudo guardar el archivo. Intenta nuevamente.');
 
   let cleaned=false;
-  const d1Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb({failBatch:true}),MEDIA_BUCKET:{async put(){},async delete(){cleaned=true;}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
+  const d1Failure=await upload(uploadRequest(bytes),{TV_DB:new UploadDb({failBatch:true}),MEDIA_BUCKET:{async put(streamKey,stream){await new Response(stream).arrayBuffer();},async head(){return cleaned?null:{size:bytes.length};},async delete(){cleaned=true;}},TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
   assert.equal(d1Failure.status,503);
   assert.equal((await d1Failure.json()).error,'No se pudo registrar el contenido. Intenta nuevamente.');
   assert.equal(cleaned,true);
@@ -179,6 +159,7 @@ test('subida binaria directa conserva bytes y nombre sin depender de FormData', 
   const bucket={
     async put(key,stream,options){stored.push({key,bytes:new Uint8Array(await new Response(stream).arrayBuffer()),options});},
     async delete(){},
+    async head(key){const row=stored.find(x=>x.key===key);return row?{size:row.bytes.length}:null;},
   };
   const response=await upload(rawUploadRequest(bytes),{TV_DB:new UploadDb(),MEDIA_BUCKET:bucket,TV_MAX_UPLOAD_BYTES:'95000000'},{user_id:'admin'});
   assert.equal(response.status,201);

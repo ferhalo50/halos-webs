@@ -1,9 +1,11 @@
+import { formatBytes, renderStorage } from '../assets/storage-view.js';
 const byId = id => document.getElementById(id);
 const loginPanel = byId('login-panel');
 const dashboard = byId('dashboard');
 const loginMessage = byId('login-message');
 const uploadMessage = byId('upload-message');
 let items = [];
+let storageRefreshing = false, uploading = false;
 
 async function api(path, options = {}) {
   const response = await fetch(`/admin/api/${path}`, { credentials: 'same-origin', cache: 'no-store', ...options });
@@ -22,16 +24,6 @@ function showLogin(message = '') {
   dashboard.hidden = true;
   byId('logout').hidden = true;
   loginMessage.textContent = message;
-}
-
-function formatBytes(bytes) {
-  if (!Number.isFinite(bytes)) return 'Tamaño no disponible';
-  if (bytes < 1000) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
-  let value = bytes / 1000;
-  let unit = units[0];
-  for (let index = 1; index < units.length && value >= 1000; index++) { value /= 1000; unit = units[index]; }
-  return `${value.toLocaleString('es-MX', { maximumFractionDigits: 1 })} ${unit}`;
 }
 
 function uploadRequest(file, onProgress) {
@@ -62,14 +54,14 @@ function uploadRequest(file, onProgress) {
 }
 
 function storageView(storage) {
-  const panel = byId('storage-panel');
-  const percent = storage.percent ?? 0;
-  panel.classList.remove('warning', 'critical', 'full');
-  if (!['normal', 'unconfigured'].includes(storage.state)) panel.classList.add(storage.state);
-  byId('storage-bar').style.width = `${percent}%`;
-  byId('storage-track').setAttribute('aria-valuenow', String(percent));
-  byId('storage-summary').textContent = storage.limitBytes ? `${formatBytes(storage.usedBytes)} de ${formatBytes(storage.limitBytes)}` : 'Límite por configurar';
-  byId('storage-detail').textContent = storage.limitBytes ? `${percent}% utilizado` : 'Las subidas están bloqueadas hasta establecer un límite.';
+  renderStorage(byId('storage-panel'),storage);
+}
+async function refreshStorage() {
+  if(storageRefreshing||dashboard.hidden||!navigator.onLine)return;
+  storageRefreshing=true;
+  try {storageView(await api('storage'));}
+  catch {byId('storage-detail').textContent='No se pudo actualizar. La última lectura puede haber cambiado.';}
+  finally {storageRefreshing=false;}
 }
 
 function element(tag, className, text) {
@@ -173,6 +165,7 @@ byId('upload-button').addEventListener('click', async () => {
   const file = byId('upload-file').files?.[0]; if (!file) return;
   const button = byId('upload-button'); if (button.disabled) return;
   button.disabled = true; button.textContent = 'Subiendo…'; uploadMessage.textContent = 'Subiendo contenido…';
+  uploading = true;
   try {
     await uploadRequest(file, percent => { uploadMessage.textContent = `Subiendo… ${percent}%`; });
     byId('upload-file').value = ''; uploadMessage.textContent = 'Contenido subido correctamente.'; await loadDashboard();
@@ -180,7 +173,7 @@ byId('upload-button').addEventListener('click', async () => {
     const detail = typeof error?.message === 'string' ? error.message.trim() : '';
     uploadMessage.textContent = detail && !/^(failed to fetch|typeerror|null|undefined|\[object Object\])$/i.test(detail) ? detail : 'No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
     button.disabled = false;
-  } finally { button.textContent = 'Subir contenido'; }
+  } finally { uploading=false;button.textContent = 'Subir contenido';await refreshStorage(); }
 });
 
 byId('password-form').addEventListener('submit', async event => {
@@ -195,3 +188,6 @@ byId('password-form').addEventListener('submit', async event => {
 });
 
 api('session').then(loadDashboard).catch(() => showLogin());
+setInterval(()=>{if(!document.hidden&&!uploading)refreshStorage();},30000);
+window.addEventListener('online',refreshStorage);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshStorage();});

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/assets/tv.css">
   <link rel="stylesheet" href="/assets/tv-guide.css">
 </head>
-<body>
+<body data-tv-site="renace">
   <div class="ambient ambient-one" aria-hidden="true"></div>
   <div class="ambient ambient-two" aria-hidden="true"></div>
 
@@ -38,6 +38,48 @@
         <h1 id="page-title">Tu momento favorito<br>empieza con <em>café.</em></h1>
       </div>
       <p class="hero-note">Elige el contenido y déjalo listo para reproducirse durante el servicio.</p>
+    </section>
+
+    <section class="tv-settings" aria-label="Configuración de pantalla y fotografías">
+      <section class="settings-card" id="screen-settings" aria-labelledby="orientation-title">
+        <p class="eyebrow">Solo en esta pantalla</p>
+        <h2 id="orientation-title">Orientación de pantalla</h2>
+        <div class="segmented" role="group" aria-label="Orientación">
+          <button type="button" data-orientation="auto" aria-pressed="true">◈ Automática</button>
+          <button type="button" data-orientation="horizontal" aria-pressed="false">▭ Horizontal</button>
+          <button type="button" data-orientation="vertical" aria-pressed="false">▯ Vertical</button>
+        </div>
+        <p class="setting-label">Giro del contenido</p>
+        <div class="segmented" role="group" aria-label="Giro del contenido">
+          <button type="button" data-rotation="0" aria-pressed="true">Sin giro</button>
+          <button type="button" data-rotation="90" aria-pressed="false">↻ 90° derecha</button>
+          <button type="button" data-rotation="-90" aria-pressed="false">↺ 90° izquierda</button>
+        </div>
+        <p class="settings-help">Automática aprovecha el espacio disponible. Horizontal y vertical encuadran sin deformar. Usa el giro si la TV está instalada de lado; no cambia la señal HDMI.</p>
+      </section>
+      <section class="settings-card" aria-labelledby="duration-title">
+        <p class="eyebrow">Compartido entre las pantallas del café</p>
+        <h2 id="duration-title">Duración de fotografías</h2>
+        <p class="settings-help">Entre 1 y 300 segundos por foto. Los videos se reproducen completos.</p>
+        <div class="duration-actions">
+          <button class="button button-secondary" id="edit-durations" type="button">Editar duraciones</button>
+          <button class="button button-quiet" id="close-durations" type="button" hidden>Cerrar edición</button>
+        </div>
+        <form id="duration-login" class="duration-login" hidden>
+          <p>Inicia sesión con la cuenta administrativa de este sistema de TV.</p>
+          <label for="duration-user">Usuario</label><input id="duration-user" name="username" autocomplete="username" required maxlength="64">
+          <label for="duration-password">Contraseña</label><input id="duration-password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+          <button class="button button-primary" type="submit">Entrar y editar</button>
+        </form>
+        <p id="duration-message" role="status" aria-live="polite"></p>
+        <div id="photo-durations"></div>
+      </section>
+    </section>
+
+    <section class="storage-compact" id="home-storage" aria-label="Almacenamiento de esta cafetería">
+      <div><strong>Almacenamiento multimedia</strong><span data-storage-summary>Cargando almacenamiento…</span></div>
+      <div class="storage-track" role="progressbar" aria-label="Espacio utilizado" aria-valuemin="0" aria-valuemax="100"><span data-storage-bar></span></div>
+      <small data-storage-detail>Capacidad independiente de esta cafetería · 1 GB = 1.000.000.000 bytes.</small>
     </section>
 
     <section class="control-panel" aria-label="Controles de reproducción">

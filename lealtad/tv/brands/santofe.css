@@ -1,0 +1,11 @@
+/* Santofé's original palette and logo; overrides apply only to its build. */
+:root { --cream:#e7ebdc; --paper:#f7f8f2; --paper-soft:#f7f8f2; --ink:#58464d; --olive:#6f5e62; --olive-deep:#58464d; --sage:#8e7d81; --line:rgba(88,70,77,.18); --line-strong:rgba(88,70,77,.35); color:#58464d; background:#e7ebdc; }
+body { background:linear-gradient(180deg,#f7f8f2,#e7ebdc); color:#58464d; }
+.brand-logo,.brand img { width:85px; height:85px; object-fit:contain; filter:none; }
+.brand-tv,.button-primary,.primary { background:#6f5e62; border-color:#6f5e62; }
+.brand,.eyebrow,.phase-label,.text-button,h1,h2,.panel p { color:#58464d; }
+.panel { background:#f7f8f2; border-color:#d1d1c7; }
+.brand span { color:#58464d; border-color:#c9c2c5; }
+.brand-tv { color:white!important; }
+.presentation,.media-stage { background:black; }
+.media-thumb .fallback-art { background:radial-gradient(ellipse at top,#8e7d81,#58464d); }

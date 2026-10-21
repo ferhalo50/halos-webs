@@ -6,8 +6,11 @@
     "dev": "wrangler dev --local --port 8790",
     "deploy": "wrangler deploy",
     "migrate:media": "node scripts/migrate-media.mjs",
-    "check": "node --check worker/index.js && node --check worker/admin.js && node --check worker/admin-auth.js && node --check worker/admin-media.js && node --check worker/media.js && node --check public/admin/admin.js && node --check public/assets/tv.js && node --check public/assets/tv-guide.js && node --check public/service-worker.js && node --check scripts/migrate-media.mjs && node --check scripts/local-smoke.mjs && node --check scripts/verify-r2-preview.mjs && node --check scripts/bootstrap-production.mjs",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "build:santofe": "node scripts/build-tv.mjs santofe",
+    "demo:renace": "node scripts/demo-local.mjs renace start",
+    "demo:santofe": "node scripts/demo-local.mjs santofe start"
   },
   "devDependencies": {
     "wrangler": "4.131.1"

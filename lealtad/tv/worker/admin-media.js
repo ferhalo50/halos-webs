@@ -5,21 +5,11 @@ const FORMATS = Object.freeze({
   '.webp': { type: 'image', mime: 'image/webp' },
   '.mp4': { type: 'video', mime: 'video/mp4' },
 });
+export { storageState, storageSummary } from './storage.js';
 
 export function configuredUploadMax(env) {
   const value = Number(env.TV_MAX_UPLOAD_BYTES);
   return Number.isSafeInteger(value) && value > 0 ? value : 95_000_000;
-}
-
-export function storageState(usedBytes, limitBytes) {
-  const percent = limitBytes > 0 ? Math.min(100, Math.round(usedBytes / limitBytes * 100)) : null;
-  const state = percent === null ? 'unconfigured' : percent >= 100 ? 'full' : percent >= 90 ? 'critical' : percent >= 80 ? 'warning' : 'normal';
-  return { usedBytes, limitBytes, percent, state };
-}
-
-export async function storageSummary(env) {
-  const row = await env.TV_DB.prepare('SELECT storage_limit_bytes,used_bytes FROM settings WHERE id=\'main\'').first();
-  return row ? storageState(Number(row.used_bytes), Number(row.storage_limit_bytes)) : storageState(0, 0);
 }
 
 export function validateUploadMetadata(file, storage, maxUploadBytes) {
@@ -34,7 +24,7 @@ export function validateUploadMetadata(file, storage, maxUploadBytes) {
   if (!Number.isSafeInteger(size) || size <= 0) return { valid: false, status: 400, message: 'El archivo debe tener un tamaño válido.' };
   if (size > maxUploadBytes) return { valid: false, status: 413, message: 'El archivo supera el tamaño máximo permitido.' };
   if (!storage.limitBytes) return { valid: false, status: 503, message: 'El límite de almacenamiento aún no está configurado.' };
-  if (storage.usedBytes + size > storage.limitBytes) return { valid: false, status: 413, message: 'No hay espacio suficiente para este archivo.' };
+  if (storage.usedBytes + (storage.reservedBytes || 0) + size > storage.limitBytes) return { valid: false, status: 413, message: `Espacio insuficiente. Tienes ${Math.max(0,(storage.limitBytes-storage.usedBytes-(storage.reservedBytes||0))/1000000).toLocaleString('es-MX',{maximumFractionDigits:1})} MB disponibles de tu almacenamiento de ${(storage.limitBytes/1000000000).toLocaleString('es-MX')} GB.` };
   return { valid: true, type: format.type, mime: format.mime, declaredMime: mime, extension, size, message: 'Formato y tamaño aceptados.' };
 }
 
@@ -57,7 +47,7 @@ export function safeStorageKey(id, extension) {
 }
 
 export async function listMedia(env) {
-  const result = await env.TV_DB.prepare(`SELECT id,original_filename,display_name,media_type,mime_type,size_bytes,active,sort_order,created_at
+  const result = await env.TV_DB.prepare(`SELECT *
     FROM media WHERE deleting=0 ORDER BY sort_order,created_at,id`).all();
   return (result.results || []).map(row => ({
     id: row.id,
@@ -68,7 +58,9 @@ export async function listMedia(env) {
     sizeBytes: Number(row.size_bytes),
     active: Boolean(row.active),
     order: Number(row.sort_order),
-    origin: 'Renace',
+    origin: env.TV_SITE === 'santofe' ? 'Santofé' : 'Renace',
+    durationSeconds: row.media_type === 'image' ? row.duration_seconds ?? null : null,
+    durationRevision: Number(row.duration_revision) || 0,
     source: `/media/item/${encodeURIComponent(row.id)}`,
     preview: `/admin/api/media/${encodeURIComponent(row.id)}`,
   }));
