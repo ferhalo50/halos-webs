@@ -3,6 +3,8 @@
   const STORAGE_KEY='loyalty-language';
   const originals=new WeakMap(),attributeOriginals=new WeakMap();
   const exact={
+    'Nueva atención':'Next customer','Listo para la siguiente atención.':'Ready for the next customer.',
+    '¿Iniciar una nueva atención? La cantidad seleccionada todavía no se ha registrado.':'Start with a new customer? The selected quantity has not been recorded.',
     'Cargando tu tarjeta…':'Loading your card…',
     'Cerrando sesión…':'Signing out…',
     'No pudimos confirmar el cierre de sesión.':'We could not confirm sign-out.',

@@ -64,7 +64,14 @@ test('Frontend maintenance preserves sessions/forms and protected route on start
  await page.waitForSelector('[data-logout-state]',{state:'detached'});await page.waitForFunction(()=>!document.querySelector('#logout').disabled);
  assert.equal(new URL(page.url()).hash,'#tarjeta');assert.equal(await page.locator('#card-link').isVisible(),true);assert.equal((await context.cookies()).find(c=>c.name===name)?.value,value);
  await page.unroute('**/api/logout');
- mode='OFF';await page.click('#maintenance-retry');await page.waitForSelector('#qr svg',{state:'attached'});assert.equal(await page.locator('[data-maintenance]').count(),0);
+ // Logout refusal restores the existing QR. Its presence cannot signal retry completion.
+ let releaseRetry,retryStarted;const retryResponse=new Promise(resolve=>releaseRetry=resolve),retryRequest=new Promise(resolve=>retryStarted=resolve);
+ await page.route('**/api/me',async route=>{const response=await route.fetch();retryStarted();await retryResponse;await route.fulfill({response});});
+ mode='OFF';
+ try{await page.click('#maintenance-retry');await retryRequest;assert.equal(await page.locator('#qr svg').count(),1);assert.equal(await page.locator('[data-maintenance]').count(),1,'the retained QR is still present before recovery finishes');}
+ finally{releaseRetry();}
+ await page.waitForSelector('[data-maintenance]',{state:'detached'});await page.waitForSelector('#qr svg',{state:'attached'});assert.equal(await page.locator('[data-maintenance]').count(),0);
+ await page.unroute('**/api/me');
  // Register/login keep typed fields, report maintenance rather than invalid credentials.
  mode='ON';await page.goto(base+'/?auth-test#registro');await page.waitForSelector('#auth-form');await page.fill('[name="name"]','Local test');await page.fill('[name="login"]','0000088888');await page.fill('[name="secret"]','4826');await page.evaluate(()=>window.LoyaltyI18n.set('en'));await page.click('#auth-form button');await page.waitForFunction(m=>document.querySelector('#error')?.textContent===m,english);await page.evaluate(()=>window.LoyaltyI18n.set('es'));assert.equal(await page.locator('#error').innerText(),message);assert.equal(await page.inputValue('[name="login"]'),'0000088888');assert.equal((await context.cookies()).find(c=>c.name===name)?.value,value);
  for(const [role,route]of [['staff','empleado'],['admin','admin']]){await context.clearCookies();const [n,v]=f[role].cookie.split('=');await context.addCookies([{name:n,value:v,url:base,secure:false}]);await page.goto(base+'/?role='+role+'#'+route);await page.waitForSelector('[data-maintenance]');assert.equal(new URL(page.url()).hash,'#'+route);mode='OFF';await page.click('#maintenance-retry');await page.waitForSelector(role==='staff'?'#lookup':'#export-events');mode='ON';const before=counter.queries;if(role==='staff'){await page.fill('#lookup input','0000080003');await page.click('#lookup button');}else await page.click('#export-events');await page.waitForSelector('[data-maintenance]');assert.equal(counter.queries,before);assert.equal((await context.cookies()).find(c=>c.name===n)?.value,v);}

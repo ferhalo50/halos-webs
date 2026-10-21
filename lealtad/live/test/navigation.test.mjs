@@ -78,7 +78,7 @@ test('shared authenticated navigation stays inside each tenant for every role',a
     for(const route of ['registro','login']){
       await publicPage.goto(tenant.base+'/#'+route);await publicPage.waitForSelector('#auth-form');
       await publicPage.locator('#auth-form input').first().focus();
-      assert.equal(await publicPage.locator('#primary-navigation').isVisible(),false);
+      assert.equal(await publicPage.locator('#primary-navigation').isVisible(),true,'input focus alone must not hide navigation');
       await publicPage.locator('#auth-form button').focus();
       await publicPage.locator('#auth-form button').scrollIntoViewIfNeeded();
       assert.equal(await publicPage.locator('#primary-navigation').isVisible(),true);
@@ -107,7 +107,7 @@ test('shared authenticated navigation stays inside each tenant for every role',a
       }
     }
     await customerPage.click('#account-link');await customerPage.waitForSelector('#secret-form');
-    await customerPage.locator('[name="currentSecret"]').focus();assert.equal(await customerPage.locator('#primary-navigation').isVisible(),false);
+    await customerPage.locator('[name="currentSecret"]').focus();assert.equal(await customerPage.locator('#primary-navigation').isVisible(),true,'credential focus must retain navigation');
     await customerPage.locator('#secret-form button').focus();assert.equal(await customerPage.locator('#primary-navigation').isVisible(),true);
     assert.equal(await customerPage.locator('#account-link').getAttribute('aria-current'),'page');
     await expectInternalHome(customerPage,tenant.base);
@@ -129,7 +129,7 @@ test('shared authenticated navigation stays inside each tenant for every role',a
       if(role==='employee'){
         await page.click('#account-link');await page.waitForSelector('#secret-form');
         await page.fill('[name="currentSecret"]','not-submitted');
-        assert.equal(await page.locator('#primary-navigation').isVisible(),false);
+        assert.equal(await page.locator('#primary-navigation').isVisible(),true,'editing must not remove the route back to Mostrador');
         await page.click('[data-language-toggle]');assert.equal(await page.inputValue('[name="currentSecret"]'),'not-submitted');await page.click('[data-language-toggle]');
         await page.locator('#secret-form button').focus();assert.equal(await page.locator('#primary-navigation').isVisible(),true);
         assert.equal(await page.locator('#account-link').getAttribute('aria-current'),'page');assert.equal(await page.locator('#counter-link').getAttribute('aria-current'),null);assert.equal(await page.locator('#counter-link').isVisible(),true);await page.click('#counter-link');await page.waitForSelector('#lookup');assert.equal(await page.locator('#counter-link').getAttribute('aria-current'),'page');

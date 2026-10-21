@@ -703,10 +703,8 @@ html[data-tenant] body>header .loyalty-menu-toggle{display:none!important}
  html[data-tenant="santofe"] body>header nav a[aria-current="page"]{color:#58464d;background:#6f5e620b;border-radius:4px}
  html[data-tenant] #toast{bottom:calc(var(--bottom-navigation-space) + 16px)}
  html[data-tenant] main input,html[data-tenant] main textarea,html[data-tenant] main select,html[data-tenant] main button{scroll-margin-block:20px calc(var(--bottom-navigation-space) + 20px)}
- /* Deterministic editing state, without guessing keyboard height. Keep reserved space to prevent jumps. */
- @supports selector(body:has(input:focus)){
-  html[data-tenant] body:has(main input:not([type="checkbox"]):not([type="radio"]):focus,main textarea:focus,main select:focus) #primary-navigation{visibility:hidden;pointer-events:none}
- }
+ /* Focus can outlive the software keyboard. Keep navigation available;
+    native viewport resizing/occlusion handles the keyboard without a sticky hidden state. */
 }
 
 /* Physical paper passes: the public preview and the customer's front share the same layout. */
@@ -872,4 +870,103 @@ html[data-tenant="mooncoffee"] #toast{
 }
 @media(max-width:1000px){
  html[data-tenant="mooncoffee"] #toast{bottom:calc(var(--bottom-navigation-space) + 80px)}
+}
+
+/* Counter-only workspace: a compact operational preview, never the public card. */
+html[data-tenant] body[data-route="empleado"] main{max-width:1440px;padding-top:16px;padding-bottom:16px}
+html[data-tenant] body[data-route="empleado"] .staff-heading{margin:0 0 14px;padding:0;align-items:center}
+html[data-tenant] body[data-route="empleado"] .staff-heading .eyebrow{margin:0 0 4px;font-size:10px}
+html[data-tenant] body[data-route="empleado"] .staff-heading .page-title{font-size:30px;line-height:1.15;letter-spacing:-.7px;margin:0}
+html[data-tenant] body[data-route="empleado"] .staff-heading .muted,
+html[data-tenant] body[data-route="empleado"] .staff-badge{display:none}
+html[data-tenant] body[data-route="empleado"] main>.help-actions{margin:0 0 14px;gap:8px}
+html[data-tenant] body[data-route="empleado"] main>.help-actions button{min-height:44px;padding:9px 14px;font-size:12px}
+html[data-tenant] body[data-route="empleado"] .staff-dashboard{gap:16px;align-items:start}
+html[data-tenant] body[data-route="empleado"] .scan-panel{padding:16px;border-radius:18px}
+html[data-tenant] body[data-route="empleado"] .scan-panel .section-row{display:flex;margin:0;gap:8px}
+html[data-tenant] body[data-route="empleado"] .scan-panel .eyebrow{font-size:9px;line-height:1.4;margin:0 0 4px}
+html[data-tenant] body[data-route="empleado"] .scan-panel h2{font-size:22px;line-height:1.2;margin:0}
+html[data-tenant] body[data-route="empleado"] .scan-symbol{display:none}
+html[data-tenant] body[data-route="empleado"] .scan-panel>.muted{font-size:12px;line-height:1.45;margin:8px 0 12px}
+html[data-tenant] body[data-route="empleado"] .scanner-shell{height:clamp(120px,21dvh,180px);aspect-ratio:auto;border-width:3px;border-radius:14px;box-shadow:none}
+html[data-tenant] body[data-route="empleado"] .camera-placeholder{padding:10px;gap:5px}
+html[data-tenant] body[data-route="empleado"] .camera-placeholder img{width:34px;height:34px}
+html[data-tenant] body[data-route="empleado"] .camera-placeholder strong{font-size:17px;line-height:1.25}
+html[data-tenant] body[data-route="empleado"] .camera-placeholder span{font-size:11px}
+html[data-tenant] body[data-route="empleado"] .scanner-actions{margin:10px 0 0;gap:8px}
+html[data-tenant] body[data-route="empleado"] .scanner-actions button{min-height:44px;padding:9px 12px}
+html[data-tenant] body[data-route="empleado"] .lookup-divider{margin:12px 0 8px;font-size:9px}
+html[data-tenant] body[data-route="empleado"] #lookup label{font-size:12px;margin:0}
+html[data-tenant] body[data-route="empleado"] #lookup input{min-height:44px;margin-top:4px;padding:10px 12px;font-size:16px}
+html[data-tenant] body[data-route="empleado"] #lookup button{min-height:44px;margin-top:10px;padding:9px 12px}
+html[data-tenant] body[data-route="empleado"] .counter-workspace{min-width:0}
+html[data-tenant] body[data-route="empleado"] .counter-workspace>.sync-status{margin:0 0 6px;font-size:11px;line-height:1.4;min-height:0}
+html[data-tenant] body[data-route="empleado"] .counter-workspace>.sync-status:empty{display:none}
+html[data-tenant] body[data-route="empleado"] #staff-card{position:static;min-width:0}
+.counter-card-preview{padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff9;color:var(--ink)}
+.counter-card-preview[data-goal="8"]{--counter-goal:8}
+.counter-card-preview[data-goal="9"]{--counter-goal:9}
+.counter-card-preview[data-goal="10"]{--counter-goal:10}
+.counter-card-top{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center}
+.counter-brand{display:block;width:40px;height:40px;object-fit:contain}
+.counter-client{display:grid;gap:2px;min-width:0}
+.counter-client small{font-size:10px;color:var(--muted)}
+.counter-client strong{font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+html[data-tenant] #staff-card #new-attention{min-height:44px;padding:9px 12px;font-size:12px;white-space:nowrap}
+.counter-card-progress{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:14px;margin-top:10px}
+.counter-card-progress>strong{display:grid;font-size:17px;line-height:1.25;white-space:nowrap}
+.counter-card-progress>strong>span{font-size:11px;color:var(--muted);font-weight:500}
+html[data-tenant] body[data-route="empleado"] #staff-card .counter-card-preview .stamps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));justify-items:center;gap:5px;margin:0}
+html[data-tenant] body[data-route="empleado"] #staff-card .counter-card-preview .stamp{width:28px;height:28px;min-height:0;aspect-ratio:1;padding:1px;font-size:11px;border-width:1px;animation:none}
+html[data-tenant="mooncoffee"] .counter-card-preview{background:#101722;color:#f7f0e2;border-color:#d2a25350}
+html[data-tenant="mooncoffee"] .counter-card-preview small,
+html[data-tenant="mooncoffee"] .counter-card-progress>strong>span{color:#c7bba8}
+html[data-tenant="santofe"] .counter-card-preview{background:#f7f8f2;border-color:#c9ccbf;color:#58464d}
+html[data-tenant="vainillacoffee"] .counter-card-preview{background:#fffaf0;color:#502810}
+html[data-tenant] body[data-route="empleado"] #staff-card .customer-summary{gap:8px;padding:9px 12px;margin:8px 0;border-radius:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+html[data-tenant] body[data-route="empleado"] #staff-card .customer-summary span{font-size:10px;line-height:1.4}
+html[data-tenant] body[data-route="empleado"] #staff-card .customer-summary strong{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-balance{padding:8px 12px;margin:8px 0;gap:10px;min-height:48px;border-radius:12px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-balance strong{font-size:16px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-balance button{min-height:44px;padding:9px 12px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-decision{margin:8px 0;padding:12px;border-radius:12px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-decision .section-row{margin:0}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-decision p{margin:5px 0;font-size:12px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-decision .actions{margin:8px 0 0;gap:8px}
+html[data-tenant] body[data-route="empleado"] #staff-card .reward-decision button{min-height:44px;padding:9px 12px}
+html[data-tenant] body[data-route="empleado"] #staff-card .stamp-quantity{margin:8px 0;padding:12px;gap:8px 12px;border-radius:12px;grid-template-columns:minmax(0,1fr) auto}
+html[data-tenant] body[data-route="empleado"] #stamp-quantity-label{font-size:13px}
+html[data-tenant] body[data-route="empleado"] .stamp-quantity small{font-size:11px;line-height:1.4}
+html[data-tenant] body[data-route="empleado"] .quantity-stepper{grid-template-columns:44px 48px 44px;gap:6px}
+html[data-tenant] body[data-route="empleado"] .quantity-stepper button{min-width:44px;min-height:44px;font-size:22px}
+html[data-tenant] body[data-route="empleado"] .quantity-stepper output{min-height:44px;font-size:20px}
+html[data-tenant] body[data-route="empleado"] #staff-card .stamp-quantity #stamp-operation{padding:8px 10px;margin:0;font-size:11.5px;line-height:1.45}
+html[data-tenant] body[data-route="empleado"] #staff-card>.actions{display:flex;flex-wrap:wrap;margin:8px 0;gap:8px}
+html[data-tenant] body[data-route="empleado"] #staff-card>.actions button{min-height:44px;flex:1;padding:9px 12px;font-size:13px}
+html[data-tenant] body[data-route="empleado"] #staff-card>.reward{margin:0;padding:10px 12px;font-size:12px;line-height:1.4;border-radius:12px}
+html[data-tenant] body[data-route="empleado"] .staff-empty{min-height:240px;padding:24px;border-radius:18px}
+html[data-tenant] body[data-route="empleado"] .staff-empty .empty-emblem{width:52px;height:52px;font-size:32px}
+html[data-tenant] body[data-route="empleado"] .staff-empty h2{font-size:24px;margin:16px 0 8px}
+@media(min-width:900px){
+ html[data-tenant] body[data-route="empleado"]>header{padding-block:6px;min-height:58px}
+ html[data-tenant] body[data-route="empleado"]>header .brand{width:84px!important;flex-basis:84px!important;height:46px;min-height:0;padding:0;background:transparent}
+ html[data-tenant] body[data-route="empleado"]>header .brand img{position:static;width:84px;height:46px;max-height:46px;object-fit:contain;transform:none}
+ html[data-tenant] body[data-route="empleado"] main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:start;align-items:center;gap:12px 16px;padding:12px 24px}
+ html[data-tenant] body[data-route="empleado"] main>.help-actions{grid-row:1;grid-column:2;justify-self:end;margin:0}
+ html[data-tenant] body[data-route="empleado"] .staff-heading{grid-row:1;grid-column:1;margin:0}
+ html[data-tenant] body[data-route="empleado"] .staff-dashboard{grid-column:1/-1;grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr)}
+ html[data-tenant] body[data-route="empleado"] #staff-card .counter-card-preview .stamps{grid-template-columns:repeat(var(--counter-goal),minmax(0,1fr))}
+ html[data-tenant] body[data-route="empleado"]>footer{padding-block:8px;font-size:10px}
+}
+@media(max-width:899px){
+ html[data-tenant] body[data-route="empleado"] .staff-dashboard{grid-template-columns:minmax(0,1fr)}
+ html[data-tenant] body[data-route="empleado"] .scanner-shell{height:150px}
+}
+@media(max-width:480px){
+ html[data-tenant] body[data-route="empleado"] #staff-card .customer-summary{grid-template-columns:minmax(0,1fr)}
+ html[data-tenant] body[data-route="empleado"] #staff-card .stamp-quantity{grid-template-columns:minmax(0,1fr)}
+ .counter-card-top{grid-template-columns:32px minmax(0,1fr) auto;gap:8px}
+ .counter-brand{width:32px;height:32px}
+ .counter-client strong{font-size:15px}
+ html[data-tenant] #staff-card #new-attention{padding-inline:8px;font-size:11px}
 }
