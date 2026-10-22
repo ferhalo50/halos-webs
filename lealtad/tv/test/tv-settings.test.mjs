@@ -1,3 +1,4 @@
+import {localTvUrl} from './fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -10,12 +11,12 @@ for(const engine of ['chromium','webkit']) for(const site of ['renace','santofe'
     const browser=await (engine==='chromium'?chromium:webkit).launch({headless:true,...(engine==='chromium'?{channel:'msedge'}:{})});t.after(()=>browser.close());
     const context=await browser.newContext({serviceWorkers:'block'}),page=await context.newPage(), errors=[];
     page.on('pageerror',e=>errors.push(e.message));
-    const base=`http://127.0.0.1:${site==='renace'?8791:8792}`;
+    const base=localTvUrl(site);
     await page.goto(base); await page.waitForSelector('.media-card');
     assert.equal(await page.locator('body').getAttribute('data-tv-site'),site);
     assert.equal(await page.locator('.brand-logo').getAttribute('src'),`/media/images/logo-${site}.png`);
-    assert.equal(await page.locator('#photo-durations input:disabled').count(),2);
-    assert.equal(await page.locator('#photo-durations').getByText('Video').count(),0);
+    assert.equal(await page.locator('#photo-durations,#duration-login,#edit-durations').count(),0);
+    assert.equal(await page.getByRole('link',{name:'Administrar',exact:true}).getAttribute('href'),'/admin');
     for(const [width,height] of sizes) {
       await page.setViewportSize({width,height});
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`${width}x${height}`);
@@ -55,32 +56,31 @@ for(const engine of ['chromium','webkit']) for(const site of ['renace','santofe'
   });
 }
 
-test('main-page authorized duration edit persists, conflicts safely, syncs another TV; sessions separate',async t=>{
+test('admin duration edit persists, conflicts safely, syncs public TV; sessions separate',async t=>{
   const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());
   const context=await browser.newContext({serviceWorkers:'block'}),page=await context.newPage(),other=await context.newPage();
-  const base='http://127.0.0.1:8792';await page.goto(base);await page.waitForSelector('.media-card');await other.goto(base);await other.waitForSelector('.media-card');
-  await page.click('#edit-durations');await page.waitForSelector('#duration-login:not([hidden])');
-  await page.fill('#duration-user','demo_santofe');await page.fill('#duration-password','Demo-santofe-TV-2026!');await page.click('#duration-login button');
-  await page.waitForSelector('#photo-durations button');
-  const row=page.locator('.duration-row').first();await row.locator('input').fill('8');await row.getByRole('button',{name:'Guardar'}).click();
-  await page.waitForFunction(()=>document.querySelector('#duration-message').textContent.startsWith('Guardado:'));
+  const base=localTvUrl('santofe');await page.goto(base);await page.waitForSelector('.media-card');await other.goto(base);await other.waitForSelector('.media-card');
+  await page.getByRole('link',{name:'Administrar',exact:true}).click();
+  await page.fill('#username','demo_santofe');await page.fill('#password','Demo-santofe-TV-2026!');await page.click('#login-form button');
+  await page.waitForSelector('.photo-duration-editor');
+  const row=page.locator('.photo-duration-editor').first();await row.locator('input').fill('8');await row.getByRole('button',{name:'Guardar'}).click();
+  await row.locator('.duration-message').filter({hasText:'Guardado.'}).waitFor();
   const content=await (await context.request.get(`${base}/admin/api/content`)).json();
   const photo=content.items.find(x=>x.type==='image');assert.equal(photo.durationSeconds,8);
-  assert.equal((await context.request.get('http://127.0.0.1:8791/admin/api/session')).status(),401);
+  assert.equal((await context.request.get(localTvUrl('renace')+'/admin/api/session')).status(),401);
   // Real 30-second polling, no reload/manual refresh, no fake clock.
-  await other.waitForFunction(()=>document.querySelector('.duration-row input')?.value==='8',null,{timeout:35000});
-  await page.reload();await page.waitForSelector('.duration-row');assert.equal(await page.locator('.duration-row input').first().inputValue(),'8');
-  await page.click('#edit-durations');await page.waitForSelector('#photo-durations button');
+  await other.waitForFunction(id=>document.querySelector(`[data-media-id="${id}"] .media-meta`)?.textContent.includes('8 s'),photo.id,{timeout:35000});
+  await page.reload();await page.waitForSelector('.photo-duration-editor');assert.equal(await page.locator('.photo-duration-editor input').first().inputValue(),'8');
   const changed=await context.request.patch(`${base}/admin/api/content/${photo.id}/duration`,{headers:{origin:base},data:{durationSeconds:9,revision:photo.durationRevision}});assert.equal(changed.status(),200);
-  await page.locator('.duration-row input').first().fill('7');await page.locator('.duration-row button').first().click();
-  await page.waitForFunction(()=>document.querySelector('#duration-message').textContent.includes('cambió'));
+  await page.locator('.photo-duration-editor input').first().fill('7');await page.locator('.photo-duration-editor button').first().click();
+  await page.waitForFunction(()=>document.querySelector('.duration-message').textContent.includes('cambió'));
   const current=(await (await context.request.get(`${base}/admin/api/content`)).json()).items.find(x=>x.id===photo.id);assert.equal(current.durationSeconds,9);
   assert.equal((await context.request.patch(`${base}/admin/api/content/${photo.id}/duration`,{headers:{origin:base},data:{durationSeconds:10,revision:current.durationRevision}})).status(),200);
 });
 
 test('photo timers, natural video ending, live removal and out-of-order transitions remain coherent',async t=>{
   const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());
-  const page=await browser.newPage({serviceWorkers:'block'}),base='http://127.0.0.1:8791';
+  const page=await browser.newPage({serviceWorkers:'block'}),base=localTvUrl('renace');
   const config=await (await fetch(`${base}/playlist.json`)).json();
   const photo=config.items.find(x=>x.type==='image'),video=config.items.find(x=>x.type==='video');
   let next={...config,items:[{...photo,durationSeconds:1},video,{...photo,id:'second',durationSeconds:2}]};

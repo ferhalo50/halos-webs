@@ -4,15 +4,16 @@
   const guides = {
     viewer: ['Guía de Renace Café TV', [
       ['Configura esta pantalla', 'Elige Automática, Horizontal o Vertical en la página principal. Si la TV está de lado, usa el giro de 90°. Se guarda únicamente en este navegador; no cambia las otras pantallas.'],
-      ['Duración de fotografías', 'En la página principal, pulsa “Editar duraciones” e inicia sesión como administrador. Guarda entre 1 y 300 segundos por foto. Las pantallas conectadas consultan cambios cada 30 segundos; una foto en curso termina con su tiempo anterior. Los videos se reproducen completos.'],
+      ['Duración de fotografías', 'Pulsa “Administrar” e inicia sesión. En cada fotografía de la biblioteca puedes guardar entre 1 y 300 segundos. Las pantallas conectadas consultan cambios cada 30 segundos; una foto en curso termina con su tiempo anterior. Los videos se reproducen completos.'],
       ['Selecciona el contenido', 'Elige una o varias tarjetas de la biblioteca. Usa “Seleccionar todo” para marcar la lista completa y “Limpiar selección” para empezar de nuevo.'],
       ['Reproduce fotos y videos', 'Pulsa “Reproducir selección” para mostrar solamente lo elegido o “Reproducir todo” para usar la biblioteca activa completa. Las fotos avanzan automáticamente y cada video se reproduce completo.'],
       ['Actualiza la biblioteca', 'Pulsa “Actualizar contenido” después de hacer cambios en el administrador. La pantalla conservará las selecciones que todavía existan y mostrará la nueva biblioteca sin recargar toda la página.'],
       ['Presentación y pantalla completa', 'Al iniciar, Renace TV intenta abrir la presentación en pantalla completa. Usa ← y → para cambiar, Atrás o Escape para salir y, en una pantalla táctil, toca dos veces. Durante la presentación solamente se muestra la foto o el video.'],
       ['Prepara contenido sin conexión', 'Selecciona contenido y pulsa “Preparar sin conexión”; si no seleccionas nada, se prepara la biblioteca completa. Espera el mensaje “Listo para usar sin conexión” antes de desconectar el dispositivo.'],
-      ['Entra al administrador', 'Pulsa “Iniciar sesión” en la parte superior para abrir el panel protegido. Ahí puedes subir, ordenar, activar o retirar contenido de la pantalla.']
+      ['Entra al administrador', 'Pulsa “Administrar” en la parte superior para abrir el panel protegido. Ahí puedes subir, ordenar, configurar duraciones, activar o retirar contenido de la pantalla.']
     ]],
     admin: ['Guía de administración', [
+      ['Duración de cada fotografía', 'En la biblioteca, cambia los segundos de una fotografía y pulsa “Guardar”. El tiempo predeterminado se conserva hasta que guardes un valor personalizado. Las pantallas se actualizan en hasta 30 segundos sin interrumpir el contenido en curso. Los videos mantienen su duración completa.'],
       ['Sube una foto o video', 'Pulsa “Seleccionar archivo”, elige el contenido y después “Subir contenido”. Mantén esta página abierta hasta que aparezca “Contenido subido correctamente”.'],
       ['Usa formatos compatibles', 'Puedes subir JPG, JPEG, PNG, WebP y MP4 de hasta 95 MB por archivo. Para una reproducción confiable en TV recomendamos video MP4 con codificación H.264. HEIC, HEIF y MOV deben convertirse antes.'],
       ['Activa o desactiva contenido', 'El contenido activo aparece en la pantalla de TV. “Desactivar” lo oculta sin borrar el archivo; puedes volver a activarlo cuando quieras. En la TV, pulsa “Actualizar contenido” para ver el cambio.'],

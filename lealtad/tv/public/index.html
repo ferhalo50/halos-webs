@@ -27,7 +27,7 @@
       </div>
       <button class="admin-link" id="refresh-content" type="button">Actualizar contenido</button>
       <button class="admin-link guide-trigger" id="tv-guide" type="button" data-tv-guide="viewer">Guía</button>
-      <a class="admin-link" href="/admin" aria-label="Iniciar sesión en el panel administrativo">Iniciar sesión</a>
+      <nav class="tv-navigation" aria-label="Navegación TV"><a class="admin-link" href="/" aria-current="page">Inicio</a><a class="admin-link" href="/admin">Administrar</a></nav>
     </div>
   </header>
 
@@ -56,23 +56,6 @@
           <button type="button" data-rotation="-90" aria-pressed="false">↺ 90° izquierda</button>
         </div>
         <p class="settings-help">Automática aprovecha el espacio disponible. Horizontal y vertical encuadran sin deformar. Usa el giro si la TV está instalada de lado; no cambia la señal HDMI.</p>
-      </section>
-      <section class="settings-card" aria-labelledby="duration-title">
-        <p class="eyebrow">Compartido entre las pantallas del café</p>
-        <h2 id="duration-title">Duración de fotografías</h2>
-        <p class="settings-help">Entre 1 y 300 segundos por foto. Los videos se reproducen completos.</p>
-        <div class="duration-actions">
-          <button class="button button-secondary" id="edit-durations" type="button">Editar duraciones</button>
-          <button class="button button-quiet" id="close-durations" type="button" hidden>Cerrar edición</button>
-        </div>
-        <form id="duration-login" class="duration-login" hidden>
-          <p>Inicia sesión con la cuenta administrativa de este sistema de TV.</p>
-          <label for="duration-user">Usuario</label><input id="duration-user" name="username" autocomplete="username" required maxlength="64">
-          <label for="duration-password">Contraseña</label><input id="duration-password" name="password" type="password" autocomplete="current-password" required maxlength="128">
-          <button class="button button-primary" type="submit">Entrar y editar</button>
-        </form>
-        <p id="duration-message" role="status" aria-live="polite"></p>
-        <div id="photo-durations"></div>
       </section>
     </section>
 

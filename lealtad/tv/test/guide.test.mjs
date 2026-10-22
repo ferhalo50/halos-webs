@@ -17,7 +17,7 @@ test('guías de pantalla y administración son accesibles, responsive y desapare
   assert.equal(await page.locator('#tv-guide').innerText(),'Guía');
   assert.ok((await page.locator('#tv-guide').boundingBox()).height>=44);
   await page.click('#tv-guide');await page.waitForSelector('dialog.tv-guide[open]');
-  assert.match(await page.locator('dialog.tv-guide').innerText(),/Selecciona el contenido[\s\S]*Actualizar contenido[\s\S]*pantalla completa[\s\S]*sin conexión[\s\S]*Iniciar sesión/i);
+  assert.match(await page.locator('dialog.tv-guide').innerText(),/Selecciona el contenido[\s\S]*Actualizar contenido[\s\S]*pantalla completa[\s\S]*sin conexión[\s\S]*Administrar/i);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.keyboard.press('Escape');await page.waitForSelector('dialog.tv-guide',{state:'detached'});
   assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-guide');

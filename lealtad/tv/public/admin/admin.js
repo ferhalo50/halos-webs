@@ -6,6 +6,7 @@ const loginMessage = byId('login-message');
 const uploadMessage = byId('upload-message');
 let items = [];
 let storageRefreshing = false, uploading = false;
+let libraryBusy = false, sessionGeneration = 0;
 
 async function api(path, options = {}) {
   const response = await fetch(`/admin/api/${path}`, { credentials: 'same-origin', cache: 'no-store', ...options });
@@ -20,6 +21,9 @@ async function api(path, options = {}) {
 }
 
 function showLogin(message = '') {
+  sessionGeneration++;
+  items = [];
+  byId('library-list').replaceChildren();
   loginPanel.hidden = false;
   dashboard.hidden = true;
   byId('logout').hidden = true;
@@ -72,11 +76,16 @@ function element(tag, className, text) {
 }
 
 async function mutate(path, options, success) {
-  try { await api(path, options); await loadDashboard(); if (success) uploadMessage.textContent = success; }
-  catch (error) { uploadMessage.textContent = error.message; }
+  if (libraryBusy) return;
+  const generation = sessionGeneration;
+  setLibraryBusy(true);
+  try { await api(path, options); if (generation !== sessionGeneration) return; await loadDashboard(); if (success) uploadMessage.textContent = success; }
+  catch (error) { if (generation === sessionGeneration) { if (error.status === 401) showLogin('La sesión terminó. Inicia sesión para continuar.'); else uploadMessage.textContent = error.message; } }
+  finally { setLibraryBusy(false); }
 }
 
 function move(id, direction) {
+  if (libraryBusy) return;
   const index = items.findIndex(item => item.id === id);
   const target = index + direction;
   if (index < 0 || target < 0 || target >= items.length) return;
@@ -93,6 +102,7 @@ function renderItem(item, index) {
   row.addEventListener('dragover', event => event.preventDefault());
   row.addEventListener('drop', event => {
     event.preventDefault();
+    if (libraryBusy) return;
     const from = items.findIndex(entry => entry.id === event.dataTransfer.getData('text/plain'));
     const to = items.findIndex(entry => entry.id === item.id);
     if (from < 0 || to < 0 || from === to) return;
@@ -107,20 +117,64 @@ function renderItem(item, index) {
   }
   const main = element('div', 'media-main');
   main.append(element('strong', '', item.name), element('small', '', `${item.type === 'image' ? 'Imagen' : 'Video'} · ${formatBytes(item.sizeBytes)}`));
+  if (item.type === 'image') main.append(durationEditor(item));
+  else main.append(element('small', 'video-duration-note', 'Se reproduce completo · duración original'));
   const status = element('div', 'media-meta');
   status.append(element('strong', '', 'Estado'), element('span', `pill ${item.active ? '' : 'inactive'}`, item.active ? 'Activo' : 'Inactivo'));
   const actions = element('div', 'row-actions');
   const toggle = element('button', '', item.active ? 'Desactivar' : 'Activar');
   toggle.type = 'button'; toggle.addEventListener('click', () => mutate(`content/${item.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !item.active }) }));
-  const up = element('button', '', '↑'); up.type = 'button'; up.title = 'Subir en el orden'; up.disabled = index === 0; up.addEventListener('click', () => move(item.id, -1));
-  const down = element('button', '', '↓'); down.type = 'button'; down.title = 'Bajar en el orden'; down.disabled = index === items.length - 1; down.addEventListener('click', () => move(item.id, 1));
+  const up = element('button', '', '↑'); up.type = 'button'; up.title = 'Subir en el orden'; up.setAttribute('aria-label', `Subir ${item.name} en el orden`); up.disabled = index === 0; up.dataset.edgeDisabled = String(up.disabled); up.addEventListener('click', () => move(item.id, -1));
+  const down = element('button', '', '↓'); down.type = 'button'; down.title = 'Bajar en el orden'; down.setAttribute('aria-label', `Bajar ${item.name} en el orden`); down.disabled = index === items.length - 1; down.dataset.edgeDisabled = String(down.disabled); down.addEventListener('click', () => move(item.id, 1));
   const remove = element('button', 'danger', 'Eliminar'); remove.type = 'button'; remove.addEventListener('click', async () => {
-    if (!confirm(`¿Eliminar “${item.name}”? Esta acción quitará el archivo de la biblioteca.`)) return;
+    if (libraryBusy || !confirm(`¿Eliminar “${item.name}”? Esta acción quitará el archivo de la biblioteca.`)) return;
     await mutate(`content/${item.id}`, { method: 'DELETE' });
   });
   actions.append(toggle, up, down, remove);
   row.append(preview, main, status, actions);
   return row;
+}
+
+function setLibraryBusy(busy) {
+  libraryBusy = busy;
+  byId('library-list').setAttribute('aria-busy', String(busy));
+  byId('library-list').querySelectorAll('button,input').forEach(node => { node.disabled = busy || node.dataset.edgeDisabled === 'true'; });
+  byId('refresh-library').disabled = busy;
+}
+
+function durationEditor(item) {
+  const form = element('form', 'photo-duration-editor'); form.noValidate = true;
+  const label = element('label', '', 'Duración de esta fotografía');
+  const input = document.createElement('input'); input.id = `duration-${item.id}`;
+  input.type = 'number'; input.inputMode = 'numeric'; input.min = '1'; input.max = '300'; input.step = '1'; input.required = true;
+  input.value = String(item.durationSeconds ?? 10); label.htmlFor = input.id;
+  const controls = element('div', 'duration-controls');
+  const save = element('button', '', 'Guardar'); save.type = 'submit';
+  const note = element('small', 'duration-current', item.durationSeconds == null ? 'Predeterminada · 10 s' : `Configurada · ${item.durationSeconds} s`);
+  const message = element('p', 'duration-message'); message.id = `${input.id}-message`; message.setAttribute('role', 'status'); message.setAttribute('aria-live', 'polite');
+  input.setAttribute('aria-describedby', message.id);
+  input.addEventListener('wheel', event => event.preventDefault(), { passive: false });
+  controls.append(input, element('span', '', 'segundos'), save);
+  form.append(label, controls, note, message);
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); if (libraryBusy || uploading) return;
+    const seconds = Number(input.value);
+    if (!input.value.trim() || !Number.isInteger(seconds) || seconds < 1 || seconds > 300) { message.textContent = 'Elige entre 1 y 300 segundos enteros.'; input.focus(); return; }
+    const generation = sessionGeneration;
+    setLibraryBusy(true); save.textContent = 'Guardando…'; message.textContent = '';
+    try {
+      const result = await api(`content/${encodeURIComponent(item.id)}/duration`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ durationSeconds: seconds, revision: item.durationRevision }) });
+      if (generation !== sessionGeneration) return;
+      item.durationSeconds = seconds; item.durationRevision = result.revision;
+      note.textContent = `Configurada · ${seconds} s`;
+      message.textContent = 'Guardado. Las pantallas se actualizan en hasta 30 segundos; el contenido en curso termina normalmente.';
+    } catch (error) {
+      if (generation !== sessionGeneration) return;
+      if (error.status === 401) showLogin('La sesión terminó. Inicia sesión para continuar.');
+      else message.textContent = error.status === 409 ? 'La fotografía cambió. Pulsa Actualizar biblioteca antes de guardar nuevamente.' : error.status ? error.message : 'Sin conexión. No se confirmó el guardado; actualiza antes de reintentar.';
+    } finally { save.textContent = 'Guardar'; setLibraryBusy(false); }
+  });
+  return form;
 }
 
 function renderLibrary() {
@@ -129,7 +183,9 @@ function renderLibrary() {
 }
 
 async function loadDashboard() {
+  const generation = sessionGeneration;
   const data = await api('content');
+  if (generation !== sessionGeneration) return;
   items = data.items;
   loginPanel.hidden = true; dashboard.hidden = false; byId('logout').hidden = false;
   byId('base-count').textContent = String(items.length);
@@ -149,8 +205,15 @@ byId('login-form').addEventListener('submit', async event => {
 });
 
 byId('logout').addEventListener('click', async () => {
+  sessionGeneration++;
   try { await api('logout', { method: 'POST' }); showLogin('Sesión cerrada.'); byId('library-list').replaceChildren(); }
   catch (error) { uploadMessage.textContent = error.message; }
+});
+
+byId('refresh-library').addEventListener('click', () => {
+  if (libraryBusy) return;
+  setLibraryBusy(true);
+  loadDashboard().catch(error => { if (error.status === 401) showLogin('La sesión terminó. Inicia sesión para continuar.'); else uploadMessage.textContent = 'No se pudo actualizar la biblioteca. Intenta nuevamente.'; }).finally(() => setLibraryBusy(false));
 });
 
 byId('upload-file').addEventListener('change', event => {
@@ -163,9 +226,10 @@ byId('upload-file').addEventListener('change', event => {
 
 byId('upload-button').addEventListener('click', async () => {
   const file = byId('upload-file').files?.[0]; if (!file) return;
-  const button = byId('upload-button'); if (button.disabled) return;
+  const button = byId('upload-button'); if (button.disabled || libraryBusy) return;
   button.disabled = true; button.textContent = 'Subiendo…'; uploadMessage.textContent = 'Subiendo contenido…';
   uploading = true;
+  setLibraryBusy(true);
   try {
     await uploadRequest(file, percent => { uploadMessage.textContent = `Subiendo… ${percent}%`; });
     byId('upload-file').value = ''; uploadMessage.textContent = 'Contenido subido correctamente.'; await loadDashboard();
@@ -173,7 +237,7 @@ byId('upload-button').addEventListener('click', async () => {
     const detail = typeof error?.message === 'string' ? error.message.trim() : '';
     uploadMessage.textContent = detail && !/^(failed to fetch|typeerror|null|undefined|\[object Object\])$/i.test(detail) ? detail : 'No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
     button.disabled = false;
-  } finally { uploading=false;button.textContent = 'Subir contenido';await refreshStorage(); }
+  } finally { uploading=false;setLibraryBusy(false);button.textContent = 'Subir contenido';await refreshStorage(); }
 });
 
 byId('password-form').addEventListener('submit', async event => {

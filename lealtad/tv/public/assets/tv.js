@@ -38,7 +38,7 @@ const state = {
   generation: 0, failed: new Set(), transitioning: false, transitionTimer: null, watchdog: null, mediaListeners: null,
   refreshing: false, refreshLabelTimer: null, syncBusy: false, playAll: false
 };
-const settings = initSettings(() => state.config, () => syncContent());
+initSettings();
 
 function showToast(message, duration = 4200) {
   clearTimeout(state.toastTimer);
@@ -157,7 +157,6 @@ function renderLibrary() {
   elements.playAll.disabled = state.config.items.length === 0;
   elements.selectAll.disabled = state.config.items.length === 0;
   updateSelection();
-  settings.render();
 }
 
 function toggleSelection(id) {

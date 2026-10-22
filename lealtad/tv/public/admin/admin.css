@@ -69,3 +69,49 @@ footer{border-top:1px solid #dcdacb;color:#7a8478;font-size:12px;padding:22px 0 
 .row-actions .danger{color:#8b2f26;border-color:#d9b6b0}
 .media-row[draggable=true]{cursor:grab}
 @media(max-width:720px){.password-panel{grid-template-columns:1fr}.row-actions{display:grid;grid-template-columns:1fr 44px 44px 1fr}.row-actions button{min-width:0}}
+
+/* Shared TV administration: touch-friendly cards, original brand palette. */
+.topbar{flex-wrap:wrap;gap:16px}.top-actions{margin-left:auto;flex-wrap:wrap;gap:16px}.text-button{min-height:44px}
+.tv-navigation{display:flex;gap:6px;flex-wrap:wrap}
+.tv-navigation a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #c7ccbe;border-radius:10px;color:inherit;text-decoration:none;font-weight:700;font-size:14px}
+.tv-navigation a[aria-current=page]{background:#e8eee5;border-color:currentColor}
+a:focus-visible{outline:3px solid #83a97b;outline-offset:3px}
+.panel,.panel>*,.media-row>*{min-width:0}
+.password-panel{padding:28px 31px}
+.notice strong{white-space:normal;overflow-wrap:anywhere}
+.media-row{grid-template-columns:120px minmax(0,1fr) auto;gap:16px;padding:18px}
+.preview{width:120px;height:110px}
+.media-main strong{white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+.media-main small{display:block;line-height:1.5}
+.media-meta{align-self:start;justify-self:end}
+.row-actions{grid-column:2/-1;justify-content:flex-start;flex-wrap:wrap;gap:8px}
+.row-actions button,.duration-controls button{min-height:44px;min-width:44px;padding:10px 14px;font-size:14px;font-weight:600;color:#3f5840;border:1px solid #b8c5b2;border-radius:9px;background:#f6f8f3}
+.row-actions button:disabled{opacity:.5;cursor:not-allowed}
+.library-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.library-tools p{margin:0}
+.photo-duration-editor{gap:6px;margin-top:12px;max-width:480px}
+.photo-duration-editor label{font-size:13px;margin:0}
+.duration-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.duration-controls input{max-width:88px;min-width:64px;min-height:44px;padding:10px!important}
+.duration-controls span{font-size:13px}.duration-current{color:#626b60}
+.duration-message{margin:0;font-size:13px;line-height:1.5;color:inherit;overflow-wrap:anywhere}
+.duration-message:empty{display:none}.video-duration-note{margin-top:12px}
+.primary{background:var(--olive,#445a3e);border-color:var(--olive,#445a3e)}
+.upload-control input[type=file]::file-selector-button{background:var(--olive,#445a3e)}
+.row-actions button,.duration-controls button{color:var(--ink,#3f5840)}
+.tv-navigation a[aria-current=page]{background:var(--paper,#e8eee5)}
+.upload-control{min-width:0;flex:1;max-width:400px}.upload-panel>div:first-child{flex:1}
+#upload-message{overflow-wrap:anywhere}input[type=file]{max-width:100%;min-width:0}
+@media(max-width:720px){
+ .shell{padding:0 16px}.topbar{gap:12px}.topbar .brand img{width:128px}.top-actions{gap:14px}
+ .tv-navigation{order:3;flex-basis:100%}.tv-navigation a{flex:1}.intro{padding:28px 0 22px}h1{font-size:clamp(30px,7vw,42px)}
+ .phase-label{display:none}.upload-panel{display:block;padding:22px}.upload-control{max-width:none;margin-top:20px}
+ .media-row{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:14px}
+ .preview{width:88px;height:88px}.media-main{grid-column:2}.media-meta{grid-column:1/-1;justify-self:start;display:flex;align-items:center;gap:8px}.media-meta strong{margin:0}
+ .photo-duration-editor{grid-column:1/-1}.media-main:has(.photo-duration-editor){display:contents}
+ .media-main:has(.photo-duration-editor)>strong,.media-main:has(.photo-duration-editor)>small{grid-column:2}
+ .preview:has(img){grid-row:1/3}
+ .row-actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 44px 44px minmax(0,1fr);gap:6px}.row-actions button{padding:10px 4px;font-size:13px}
+ .section-heading{flex-wrap:wrap;align-items:center}.library-tools{justify-content:flex-start;width:100%}
+ .password-panel{padding:22px;grid-template-columns:minmax(0,1fr)}.notice{overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce){.button{transition:none}.button:not(:disabled):hover{transform:none}}

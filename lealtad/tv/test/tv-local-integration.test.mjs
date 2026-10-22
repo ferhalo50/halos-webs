@@ -1,11 +1,12 @@
+import {localTvUrl} from './fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 // These URLs are intentionally fixed to loopback. Never point this at production.
 for(const site of ['renace','santofe']) test(`${site} local D1/R2: upload, CAS concurrency, activation, order, range, deletion and isolation`,async()=>{
-  const base=`http://127.0.0.1:${site==='renace'?8791:8792}`;
-  const other=`http://127.0.0.1:${site==='renace'?8792:8791}`;
+  const base=localTvUrl(site);
+  const other=localTvUrl(site==='renace'?'santofe':'renace');
   const login=await fetch(`${base}/admin/api/login`,{method:'POST',headers:{origin:base,'content-type':'application/json'},body:JSON.stringify({username:`demo_${site}`,password:`Demo-${site}-TV-2026!`})});
   assert.equal(login.status,200);
   const cookie=login.headers.get('set-cookie').split(';')[0];

@@ -1,4 +1,4 @@
-const SHELL_CACHE = 'renace-tv-shell-1.4.0';
+const SHELL_CACHE = 'renace-tv-shell-1.4.1';
 const MEDIA_PREFIX = 'renace-tv-media-';
 const META_CACHE = 'renace-tv-state';
 const POINTER = '/__tv_offline_state__';

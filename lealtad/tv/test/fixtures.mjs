@@ -1,5 +1,11 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
+// Both modes are fixed loopback fixtures; never accept a remote test target.
+export function localTvUrl(site) {
+  if (!['renace','santofe'].includes(site)) throw new Error('Unknown local fixture');
+  const first = process.env.TV_FIXTURE_SERVER === '1' ? 18891 : 8791;
+  return `http://127.0.0.1:${first + (site === 'santofe' ? 1 : 0)}`;
+}
 export function fixtureDb({failBatch=false}={}) {
   const sqlite=new DatabaseSync(':memory:');
   for(const name of ['0001_tv_admin.sql','0002_photo_duration.sql','0003_independent_1gb.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));

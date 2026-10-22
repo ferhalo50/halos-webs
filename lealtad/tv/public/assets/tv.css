@@ -13,7 +13,7 @@
   --radius: 26px;
 }
 
-.tv-settings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin:32px 0; }
+.tv-settings { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; margin:32px 0; }
 .storage-compact { padding:18px 24px; margin:0 0 24px; border:1px solid var(--line); border-radius:18px; background:var(--paper); }
 .storage-compact>div:first-child { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:14px; }
 .storage-track { height:8px; border-radius:999px; background:var(--line); overflow:hidden; margin:12px 0 8px; }
@@ -29,7 +29,9 @@
 .segmented button { min-height:48px; padding:12px 16px; border:1px solid var(--line-strong); border-radius:12px; background:transparent; color:var(--ink); cursor:pointer; }
 .segmented button[aria-pressed=true] { background:var(--olive); color:white; border-color:var(--olive); }
 .tv-settings button:focus-visible,.tv-settings input:focus-visible { outline:3px solid var(--sage); outline-offset:3px; }
-.duration-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.tv-navigation { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.tv-navigation a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; }
+.tv-navigation a[aria-current=page] { border-color:var(--olive); }
 .duration-row { display:grid; grid-template-columns:minmax(0,1fr) 76px auto auto; align-items:center; gap:10px; padding:12px 0; border-top:1px solid var(--line); }
 .duration-row label { overflow-wrap:anywhere; font-weight:600; font-size:14px; }
 .duration-row span { font-size:12px; }
