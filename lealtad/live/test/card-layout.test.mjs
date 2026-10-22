@@ -65,7 +65,9 @@ test('customer cards keep exact rows on every requested mobile viewport',async t
         await page.screenshot({path:`${directory}/${item.slug}-cliente-${viewport.width===390?'movil':'desktop'}.png`,fullPage:true});
       }
     }
-    const dimensions=await page.evaluate(()=>{const card=document.querySelector('[data-loyalty-flip]').getBoundingClientRect(),front=document.querySelector('.loyalty-card-front,.santofe-card-front').getBoundingClientRect(),back=document.querySelector('.loyalty-card-back,.santofe-card-back').getBoundingClientRect();return {card:[Math.round(card.width),Math.round(card.height)],front:[Math.round(front.width),Math.round(front.height)],back:[Math.round(back.width),Math.round(back.height)]};});
+    // Compare layout sizes: the inactive face now rests edge-on to avoid
+    // WebKit backface bleed. Active painted geometry is tested in card-flip-webkit.
+    const dimensions=await page.evaluate(()=>{const card=document.querySelector('[data-loyalty-flip]'),front=card.querySelector('.loyalty-card-front,.santofe-card-front'),back=card.querySelector('.loyalty-card-back,.santofe-card-back');return {card:[card.offsetWidth,card.offsetHeight],front:[front.offsetWidth,front.offsetHeight],back:[back.offsetWidth,back.offsetHeight]};});
     assert.deepEqual(dimensions.front,dimensions.back);assert.deepEqual(dimensions.card,dimensions.front);
     assert.match(await page.locator('.qr-brightness-help').innerText(),/Sube el brillo/);
     await page.click('#flip-card');await page.waitForFunction(()=>window.__wakeLockTest.requests===1);assert.equal(await page.locator('[data-loyalty-flip]').getAttribute('aria-pressed'),'true');

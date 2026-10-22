@@ -970,3 +970,29 @@ html[data-tenant] body[data-route="empleado"] .staff-empty h2{font-size:24px;mar
  .counter-client strong{font-size:15px}
  html[data-tenant] #staff-card #new-attention{padding-inline:8px;font-size:11px}
 }
+
+/* WebKit can paint positioned descendants through a backface-hidden parent.
+   Turn each face only to its edge, then reveal the other face explicitly.
+   Neither face rotates beyond 90 degrees or relies on backface culling. */
+[data-loyalty-flip]{--face-turn:.31s}
+[data-tenant="santofe"] [data-loyalty-flip]{--face-turn:.34s}
+[data-loyalty-flip] :is(.loyalty-flip-inner,.santofe-flip-inner){transform:none!important;transition:none}
+[data-loyalty-flip] :is(.loyalty-card-front,.santofe-card-front){
+ transform:rotateY(0deg);visibility:visible;pointer-events:auto;
+ transition:transform var(--face-turn) ease-out var(--face-turn),visibility 0s linear var(--face-turn);
+}
+[data-loyalty-flip] :is(.loyalty-card-back,.santofe-card-back){
+ transform:rotateY(90deg);visibility:hidden;pointer-events:none;
+ transition:transform var(--face-turn) ease-in,visibility 0s linear var(--face-turn);
+}
+[data-loyalty-flip].is-flipped :is(.loyalty-card-front,.santofe-card-front){
+ transform:rotateY(-90deg);visibility:hidden;pointer-events:none;
+ transition:transform var(--face-turn) ease-in,visibility 0s linear var(--face-turn);
+}
+[data-loyalty-flip].is-flipped :is(.loyalty-card-back,.santofe-card-back){
+ transform:rotateY(0deg);visibility:visible;pointer-events:auto;
+ transition:transform var(--face-turn) ease-out var(--face-turn),visibility 0s linear var(--face-turn);
+}
+@media(prefers-reduced-motion:reduce){
+ [data-loyalty-flip] :is(.loyalty-card-front,.santofe-card-front,.loyalty-card-back,.santofe-card-back){transition:none!important}
+}
